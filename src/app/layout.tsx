@@ -8,7 +8,7 @@ import { Toaster } from '@/components/ui/toaster'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Internship Management Platform',
+  title: 'InternHub - Skill-Based Internship Platform',
   description: 'A modern platform for managing skill-based internships with gamified credits and Web3 certificates',
 }
 
@@ -27,7 +27,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <Providers>
-            {children}
+            <div className="min-h-screen bg-background">
+              {children}
+            </div>
             <Toaster />
           </Providers>
         </ThemeProvider>

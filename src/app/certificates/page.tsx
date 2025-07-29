@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -17,57 +18,45 @@ import {
   Shield
 } from "lucide-react"
 
-// Mock certificate data
-const mockCertificates = [
-  {
-    id: "1",
-    title: "Frontend Development Mastery",
-    description: "Successfully completed a comprehensive frontend development internship",
-    internship: "Frontend Developer Intern",
-    company: "TechCorp",
-    mentor: "Sarah Johnson",
-    issueDate: "2024-01-15",
-    creditsEarned: 250,
-    skills: ["React", "TypeScript", "Tailwind CSS", "Next.js"],
-    status: "issued",
-    certificateUrl: "/certificates/cert-1.pdf",
-    nftTokenId: null,
-    verificationId: "CERT-2024-001"
-  },
-  {
-    id: "2",
-    title: "Data Science Fundamentals",
-    description: "Demonstrated proficiency in data analysis and machine learning",
-    internship: "Data Science Intern",
-    company: "DataFlow Inc",
-    mentor: "Dr. Michael Chen",
-    issueDate: "2023-12-20",
-    creditsEarned: 300,
-    skills: ["Python", "Machine Learning", "SQL", "Data Visualization"],
-    status: "minted",
-    certificateUrl: "/certificates/cert-2.pdf",
-    nftTokenId: "0x1234567890abcdef",
-    verificationId: "CERT-2023-045"
-  },
-  {
-    id: "3",
-    title: "UX Design Excellence",
-    description: "Created outstanding user experiences and interface designs",
-    internship: "UX Design Intern",
-    company: "DesignStudio",
-    mentor: "Emma Wilson",
-    issueDate: "2023-11-30",
-    creditsEarned: 200,
-    skills: ["Figma", "User Research", "Prototyping", "Design Systems"],
-    status: "issued",
-    certificateUrl: "/certificates/cert-3.pdf",
-    nftTokenId: null,
-    verificationId: "CERT-2023-032"
-  }
-]
+interface Certificate {
+  id: string
+  title: string
+  description: string
+  issueDate: string
+  certificateUrl: string | null
+  nftTokenId: string | null
+  status: string
+}
 
 export default function CertificatesPage() {
+  const { data: session } = useSession()
   const [selectedCertificate, setSelectedCertificate] = useState<string | null>(null)
+  const [certificates, setCertificates] = useState<Certificate[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch certificates from API
+  useEffect(() => {
+    const fetchCertificates = async () => {
+      if (!session?.user?.id) return
+      
+      try {
+        setLoading(true)
+        const response = await fetch('/api/certificates')
+        if (!response.ok) {
+          throw new Error('Failed to fetch certificates')
+        }
+        const data = await response.json()
+        setCertificates(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCertificates()
+  }, [session?.user?.id])
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -91,6 +80,23 @@ export default function CertificatesPage() {
     }
   }
 
+  if (!session) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center py-12">
+            <Award className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Please sign in</h3>
+            <p className="text-muted-foreground mb-4">
+              You need to be signed in to view your certificates
+            </p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -112,9 +118,9 @@ export default function CertificatesPage() {
               <Award className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{mockCertificates.length}</div>
+              <div className="text-2xl font-bold">{loading ? "..." : certificates.length}</div>
               <p className="text-xs text-muted-foreground">
-                Across {new Set(mockCertificates.map(c => c.company)).size} companies
+                Your achievements
               </p>
             </CardContent>
           </Card>
@@ -126,7 +132,7 @@ export default function CertificatesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {mockCertificates.filter(c => c.status === 'minted').length}
+                {loading ? "..." : certificates.filter(c => c.status === 'MINTED').length}
               </div>
               <p className="text-xs text-muted-foreground">
                 Blockchain verified
@@ -136,38 +142,70 @@ export default function CertificatesPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Credits</CardTitle>
+              <CardTitle className="text-sm font-medium">Issued</CardTitle>
               <Shield className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {mockCertificates.reduce((sum, c) => sum + c.creditsEarned, 0)}
+                {loading ? "..." : certificates.filter(c => c.status === 'ISSUED').length}
               </div>
               <p className="text-xs text-muted-foreground">
-                Skill credits earned
+                Ready to mint
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Skills Verified</CardTitle>
+              <CardTitle className="text-sm font-medium">Status</CardTitle>
               <User className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {new Set(mockCertificates.flatMap(c => c.skills)).size}
+                {loading ? "..." : certificates.length > 0 ? "Active" : "None"}
               </div>
               <p className="text-xs text-muted-foreground">
-                Unique skills
+                Certificate status
               </p>
             </CardContent>
           </Card>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="grid gap-6">
+            {[...Array(2)].map((_, i) => (
+              <Card key={i} className="animate-pulse">
+                <CardHeader>
+                  <div className="h-6 bg-muted rounded w-3/4"></div>
+                  <div className="h-4 bg-muted rounded w-1/2"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="h-4 bg-muted rounded"></div>
+                    <div className="h-4 bg-muted rounded w-5/6"></div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-12">
+            <div className="text-red-500 mb-4">
+              <Award className="mx-auto h-12 w-12 mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Error Loading Certificates</h3>
+              <p>{error}</p>
+            </div>
+          </div>
+        )}
+
         {/* Certificates Grid */}
-        <div className="grid gap-6">
-          {mockCertificates.map((certificate) => (
+        {!loading && !error && (
+          <div className="grid gap-6">
+            {certificates.map((certificate) => (
             <Card key={certificate.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -176,69 +214,46 @@ export default function CertificatesPage() {
                       <CardTitle className="text-xl">{certificate.title}</CardTitle>
                       <Badge className={getStatusColor(certificate.status)}>
                         {getStatusIcon(certificate.status)}
-                        <span className="ml-1 capitalize">{certificate.status}</span>
+                        <span className="ml-1 capitalize">{certificate.status.toLowerCase()}</span>
                       </Badge>
                     </div>
                     <CardDescription className="text-base">
                       {certificate.description}
                     </CardDescription>
                   </div>
-                  <div className="text-right space-y-2">
-                    <div className="text-2xl font-bold text-primary">
-                      {certificate.creditsEarned}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Credits</div>
-                  </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <Building className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{certificate.company}</p>
-                      <p className="text-muted-foreground">{certificate.internship}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">{certificate.mentor}</p>
-                      <p className="text-muted-foreground">Mentor</p>
-                    </div>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <div>
-                      <p className="font-medium">{certificate.issueDate}</p>
+                      <p className="font-medium">{new Date(certificate.issueDate).toLocaleDateString()}</p>
                       <p className="text-muted-foreground">Issue Date</p>
                     </div>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Skills Verified:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {certificate.skills.map((skill) => (
-                      <Badge key={skill} variant="secondary">
-                        {skill}
-                      </Badge>
-                    ))}
+                  <div className="flex items-center space-x-2">
+                    <Shield className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="font-medium">{certificate.status}</p>
+                      <p className="text-muted-foreground">Status</p>
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between pt-4 border-t">
                   <div className="text-sm text-muted-foreground">
-                    <p>Verification ID: {certificate.verificationId}</p>
                     {certificate.nftTokenId && (
                       <p>NFT Token: {certificate.nftTokenId.slice(0, 10)}...</p>
                     )}
                   </div>
                   <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">
-                      <Download className="mr-2 h-4 w-4" />
-                      Download
-                    </Button>
+                    {certificate.certificateUrl && (
+                      <Button variant="outline" size="sm">
+                        <Download className="mr-2 h-4 w-4" />
+                        Download
+                      </Button>
+                    )}
                     <Button variant="outline" size="sm">
                       <Share2 className="mr-2 h-4 w-4" />
                       Share
@@ -247,7 +262,7 @@ export default function CertificatesPage() {
                       <ExternalLink className="mr-2 h-4 w-4" />
                       Verify
                     </Button>
-                    {certificate.status === "issued" && (
+                    {certificate.status === "ISSUED" && (
                       <Button size="sm">
                         <Zap className="mr-2 h-4 w-4" />
                         Mint NFT
@@ -260,8 +275,10 @@ export default function CertificatesPage() {
           ))}
         </div>
 
+        )}
+
         {/* Empty State */}
-        {mockCertificates.length === 0 && (
+        {!loading && !error && certificates.length === 0 && (
           <div className="text-center py-12">
             <Award className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">No certificates yet</h3>

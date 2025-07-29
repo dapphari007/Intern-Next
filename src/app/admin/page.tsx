@@ -1,5 +1,8 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -20,87 +23,116 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 
-// Mock admin data
-const mockData = {
+interface AdminAnalytics {
   stats: {
-    totalUsers: 1250,
-    totalInternships: 85,
-    activeMentors: 45,
-    certificatesIssued: 320,
-    pendingApplications: 23,
-    systemHealth: 98.5
-  },
-  recentUsers: [
-    {
-      id: "1",
-      name: "Alice Johnson",
-      email: "alice@example.com",
-      role: "INTERN",
-      joinedAt: "2024-01-10",
-      status: "active"
-    },
-    {
-      id: "2",
-      name: "Bob Smith",
-      email: "bob@example.com",
-      role: "MENTOR",
-      joinedAt: "2024-01-09",
-      status: "active"
-    },
-    {
-      id: "3",
-      name: "Carol Davis",
-      email: "carol@example.com",
-      role: "INTERN",
-      joinedAt: "2024-01-08",
-      status: "pending"
-    }
-  ],
-  pendingInternships: [
-    {
-      id: "1",
-      title: "Machine Learning Intern",
-      company: "AI Corp",
-      mentor: "Dr. Sarah Wilson",
-      submittedAt: "2024-01-10",
-      status: "pending"
-    },
-    {
-      id: "2",
-      title: "Blockchain Developer",
-      company: "CryptoTech",
-      mentor: "Mike Johnson",
-      submittedAt: "2024-01-09",
-      status: "pending"
-    }
-  ],
-  systemAlerts: [
-    {
-      id: "1",
-      type: "warning",
-      message: "High server load detected",
-      timestamp: "2024-01-10 14:30"
-    },
-    {
-      id: "2",
-      type: "info",
-      message: "Database backup completed successfully",
-      timestamp: "2024-01-10 12:00"
-    }
-  ],
+    totalUsers: number;
+    totalInternships: number;
+    activeMentors: number;
+    certificatesIssued: number;
+    pendingApplications: number;
+    systemHealth: number;
+  };
+  recentUsers: Array<{
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    joinedAt: string;
+    status: string;
+  }>;
+  pendingInternships: Array<{
+    id: string;
+    title: string;
+    company: string;
+    mentor: string;
+    submittedAt: string;
+    status: string;
+  }>;
+  systemAlerts: Array<{
+    id: string;
+    type: string;
+    message: string;
+    timestamp: string;
+  }>;
   analytics: {
-    userGrowth: 15.2,
-    internshipCompletion: 87.5,
-    mentorSatisfaction: 4.8,
-    platformUptime: 99.9
-  }
+    userGrowth: number;
+    internshipCompletion: number;
+    mentorSatisfaction: number;
+    platformUptime: number;
+  };
 }
 
 export default function AdminDashboard() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [adminData, setAdminData] = useState<AdminAnalytics | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (status === "loading") return
+
+    if (!session?.user || session.user.role !== 'ADMIN') {
+      router.push("/dashboard")
+      return
+    }
+
+    const fetchAdminData = async () => {
+      try {
+        const response = await fetch('/api/admin/analytics')
+        if (response.ok) {
+          const data = await response.json()
+          setAdminData(data)
+        } else {
+          console.error('Failed to fetch admin data')
+        }
+      } catch (error) {
+        console.error('Error fetching admin data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchAdminData()
+  }, [session, status, router])
+
+  if (status === "loading" || loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="animate-pulse space-y-8">
+            <div className="h-8 bg-muted rounded w-1/4"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="h-32 bg-muted rounded"></div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (!session?.user || session.user.role !== 'ADMIN') {
+    return null
+  }
+
+  if (!adminData) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navigation />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <p>Failed to load admin data</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
-      
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -136,9 +168,9 @@ export default function AdminDashboard() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{mockData.stats.totalUsers}</div>
+              <div className="text-2xl font-bold">{adminData.stats.totalUsers}</div>
               <p className="text-xs text-muted-foreground">
-                +{mockData.analytics.userGrowth}% from last month
+                +{adminData.analytics.userGrowth}% from last month
               </p>
             </CardContent>
           </Card>
@@ -149,9 +181,9 @@ export default function AdminDashboard() {
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{mockData.stats.totalInternships}</div>
+              <div className="text-2xl font-bold">{adminData.stats.totalInternships}</div>
               <p className="text-xs text-muted-foreground">
-                {mockData.stats.activeMentors} active mentors
+                {adminData.stats.activeMentors} active mentors
               </p>
             </CardContent>
           </Card>
@@ -162,9 +194,9 @@ export default function AdminDashboard() {
               <Award className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{mockData.stats.certificatesIssued}</div>
+              <div className="text-2xl font-bold">{adminData.stats.certificatesIssued}</div>
               <p className="text-xs text-muted-foreground">
-                {mockData.analytics.internshipCompletion}% completion rate
+                {adminData.analytics.internshipCompletion}% completion rate
               </p>
             </CardContent>
           </Card>
@@ -175,9 +207,9 @@ export default function AdminDashboard() {
               <Shield className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{mockData.stats.systemHealth}%</div>
+              <div className="text-2xl font-bold">{adminData.stats.systemHealth}%</div>
               <p className="text-xs text-muted-foreground">
-                {mockData.analytics.platformUptime}% uptime
+                {adminData.analytics.platformUptime}% uptime
               </p>
             </CardContent>
           </Card>
@@ -202,16 +234,16 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockData.recentUsers.map((user) => (
+                  {adminData.recentUsers.map((user) => (
                     <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-8 w-8">
                           <AvatarFallback>
-                            {user.name.split(' ').map(n => n[0]).join('')}
+                            {user.name?.split(' ').map(n => n[0]).join('') || user.email.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{user.name}</p>
+                          <p className="font-medium">{user.name || 'No name'}</p>
                           <p className="text-sm text-muted-foreground">{user.email}</p>
                         </div>
                       </div>
@@ -238,14 +270,14 @@ export default function AdminDashboard() {
                     Pending Approvals
                   </CardTitle>
                   <Badge variant="outline">
-                    {mockData.pendingInternships.length} pending
+                    {adminData.pendingInternships.length} pending
                   </Badge>
                 </div>
                 <CardDescription>Internships awaiting approval</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockData.pendingInternships.map((internship) => (
+                  {adminData.pendingInternships.map((internship) => (
                     <div key={internship.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="space-y-1">
                         <p className="font-medium">{internship.title}</p>
@@ -317,14 +349,17 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {mockData.systemAlerts.map((alert) => (
+                  {adminData.systemAlerts.map((alert) => (
                     <div key={alert.id} className="flex items-start space-x-3">
                       <div className={`w-2 h-2 rounded-full mt-2 ${
-                        alert.type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+                        alert.type === 'warning' ? 'bg-yellow-500' : 
+                        alert.type === 'success' ? 'bg-green-500' : 'bg-blue-500'
                       }`}></div>
                       <div className="space-y-1">
                         <p className="text-sm font-medium">{alert.message}</p>
-                        <p className="text-xs text-muted-foreground">{alert.timestamp}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(alert.timestamp).toLocaleString()}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -341,25 +376,25 @@ export default function AdminDashboard() {
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">User Growth</span>
                   <span className="text-sm font-medium text-green-600">
-                    +{mockData.analytics.userGrowth}%
+                    +{adminData.analytics.userGrowth}%
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Completion Rate</span>
                   <span className="text-sm font-medium">
-                    {mockData.analytics.internshipCompletion}%
+                    {adminData.analytics.internshipCompletion}%
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Mentor Rating</span>
                   <span className="text-sm font-medium">
-                    {mockData.analytics.mentorSatisfaction}/5.0
+                    {adminData.analytics.mentorSatisfaction}/5.0
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Platform Uptime</span>
                   <span className="text-sm font-medium text-green-600">
-                    {mockData.analytics.platformUptime}%
+                    {adminData.analytics.platformUptime}%
                   </span>
                 </div>
               </CardContent>

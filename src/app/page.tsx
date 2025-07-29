@@ -1,3 +1,6 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,38 +29,62 @@ const valuePropositions = [
   }
 ]
 
-const testimonials = [
-  {
-    name: "Sarah Chen",
-    role: "Software Engineering Intern",
-    company: "TechCorp",
-    content: "The skill-based matching helped me find the perfect internship. I earned 150 credits and got a full-time offer!",
-    rating: 5
-  },
-  {
-    name: "Marcus Johnson",
-    role: "Data Science Mentor",
-    company: "DataFlow Inc",
-    content: "Mentoring through this platform has been incredibly rewarding. The credit system motivates interns to excel.",
-    rating: 5
-  },
-  {
-    name: "Priya Patel",
-    role: "UX Design Intern",
-    company: "DesignStudio",
-    content: "The Web3 certificates gave me a competitive edge in job interviews. Employers love the verified credentials.",
-    rating: 5
-  }
-]
+interface Testimonial {
+  id: string;
+  name: string;
+  role: string;
+  company: string;
+  content: string;
+  rating: number;
+}
 
-const stats = [
-  { label: "Active Internships", value: "500+" },
-  { label: "Successful Placements", value: "2,000+" },
-  { label: "Industry Partners", value: "150+" },
-  { label: "Skill Credits Earned", value: "50K+" }
-]
+interface Stat {
+  label: string;
+  value: string;
+}
 
 export default function HomePage() {
+  const [stats, setStats] = useState<Stat[]>([])
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([])
+  const [loading, setLoading] = useState(true)
+  const [testimonialsLoading, setTestimonialsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/stats')
+        if (response.ok) {
+          const data = await response.json()
+          setStats(data)
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error)
+        // Set empty stats on error
+        setStats([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    const fetchTestimonials = async () => {
+      try {
+        const response = await fetch('/api/testimonials')
+        if (response.ok) {
+          const data = await response.json()
+          setTestimonials(data.slice(0, 3)) // Only show first 3
+        }
+      } catch (error) {
+        console.error('Error fetching testimonials:', error)
+        // Set empty testimonials on error
+        setTestimonials([])
+      } finally {
+        setTestimonialsLoading(false)
+      }
+    }
+
+    fetchStats()
+    fetchTestimonials()
+  }, [])
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -97,12 +124,21 @@ export default function HomePage() {
       <section className="py-16 px-4 border-b">
         <div className="container mx-auto max-w-6xl">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            {stats.map((stat, index) => (
-              <div key={index} className="space-y-2">
-                <div className="text-3xl font-bold text-primary">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
-              </div>
-            ))}
+            {loading ? (
+              [...Array(4)].map((_, index) => (
+                <div key={index} className="space-y-2 animate-pulse">
+                  <div className="h-8 bg-muted rounded"></div>
+                  <div className="h-4 bg-muted rounded w-3/4 mx-auto"></div>
+                </div>
+              ))
+            ) : (
+              stats.map((stat, index) => (
+                <div key={index} className="space-y-2">
+                  <div className="text-3xl font-bold text-primary">{stat.value}</div>
+                  <div className="text-sm text-muted-foreground">{stat.label}</div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -161,28 +197,49 @@ export default function HomePage() {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index}>
-                <CardHeader>
-                  <div className="flex items-center space-x-1 mb-2">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <CardDescription className="text-base italic">
-                    "{testimonial.content}"
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div>
-                    <div className="font-semibold">{testimonial.name}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {testimonial.role} at {testimonial.company}
+            {testimonialsLoading ? (
+              [...Array(3)].map((_, index) => (
+                <Card key={index} className="animate-pulse">
+                  <CardHeader>
+                    <div className="flex items-center space-x-1 mb-2">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="h-4 w-4 bg-muted rounded"></div>
+                      ))}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    <div className="h-16 bg-muted rounded"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="h-4 bg-muted rounded w-3/4"></div>
+                      <div className="h-3 bg-muted rounded w-1/2"></div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              testimonials.map((testimonial, index) => (
+                <Card key={testimonial.id || index}>
+                  <CardHeader>
+                    <div className="flex items-center space-x-1 mb-2">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      ))}
+                    </div>
+                    <CardDescription className="text-base italic">
+                      "{testimonial.content}"
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div>
+                      <div className="font-semibold">{testimonial.name}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {testimonial.role} at {testimonial.company}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </div>
       </section>

@@ -1,26 +1,35 @@
 import { getServerSession } from "next-auth"
+import { redirect } from "next/navigation"
 import { authOptions } from "@/lib/auth"
 import { InternDashboard } from "@/components/dashboard/intern-dashboard"
 import { MentorDashboard } from "@/components/dashboard/mentor-dashboard"
-import { UserRole } from "@/types"
+import { UserService } from "@/lib/services/user.service"
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
 
   if (!session?.user) {
-    return <div>Please sign in to access your dashboard.</div>
+    redirect("/auth/signin")
   }
 
-  const userRole = session.user.role as UserRole
+  // Get full user data from database
+  const user = await UserService.getUserById(session.user.id)
+  
+  if (!user) {
+    redirect("/auth/signin")
+  }
 
-  switch (userRole) {
-    case UserRole.INTERN:
-      return <InternDashboard />
-    case UserRole.MENTOR:
-      return <MentorDashboard />
-    case UserRole.ADMIN:
-      return <MentorDashboard /> // Admin can see mentor view for now
+  // Admin users should go to admin dashboard
+  if (user.role === 'ADMIN') {
+    redirect("/admin")
+  }
+
+  switch (user.role) {
+    case 'INTERN':
+      return <InternDashboard user={user} />
+    case 'MENTOR':
+      return <MentorDashboard user={user} />
     default:
-      return <InternDashboard />
+      return <InternDashboard user={user} />
   }
 }
