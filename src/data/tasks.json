@@ -1,0 +1,401 @@
+[
+  {
+    "id": "task_1",
+    "internshipId": "1",
+    "internId": "user_1",
+    "mentorId": "mentor_1",
+    "title": "Implement user authentication",
+    "description": "Create login/signup forms with validation and integrate with backend API. Include form validation, error handling, and user feedback.",
+    "status": "completed",
+    "priority": "high",
+    "difficulty": "medium",
+    "estimatedHours": 8,
+    "actualHours": 7,
+    "dueDate": "2024-01-15",
+    "createdAt": "2024-01-08",
+    "submittedAt": "2024-01-14",
+    "completedAt": "2024-01-14",
+    "credits": 50,
+    "skills": ["React", "JavaScript", "Form Validation", "API Integration"],
+    "requirements": [
+      "Create responsive login and signup forms",
+      "Implement client-side validation",
+      "Integrate with authentication API",
+      "Add error handling and user feedback",
+      "Write unit tests for components"
+    ],
+    "deliverables": [
+      "Login component with validation",
+      "Signup component with validation",
+      "API integration service",
+      "Unit tests",
+      "Documentation"
+    ],
+    "feedback": "Excellent work! Clean code and good error handling. The form validation is comprehensive and user-friendly.",
+    "mentorRating": 5,
+    "files": [
+      {
+        "name": "auth-components.zip",
+        "url": "/files/task_1/auth-components.zip",
+        "uploadedAt": "2024-01-14"
+      }
+    ]
+  },
+  {
+    "id": "task_2",
+    "internshipId": "1",
+    "internId": "user_1",
+    "mentorId": "mentor_1",
+    "title": "Design responsive dashboard",
+    "description": "Create a responsive dashboard layout using Tailwind CSS with data visualization components and mobile-first approach.",
+    "status": "in_progress",
+    "priority": "high",
+    "difficulty": "medium",
+    "estimatedHours": 12,
+    "actualHours": 8,
+    "dueDate": "2024-01-20",
+    "createdAt": "2024-01-10",
+    "submittedAt": null,
+    "completedAt": null,
+    "credits": 75,
+    "skills": ["React", "Tailwind CSS", "Responsive Design", "Data Visualization"],
+    "requirements": [
+      "Create responsive dashboard layout",
+      "Implement data visualization components",
+      "Ensure mobile-first design",
+      "Add interactive elements",
+      "Optimize for performance"
+    ],
+    "deliverables": [
+      "Dashboard layout component",
+      "Chart and graph components",
+      "Mobile responsive design",
+      "Interactive features",
+      "Performance optimization report"
+    ],
+    "feedback": null,
+    "mentorRating": null,
+    "files": []
+  },
+  {
+    "id": "task_3",
+    "internshipId": "1",
+    "internId": "user_1",
+    "mentorId": "mentor_1",
+    "title": "Write unit tests",
+    "description": "Add comprehensive unit tests for authentication components using Jest and React Testing Library.",
+    "status": "pending",
+    "priority": "medium",
+    "difficulty": "easy",
+    "estimatedHours": 6,
+    "actualHours": null,
+    "dueDate": "2024-01-25",
+    "createdAt": "2024-01-12",
+    "submittedAt": null,
+    "completedAt": null,
+    "credits": 40,
+    "skills": ["Jest", "React Testing Library", "Unit Testing", "Test Coverage"],
+    "requirements": [
+      "Write unit tests for all authentication components",
+      "Achieve 90%+ test coverage",
+      "Include edge case testing",
+      "Add integration tests",
+      "Document testing strategy"
+    ],
+    "deliverables": [
+      "Unit test files",
+      "Test coverage report",
+      "Integration tests",
+      "Testing documentation",
+      "CI/CD test integration"
+    ],
+    "feedback": null,
+    "mentorRating": null,
+    "files": []
+  },
+  {
+    "id": "task_4",
+    "internshipId": "2",
+    "internId": "user_2",
+    "mentorId": "mentor_2",
+    "title": "Data preprocessing pipeline",
+    "description": "Build a data preprocessing pipeline for customer data analysis including data cleaning, transformation, and feature engineering.",
+    "status": "completed",
+    "priority": "high",
+    "difficulty": "hard",
+    "estimatedHours": 16,
+    "actualHours": 18,
+    "dueDate": "2024-01-12",
+    "createdAt": "2024-01-05",
+    "submittedAt": "2024-01-11",
+    "completedAt": "2024-01-11",
+    "credits": 80,
+    "skills": ["Python", "Pandas", "Data Cleaning", "Feature Engineering"],
+    "requirements": [
+      "Clean and validate raw customer data",
+      "Handle missing values and outliers",
+      "Create feature engineering pipeline",
+      "Implement data quality checks",
+      "Document the preprocessing steps"
+    ],
+    "deliverables": [
+      "Data preprocessing script",
+      "Data quality report",
+      "Feature engineering pipeline",
+      "Documentation",
+      "Sample processed datasets"
+    ],
+    "feedback": "Outstanding work on the data pipeline! The feature engineering approach was innovative and the documentation is thorough.",
+    "mentorRating": 5,
+    "files": [
+      {
+        "name": "data-pipeline.py",
+        "url": "/files/task_4/data-pipeline.py",
+        "uploadedAt": "2024-01-11"
+      },
+      {
+        "name": "data-quality-report.pdf",
+        "url": "/files/task_4/data-quality-report.pdf",
+        "uploadedAt": "2024-01-11"
+      }
+    ]
+  },
+  {
+    "id": "task_5",
+    "internshipId": "2",
+    "internId": "user_2",
+    "mentorId": "mentor_2",
+    "title": "Machine learning model development",
+    "description": "Develop and train a machine learning model for customer churn prediction using the preprocessed data.",
+    "status": "in_progress",
+    "priority": "high",
+    "difficulty": "hard",
+    "estimatedHours": 20,
+    "actualHours": 12,
+    "dueDate": "2024-01-22",
+    "createdAt": "2024-01-12",
+    "submittedAt": null,
+    "completedAt": null,
+    "credits": 100,
+    "skills": ["Machine Learning", "Scikit-learn", "Model Evaluation", "Python"],
+    "requirements": [
+      "Develop multiple ML models for comparison",
+      "Implement proper cross-validation",
+      "Optimize hyperparameters",
+      "Evaluate model performance",
+      "Create model interpretation analysis"
+    ],
+    "deliverables": [
+      "Trained ML models",
+      "Model evaluation report",
+      "Hyperparameter tuning results",
+      "Model interpretation analysis",
+      "Deployment-ready model"
+    ],
+    "feedback": null,
+    "mentorRating": null,
+    "files": []
+  },
+  {
+    "id": "task_6",
+    "internshipId": "3",
+    "internId": "user_3",
+    "mentorId": "mentor_3",
+    "title": "User research and personas",
+    "description": "Conduct user research and create detailed user personas for the mobile app redesign project.",
+    "status": "completed",
+    "priority": "high",
+    "difficulty": "medium",
+    "estimatedHours": 10,
+    "actualHours": 11,
+    "dueDate": "2024-01-18",
+    "createdAt": "2024-01-08",
+    "submittedAt": "2024-01-17",
+    "completedAt": "2024-01-17",
+    "credits": 60,
+    "skills": ["User Research", "Persona Development", "Interview Techniques", "Data Analysis"],
+    "requirements": [
+      "Conduct 10+ user interviews",
+      "Analyze user feedback and behavior",
+      "Create 3-5 detailed user personas",
+      "Identify key user pain points",
+      "Present findings to stakeholders"
+    ],
+    "deliverables": [
+      "User interview transcripts",
+      "User persona documents",
+      "Research findings report",
+      "Pain point analysis",
+      "Stakeholder presentation"
+    ],
+    "feedback": "Great research methodology and insightful personas. The pain point analysis will be very valuable for the design phase.",
+    "mentorRating": 4,
+    "files": [
+      {
+        "name": "user-personas.pdf",
+        "url": "/files/task_6/user-personas.pdf",
+        "uploadedAt": "2024-01-17"
+      },
+      {
+        "name": "research-findings.pptx",
+        "url": "/files/task_6/research-findings.pptx",
+        "uploadedAt": "2024-01-17"
+      }
+    ]
+  },
+  {
+    "id": "task_7",
+    "internshipId": "3",
+    "internId": "user_3",
+    "mentorId": "mentor_3",
+    "title": "Wireframes and prototypes",
+    "description": "Create wireframes and interactive prototypes for the mobile app based on user research findings.",
+    "status": "in_progress",
+    "priority": "high",
+    "difficulty": "medium",
+    "estimatedHours": 14,
+    "actualHours": 8,
+    "dueDate": "2024-01-25",
+    "createdAt": "2024-01-18",
+    "submittedAt": null,
+    "completedAt": null,
+    "credits": 70,
+    "skills": ["Wireframing", "Prototyping", "Figma", "User Flow Design"],
+    "requirements": [
+      "Create low-fidelity wireframes",
+      "Develop high-fidelity prototypes",
+      "Design user flow diagrams",
+      "Implement interactive elements",
+      "Conduct usability testing"
+    ],
+    "deliverables": [
+      "Low-fidelity wireframes",
+      "High-fidelity prototypes",
+      "User flow diagrams",
+      "Interactive prototype",
+      "Usability testing results"
+    ],
+    "feedback": null,
+    "mentorRating": null,
+    "files": []
+  },
+  {
+    "id": "task_8",
+    "internshipId": "4",
+    "internId": "user_4",
+    "mentorId": "mentor_4",
+    "title": "REST API development",
+    "description": "Develop RESTful APIs for user management and authentication with proper error handling and documentation.",
+    "status": "completed",
+    "priority": "high",
+    "difficulty": "hard",
+    "estimatedHours": 15,
+    "actualHours": 16,
+    "dueDate": "2024-01-16",
+    "createdAt": "2024-01-07",
+    "submittedAt": "2024-01-15",
+    "completedAt": "2024-01-15",
+    "credits": 85,
+    "skills": ["Node.js", "Express.js", "REST API", "Authentication", "Documentation"],
+    "requirements": [
+      "Implement CRUD operations for users",
+      "Add JWT-based authentication",
+      "Include proper error handling",
+      "Write comprehensive API documentation",
+      "Add input validation and sanitization"
+    ],
+    "deliverables": [
+      "REST API endpoints",
+      "Authentication middleware",
+      "Error handling system",
+      "API documentation",
+      "Postman collection"
+    ],
+    "feedback": "Excellent API design and implementation. The documentation is comprehensive and the error handling is robust.",
+    "mentorRating": 5,
+    "files": [
+      {
+        "name": "api-source-code.zip",
+        "url": "/files/task_8/api-source-code.zip",
+        "uploadedAt": "2024-01-15"
+      },
+      {
+        "name": "api-documentation.pdf",
+        "url": "/files/task_8/api-documentation.pdf",
+        "uploadedAt": "2024-01-15"
+      }
+    ]
+  },
+  {
+    "id": "task_9",
+    "internshipId": "5",
+    "internId": "user_5",
+    "mentorId": "mentor_5",
+    "title": "Cross-platform mobile app",
+    "description": "Develop a cross-platform mobile application using React Native with navigation and state management.",
+    "status": "in_progress",
+    "priority": "high",
+    "difficulty": "hard",
+    "estimatedHours": 25,
+    "actualHours": 15,
+    "dueDate": "2024-01-28",
+    "createdAt": "2024-01-06",
+    "submittedAt": null,
+    "completedAt": null,
+    "credits": 120,
+    "skills": ["React Native", "Navigation", "State Management", "Mobile UI/UX"],
+    "requirements": [
+      "Implement navigation between screens",
+      "Add state management with Redux",
+      "Create responsive mobile UI",
+      "Integrate with backend APIs",
+      "Test on both iOS and Android"
+    ],
+    "deliverables": [
+      "React Native application",
+      "Navigation implementation",
+      "State management setup",
+      "API integration",
+      "Testing documentation"
+    ],
+    "feedback": null,
+    "mentorRating": null,
+    "files": []
+  },
+  {
+    "id": "task_10",
+    "internshipId": "4",
+    "internId": "user_4",
+    "mentorId": "mentor_4",
+    "title": "Database optimization",
+    "description": "Optimize database queries and implement caching strategies for improved API performance.",
+    "status": "pending",
+    "priority": "medium",
+    "difficulty": "hard",
+    "estimatedHours": 12,
+    "actualHours": null,
+    "dueDate": "2024-01-30",
+    "createdAt": "2024-01-16",
+    "submittedAt": null,
+    "completedAt": null,
+    "credits": 65,
+    "skills": ["PostgreSQL", "Query Optimization", "Caching", "Performance Tuning"],
+    "requirements": [
+      "Analyze and optimize slow queries",
+      "Implement Redis caching",
+      "Add database indexing",
+      "Monitor performance metrics",
+      "Document optimization strategies"
+    ],
+    "deliverables": [
+      "Optimized database queries",
+      "Caching implementation",
+      "Performance monitoring setup",
+      "Optimization report",
+      "Best practices documentation"
+    ],
+    "feedback": null,
+    "mentorRating": null,
+    "files": []
+  }
+]

@@ -1,0 +1,314 @@
+[
+  {
+    "id": "1",
+    "title": "Frontend Developer Intern",
+    "company": "TechCorp",
+    "location": "Remote",
+    "duration": 12,
+    "isPaid": true,
+    "stipend": 1500,
+    "domain": "Web Development",
+    "description": "Work on React applications and learn modern frontend technologies. You'll be building user interfaces, implementing responsive designs, and collaborating with our design team.",
+    "mentor": "Sarah Johnson",
+    "mentorId": "mentor_1",
+    "rating": 4.8,
+    "applicants": 45,
+    "maxInterns": 2,
+    "skills": ["React", "TypeScript", "Tailwind CSS", "Next.js", "JavaScript"],
+    "postedAt": "2024-01-08",
+    "requirements": [
+      "Basic knowledge of HTML, CSS, and JavaScript",
+      "Familiarity with React framework",
+      "Understanding of responsive design principles",
+      "Good communication skills"
+    ],
+    "responsibilities": [
+      "Develop user-facing features using React",
+      "Collaborate with designers to implement UI/UX designs",
+      "Write clean, maintainable code",
+      "Participate in code reviews",
+      "Learn and apply best practices in frontend development"
+    ],
+    "benefits": [
+      "Mentorship from senior developers",
+      "Flexible working hours",
+      "Access to learning resources",
+      "Certificate upon completion",
+      "Potential for full-time offer"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "2",
+    "title": "Data Science Intern",
+    "company": "DataFlow Inc",
+    "location": "New York, NY",
+    "duration": 16,
+    "isPaid": true,
+    "stipend": 2000,
+    "domain": "Data Science",
+    "description": "Analyze large datasets and build machine learning models. Work with real-world data to extract insights and create predictive models.",
+    "mentor": "Dr. Michael Chen",
+    "mentorId": "mentor_2",
+    "rating": 4.9,
+    "applicants": 78,
+    "maxInterns": 1,
+    "skills": ["Python", "Machine Learning", "SQL", "Pandas", "Scikit-learn"],
+    "postedAt": "2024-01-05",
+    "requirements": [
+      "Strong foundation in Python programming",
+      "Basic understanding of statistics and mathematics",
+      "Familiarity with data manipulation libraries",
+      "Interest in machine learning concepts"
+    ],
+    "responsibilities": [
+      "Clean and preprocess large datasets",
+      "Build and evaluate machine learning models",
+      "Create data visualizations and reports",
+      "Collaborate with data engineering team",
+      "Present findings to stakeholders"
+    ],
+    "benefits": [
+      "Work with cutting-edge ML technologies",
+      "Access to premium datasets",
+      "Conference attendance opportunities",
+      "Research publication opportunities",
+      "Networking with data science professionals"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "3",
+    "title": "UX Design Intern",
+    "company": "DesignStudio",
+    "location": "San Francisco, CA",
+    "duration": 10,
+    "isPaid": false,
+    "stipend": 0,
+    "domain": "Design",
+    "description": "Create user-centered designs for mobile and web applications. Learn design thinking methodology and work on real client projects.",
+    "mentor": "Emma Wilson",
+    "mentorId": "mentor_3",
+    "rating": 4.7,
+    "applicants": 32,
+    "maxInterns": 3,
+    "skills": ["Figma", "User Research", "Prototyping", "Adobe Creative Suite"],
+    "postedAt": "2024-01-10",
+    "requirements": [
+      "Portfolio showcasing design work",
+      "Proficiency in design tools (Figma, Sketch, etc.)",
+      "Understanding of UX principles",
+      "Strong visual communication skills"
+    ],
+    "responsibilities": [
+      "Conduct user research and usability testing",
+      "Create wireframes and prototypes",
+      "Design user interfaces for web and mobile",
+      "Collaborate with development teams",
+      "Maintain design systems and style guides"
+    ],
+    "benefits": [
+      "Portfolio development opportunities",
+      "Mentorship from senior designers",
+      "Client interaction experience",
+      "Design tool licenses provided",
+      "Industry networking events"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "4",
+    "title": "Backend Developer Intern",
+    "company": "ServerTech",
+    "location": "Remote",
+    "duration": 14,
+    "isPaid": true,
+    "stipend": 1800,
+    "domain": "Backend Development",
+    "description": "Build scalable APIs and work with cloud infrastructure. Learn about microservices architecture and database optimization.",
+    "mentor": "James Rodriguez",
+    "mentorId": "mentor_4",
+    "rating": 4.6,
+    "applicants": 56,
+    "maxInterns": 2,
+    "skills": ["Node.js", "PostgreSQL", "AWS", "Docker", "REST APIs"],
+    "postedAt": "2024-01-07",
+    "requirements": [
+      "Strong programming skills in JavaScript or Python",
+      "Understanding of database concepts",
+      "Basic knowledge of web APIs",
+      "Familiarity with version control (Git)"
+    ],
+    "responsibilities": [
+      "Develop and maintain REST APIs",
+      "Optimize database queries and performance",
+      "Implement authentication and authorization",
+      "Deploy applications to cloud platforms",
+      "Write comprehensive tests for backend services"
+    ],
+    "benefits": [
+      "Cloud platform credits for learning",
+      "Exposure to enterprise-level systems",
+      "DevOps and deployment experience",
+      "Code review and mentorship",
+      "Potential for remote work continuation"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "5",
+    "title": "Mobile App Developer Intern",
+    "company": "MobileFirst",
+    "location": "Austin, TX",
+    "duration": 12,
+    "isPaid": true,
+    "stipend": 1600,
+    "domain": "Mobile Development",
+    "description": "Develop cross-platform mobile applications using React Native. Work on both iOS and Android platforms.",
+    "mentor": "Lisa Park",
+    "mentorId": "mentor_5",
+    "rating": 4.8,
+    "applicants": 41,
+    "maxInterns": 1,
+    "skills": ["React Native", "JavaScript", "Firebase", "iOS", "Android"],
+    "postedAt": "2024-01-09",
+    "requirements": [
+      "Experience with React or React Native",
+      "Understanding of mobile app development concepts",
+      "Knowledge of JavaScript ES6+",
+      "Familiarity with mobile UI/UX principles"
+    ],
+    "responsibilities": [
+      "Develop mobile applications for iOS and Android",
+      "Integrate with backend APIs and services",
+      "Implement push notifications and analytics",
+      "Optimize app performance and user experience",
+      "Participate in app store deployment process"
+    ],
+    "benefits": [
+      "Published apps in app stores",
+      "Mobile development device access",
+      "Cross-platform development experience",
+      "User analytics and feedback exposure",
+      "Mobile-first design methodology training"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "6",
+    "title": "DevOps Intern",
+    "company": "CloudOps",
+    "location": "Seattle, WA",
+    "duration": 16,
+    "isPaid": true,
+    "stipend": 1700,
+    "domain": "DevOps",
+    "description": "Learn CI/CD pipelines and cloud infrastructure management. Work with containerization and orchestration technologies.",
+    "mentor": "Alex Kumar",
+    "mentorId": "mentor_6",
+    "rating": 4.5,
+    "applicants": 29,
+    "maxInterns": 1,
+    "skills": ["Docker", "Kubernetes", "Jenkins", "AWS", "Terraform"],
+    "postedAt": "2024-01-06",
+    "requirements": [
+      "Basic understanding of Linux systems",
+      "Familiarity with command line interfaces",
+      "Interest in automation and infrastructure",
+      "Problem-solving and analytical skills"
+    ],
+    "responsibilities": [
+      "Set up and maintain CI/CD pipelines",
+      "Manage containerized applications",
+      "Monitor system performance and reliability",
+      "Automate deployment processes",
+      "Implement infrastructure as code"
+    ],
+    "benefits": [
+      "Cloud platform certifications support",
+      "Infrastructure automation experience",
+      "Enterprise-level tools access",
+      "On-call experience and incident management",
+      "Site reliability engineering exposure"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "7",
+    "title": "Cybersecurity Intern",
+    "company": "SecureNet",
+    "location": "Washington, DC",
+    "duration": 12,
+    "isPaid": true,
+    "stipend": 1900,
+    "domain": "Cybersecurity",
+    "description": "Learn about network security, penetration testing, and security auditing. Work with enterprise security tools.",
+    "mentor": "David Thompson",
+    "mentorId": "mentor_7",
+    "rating": 4.9,
+    "applicants": 67,
+    "maxInterns": 2,
+    "skills": ["Network Security", "Penetration Testing", "Python", "Linux", "SIEM"],
+    "postedAt": "2024-01-04",
+    "requirements": [
+      "Basic understanding of networking concepts",
+      "Interest in cybersecurity and ethical hacking",
+      "Programming experience (Python preferred)",
+      "Strong analytical and problem-solving skills"
+    ],
+    "responsibilities": [
+      "Conduct security assessments and audits",
+      "Analyze security logs and incidents",
+      "Assist in penetration testing activities",
+      "Develop security automation scripts",
+      "Research emerging security threats"
+    ],
+    "benefits": [
+      "Security certification preparation",
+      "Hands-on penetration testing experience",
+      "Enterprise security tools training",
+      "Incident response simulation",
+      "Cybersecurity conference attendance"
+    ],
+    "status": "active"
+  },
+  {
+    "id": "8",
+    "title": "AI/ML Research Intern",
+    "company": "AI Innovations",
+    "location": "Boston, MA",
+    "duration": 20,
+    "isPaid": true,
+    "stipend": 2200,
+    "domain": "Artificial Intelligence",
+    "description": "Research and develop AI models for computer vision and natural language processing applications.",
+    "mentor": "Dr. Rachel Kim",
+    "mentorId": "mentor_8",
+    "rating": 4.9,
+    "applicants": 89,
+    "maxInterns": 1,
+    "skills": ["TensorFlow", "PyTorch", "Computer Vision", "NLP", "Research"],
+    "postedAt": "2024-01-03",
+    "requirements": [
+      "Strong mathematical background",
+      "Experience with deep learning frameworks",
+      "Research experience or publications preferred",
+      "PhD or Master's student preferred"
+    ],
+    "responsibilities": [
+      "Conduct literature reviews on AI topics",
+      "Implement and experiment with AI models",
+      "Analyze and visualize research results",
+      "Write research papers and reports",
+      "Present findings at conferences"
+    ],
+    "benefits": [
+      "Research publication opportunities",
+      "Conference presentation experience",
+      "Access to high-performance computing",
+      "Collaboration with PhD researchers",
+      "Potential for continued research partnership"
+    ],
+    "status": "active"
+  }
+]

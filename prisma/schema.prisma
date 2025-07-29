@@ -1,0 +1,245 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          UserRole  @default(INTERN)
+  bio           String?
+  resume        String?
+  skillCredits  Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  internships   InternshipApplication[]
+  mentorships   Internship[] @relation("MentorInternships")
+  tasks         Task[]
+  submissions   TaskSubmission[]
+  creditHistory CreditHistory[]
+  certificates  Certificate[]
+  chatMessages  ChatMessage[]
+
+  @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Internship {
+  id          String           @id @default(cuid())
+  title       String
+  description String           @db.Text
+  domain      String
+  duration    Int              // in weeks
+  isPaid      Boolean          @default(false)
+  stipend     Float?
+  mentorId    String
+  status      InternshipStatus @default(ACTIVE)
+  maxInterns  Int              @default(1)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  mentor       User                    @relation("MentorInternships", fields: [mentorId], references: [id])
+  applications InternshipApplication[]
+  tasks        Task[]
+  projectRooms ProjectRoom[]
+
+  @@map("internships")
+}
+
+model InternshipApplication {
+  id           String                @id @default(cuid())
+  internshipId String
+  userId       String
+  status       ApplicationStatus     @default(PENDING)
+  appliedAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  internship Internship @relation(fields: [internshipId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+
+  @@unique([internshipId, userId])
+  @@map("internship_applications")
+}
+
+model Task {
+  id           String     @id @default(cuid())
+  title        String
+  description  String     @db.Text
+  internshipId String
+  assignedTo   String
+  status       TaskStatus @default(PENDING)
+  dueDate      DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  internship  Internship       @relation(fields: [internshipId], references: [id])
+  assignee    User             @relation(fields: [assignedTo], references: [id])
+  submissions TaskSubmission[]
+
+  @@map("tasks")
+}
+
+model TaskSubmission {
+  id          String           @id @default(cuid())
+  taskId      String
+  userId      String
+  content     String           @db.Text
+  fileUrl     String?
+  status      SubmissionStatus @default(SUBMITTED)
+  feedback    String?
+  creditsAwarded Int           @default(0)
+  submittedAt DateTime         @default(now())
+  reviewedAt  DateTime?
+
+  task Task @relation(fields: [taskId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("task_submissions")
+}
+
+model CreditHistory {
+  id          String      @id @default(cuid())
+  userId      String
+  amount      Int
+  type        CreditType
+  description String
+  createdAt   DateTime    @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("credit_history")
+}
+
+model Certificate {
+  id           String            @id @default(cuid())
+  userId       String
+  internshipId String?
+  title        String
+  description  String
+  issueDate    DateTime          @default(now())
+  certificateUrl String?
+  nftTokenId   String?
+  status       CertificateStatus @default(ISSUED)
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("certificates")
+}
+
+model ProjectRoom {
+  id           String @id @default(cuid())
+  internshipId String
+  name         String
+  description  String?
+  createdAt    DateTime @default(now())
+
+  internship   Internship    @relation(fields: [internshipId], references: [id])
+  chatMessages ChatMessage[]
+
+  @@map("project_rooms")
+}
+
+model ChatMessage {
+  id            String   @id @default(cuid())
+  projectRoomId String
+  userId        String
+  content       String   @db.Text
+  createdAt     DateTime @default(now())
+
+  projectRoom ProjectRoom @relation(fields: [projectRoomId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
+
+  @@map("chat_messages")
+}
+
+enum UserRole {
+  INTERN
+  MENTOR
+  ADMIN
+}
+
+enum InternshipStatus {
+  ACTIVE
+  INACTIVE
+  COMPLETED
+}
+
+enum ApplicationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  APPROVED
+  REJECTED
+  NEEDS_REVISION
+}
+
+enum CreditType {
+  EARNED
+  SPENT
+  BONUS
+  PENALTY
+}
+
+enum CertificateStatus {
+  ISSUED
+  MINTED
+  REVOKED
+}
