@@ -77,6 +77,7 @@ model User {
   jobApplications JobApplication[] @relation("JobApplications")
   analytics     StudentAnalytics? @relation("StudentAnalytics")
   notificationPreferences NotificationPreferences? @relation("UserNotificationPreferences")
+  privacyPreferences PrivacyPreferences? @relation("UserPrivacyPreferences")
   wallet        Wallet? @relation("UserWallet")
 
   @@map("users")
@@ -441,6 +442,23 @@ model NotificationPreferences {
   user User @relation("UserNotificationPreferences", fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("notification_preferences")
+}
+
+model PrivacyPreferences {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  profileVisibility   String   @default("public") // "public", "private", "friends"
+  showEmail           Boolean  @default(false)
+  showPhone           Boolean  @default(false)
+  allowMentorContact  Boolean  @default(true)
+  showOnlineStatus    Boolean  @default(true)
+  allowDataCollection Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User @relation("UserPrivacyPreferences", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("privacy_preferences")
 }
 
 model Wallet {

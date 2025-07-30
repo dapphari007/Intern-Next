@@ -237,7 +237,11 @@ export default async function MessagesPage() {
                 {receivedMessages.map((message) => (
                   <div 
                     key={message.id} 
-                    className={`p-4 border rounded-lg ${!message.isRead ? 'bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800' : ''}`}
+                    className={`p-4 border rounded-lg transition-colors ${
+                      !message.isRead 
+                        ? 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-700 shadow-sm' 
+                        : 'hover:bg-muted/50 dark:hover:bg-muted/20'
+                    }`}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center space-x-2">
@@ -245,7 +249,7 @@ export default async function MessagesPage() {
                           {message.sender.name?.charAt(0) || message.sender.email.charAt(0)}
                         </div>
                         <div>
-                          <h4 className="font-medium text-sm">{message.sender.name || 'Unknown'}</h4>
+                          <h4 className="font-medium text-sm text-foreground">{message.sender.name || 'Unknown'}</h4>
                           <p className="text-xs text-muted-foreground">{message.sender.email}</p>
                         </div>
                       </div>
@@ -260,7 +264,7 @@ export default async function MessagesPage() {
                         )}
                       </div>
                     </div>
-                    <h5 className="font-medium mb-1">{message.subject}</h5>
+                    <h5 className="font-medium mb-1 text-foreground">{message.subject}</h5>
                     <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
                       {message.content}
                     </p>

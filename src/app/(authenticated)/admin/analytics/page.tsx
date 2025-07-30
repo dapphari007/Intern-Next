@@ -44,6 +44,12 @@ interface AnalyticsData {
     pending: number
     cancelled: number
   }
+  applicationStats: {
+    total: number
+    accepted: number
+    pending: number
+    rejected: number
+  }
   monthlyData: Array<{
     month: string
     users: number
@@ -114,6 +120,12 @@ export default function AdminAnalyticsPage() {
             completed: 0,
             pending: 0,
             cancelled: 0
+          },
+          applicationStats: {
+            total: 0,
+            accepted: 0,
+            pending: 0,
+            rejected: 0
           },
           monthlyData: []
         })
@@ -192,11 +204,47 @@ export default function AdminAnalyticsPage() {
           <p className="text-muted-foreground">Platform insights and performance metrics</p>
         </div>
         <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              // TODO: Implement filter functionality
+              alert('Filter functionality coming soon!')
+            }}
+          >
             <Filter className="mr-2 h-4 w-4" />
             Filter
           </Button>
-          <Button variant="outline" size="sm">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              // Export analytics data as CSV
+              const csvData = [
+                ['Metric', 'Value'],
+                ['Total Users', analyticsData.overview.totalUsers],
+                ['Total Internships', analyticsData.overview.totalInternships],
+                ['Total Applications', analyticsData.overview.totalApplications],
+                ['Total Certificates', analyticsData.overview.totalCertificates],
+                ['Interns', analyticsData.userStats.interns],
+                ['Mentors', analyticsData.userStats.mentors],
+                ['Admins', analyticsData.userStats.admins],
+                ['Active Internships', analyticsData.internshipStats.active],
+                ['Completed Internships', analyticsData.internshipStats.completed],
+                ['Pending Applications', analyticsData.internshipStats.pending],
+                ['Cancelled Internships', analyticsData.internshipStats.cancelled]
+              ]
+              
+              const csvContent = csvData.map(row => row.join(',')).join('\n')
+              const blob = new Blob([csvContent], { type: 'text/csv' })
+              const url = window.URL.createObjectURL(blob)
+              const a = document.createElement('a')
+              a.href = url
+              a.download = `analytics-${new Date().toISOString().split('T')[0]}.csv`
+              a.click()
+              window.URL.revokeObjectURL(url)
+            }}
+          >
             <Download className="mr-2 h-4 w-4" />
             Export
           </Button>
@@ -282,7 +330,10 @@ export default function AdminAnalyticsPage() {
                   <div className="text-right">
                     <div className="font-medium">{analyticsData.userStats.interns}</div>
                     <div className="text-xs text-muted-foreground">
-                      {((analyticsData.userStats.interns / analyticsData.overview.totalUsers) * 100).toFixed(1)}%
+                      {analyticsData.overview.totalUsers > 0 
+                        ? ((analyticsData.userStats.interns / analyticsData.overview.totalUsers) * 100).toFixed(1)
+                        : '0.0'
+                      }%
                     </div>
                   </div>
                 </div>
@@ -295,7 +346,10 @@ export default function AdminAnalyticsPage() {
                   <div className="text-right">
                     <div className="font-medium">{analyticsData.userStats.mentors}</div>
                     <div className="text-xs text-muted-foreground">
-                      {((analyticsData.userStats.mentors / analyticsData.overview.totalUsers) * 100).toFixed(1)}%
+                      {analyticsData.overview.totalUsers > 0 
+                        ? ((analyticsData.userStats.mentors / analyticsData.overview.totalUsers) * 100).toFixed(1)
+                        : '0.0'
+                      }%
                     </div>
                   </div>
                 </div>
@@ -308,7 +362,10 @@ export default function AdminAnalyticsPage() {
                   <div className="text-right">
                     <div className="font-medium">{analyticsData.userStats.admins}</div>
                     <div className="text-xs text-muted-foreground">
-                      {((analyticsData.userStats.admins / analyticsData.overview.totalUsers) * 100).toFixed(1)}%
+                      {analyticsData.overview.totalUsers > 0 
+                        ? ((analyticsData.userStats.admins / analyticsData.overview.totalUsers) * 100).toFixed(1)
+                        : '0.0'
+                      }%
                     </div>
                   </div>
                 </div>
@@ -323,7 +380,10 @@ export default function AdminAnalyticsPage() {
               <CardContent>
                 <div className="text-3xl font-bold mb-2">{analyticsData.userStats.activeUsers}</div>
                 <div className="text-sm text-muted-foreground mb-4">
-                  {((analyticsData.userStats.activeUsers / analyticsData.overview.totalUsers) * 100).toFixed(1)}% of total users
+                  {analyticsData.overview.totalUsers > 0 
+                    ? ((analyticsData.userStats.activeUsers / analyticsData.overview.totalUsers) * 100).toFixed(1)
+                    : '0.0'
+                  }% of total users
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
@@ -390,7 +450,10 @@ export default function AdminAnalyticsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold mb-2">
-                  {((analyticsData.overview.totalInternships / analyticsData.overview.totalApplications) * 100).toFixed(1)}%
+                  {analyticsData.overview.totalApplications > 0 
+                    ? ((analyticsData.overview.totalInternships / analyticsData.overview.totalApplications) * 100).toFixed(1)
+                    : '0.0'
+                  }%
                 </div>
                 <div className="text-sm text-muted-foreground mb-4">
                   {analyticsData.overview.totalInternships} internships from {analyticsData.overview.totalApplications} applications
@@ -404,12 +467,12 @@ export default function AdminAnalyticsPage() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Pending Applications</span>
-                    <span className="font-medium text-yellow-600">234</span>
+                    <span className="font-medium text-yellow-600">{analyticsData.applicationStats.pending}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Rejected Applications</span>
                     <span className="font-medium text-red-600">
-                      {analyticsData.overview.totalApplications - analyticsData.overview.totalInternships - 234}
+                      {analyticsData.applicationStats.rejected}
                     </span>
                   </div>
                 </div>
@@ -428,7 +491,10 @@ export default function AdminAnalyticsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold mb-2">
-                  {((analyticsData.internshipStats.completed / (analyticsData.internshipStats.completed + analyticsData.internshipStats.cancelled)) * 100).toFixed(1)}%
+                  {(analyticsData.internshipStats.completed + analyticsData.internshipStats.cancelled) > 0
+                    ? ((analyticsData.internshipStats.completed / (analyticsData.internshipStats.completed + analyticsData.internshipStats.cancelled)) * 100).toFixed(1)
+                    : '0.0'
+                  }%
                 </div>
                 <div className="text-sm text-muted-foreground">
                   {analyticsData.internshipStats.completed} out of {analyticsData.internshipStats.completed + analyticsData.internshipStats.cancelled} finished internships
@@ -438,23 +504,143 @@ export default function AdminAnalyticsPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Average Duration</CardTitle>
-                <CardDescription>Average internship length</CardDescription>
+                <CardTitle>Application Success Rate</CardTitle>
+                <CardDescription>Applications converted to internships</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold mb-2">12.5</div>
-                <div className="text-sm text-muted-foreground">weeks per internship</div>
+                <div className="text-3xl font-bold mb-2">
+                  {analyticsData.applicationStats.total > 0 
+                    ? ((analyticsData.applicationStats.accepted / analyticsData.applicationStats.total) * 100).toFixed(1)
+                    : '0.0'
+                  }%
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {analyticsData.applicationStats.accepted} accepted out of {analyticsData.applicationStats.total} applications
+                </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Satisfaction Score</CardTitle>
-                <CardDescription>Average intern satisfaction</CardDescription>
+                <CardTitle>Platform Activity</CardTitle>
+                <CardDescription>User engagement metrics</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold mb-2">4.7/5</div>
-                <div className="text-sm text-muted-foreground">Based on 156 reviews</div>
+                <div className="text-3xl font-bold mb-2">
+                  {analyticsData.overview.totalUsers > 0 
+                    ? ((analyticsData.userStats.activeUsers / analyticsData.overview.totalUsers) * 100).toFixed(1)
+                    : '0.0'
+                  }%
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {analyticsData.userStats.activeUsers} active users this month
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Additional Performance Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Application Status Breakdown</CardTitle>
+                <CardDescription>Current status of all applications</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="text-sm">Accepted</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium">{analyticsData.applicationStats.accepted}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {analyticsData.applicationStats.total > 0 
+                        ? ((analyticsData.applicationStats.accepted / analyticsData.applicationStats.total) * 100).toFixed(1)
+                        : '0.0'
+                      }%
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                    <span className="text-sm">Pending</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium">{analyticsData.applicationStats.pending}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {analyticsData.applicationStats.total > 0 
+                        ? ((analyticsData.applicationStats.pending / analyticsData.applicationStats.total) * 100).toFixed(1)
+                        : '0.0'
+                      }%
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span className="text-sm">Rejected</span>
+                  </div>
+                  <div className="text-right">
+                    <div className="font-medium">{analyticsData.applicationStats.rejected}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {analyticsData.applicationStats.total > 0 
+                        ? ((analyticsData.applicationStats.rejected / analyticsData.applicationStats.total) * 100).toFixed(1)
+                        : '0.0'
+                      }%
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>User Activity Levels</CardTitle>
+                <CardDescription>Activity breakdown by time period</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between text-sm">
+                  <span>Daily Active Users</span>
+                  <div className="text-right">
+                    <div className="font-medium">{analyticsData.userStats.dailyActiveUsers}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {analyticsData.overview.totalUsers > 0 
+                        ? ((analyticsData.userStats.dailyActiveUsers / analyticsData.overview.totalUsers) * 100).toFixed(1)
+                        : '0.0'
+                      }%
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span>Weekly Active Users</span>
+                  <div className="text-right">
+                    <div className="font-medium">{analyticsData.userStats.weeklyActiveUsers}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {analyticsData.overview.totalUsers > 0 
+                        ? ((analyticsData.userStats.weeklyActiveUsers / analyticsData.overview.totalUsers) * 100).toFixed(1)
+                        : '0.0'
+                      }%
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span>Monthly Active Users</span>
+                  <div className="text-right">
+                    <div className="font-medium">{analyticsData.userStats.monthlyActiveUsers}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {analyticsData.overview.totalUsers > 0 
+                        ? ((analyticsData.userStats.monthlyActiveUsers / analyticsData.overview.totalUsers) * 100).toFixed(1)
+                        : '0.0'
+                      }%
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>

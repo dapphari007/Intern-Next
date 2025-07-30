@@ -29,6 +29,13 @@ export interface InternshipStats {
   cancelled: number
 }
 
+export interface ApplicationStats {
+  total: number
+  accepted: number
+  pending: number
+  rejected: number
+}
+
 export interface MonthlyData {
   month: string
   users: number
@@ -41,6 +48,7 @@ export interface AnalyticsData {
   overview: AnalyticsOverview
   userStats: UserStats
   internshipStats: InternshipStats
+  applicationStats: ApplicationStats
   monthlyData: MonthlyData[]
   completionRate?: {
     totalInternships: number
@@ -194,6 +202,17 @@ export class AnalyticsService {
     return { active, completed, pending, cancelled }
   }
 
+  static async getApplicationStats(): Promise<ApplicationStats> {
+    const [total, accepted, pending, rejected] = await Promise.all([
+      db.internshipApplication.count(),
+      db.internshipApplication.count({ where: { status: ApplicationStatus.ACCEPTED } }),
+      db.internshipApplication.count({ where: { status: ApplicationStatus.PENDING } }),
+      db.internshipApplication.count({ where: { status: ApplicationStatus.REJECTED } })
+    ])
+
+    return { total, accepted, pending, rejected }
+  }
+
   static async getInternshipCompletionRate(): Promise<{
     totalInternships: number
     completedInternships: number
@@ -273,10 +292,11 @@ export class AnalyticsService {
   }
 
   static async getCompleteAnalytics(): Promise<AnalyticsData> {
-    const [overview, userStats, internshipStats, monthlyData, completionRate] = await Promise.all([
+    const [overview, userStats, internshipStats, applicationStats, monthlyData, completionRate] = await Promise.all([
       this.getOverviewStats(),
       this.getUserStats(),
       this.getInternshipStats(),
+      this.getApplicationStats(),
       this.getMonthlyData(),
       this.getInternshipCompletionRate()
     ])
@@ -285,6 +305,7 @@ export class AnalyticsService {
       overview,
       userStats,
       internshipStats,
+      applicationStats,
       monthlyData,
       completionRate
     }

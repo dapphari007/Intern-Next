@@ -291,6 +291,7 @@ export class UserService {
     return await db.user.update({
       where: { id },
       data: {
+        isActive: isActive,
         updatedAt: new Date()
       }
     })

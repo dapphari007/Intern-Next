@@ -62,7 +62,9 @@ export default function SettingsPage() {
     profileVisibility: "public",
     showEmail: false,
     showPhone: false,
-    allowMentorContact: true
+    allowMentorContact: true,
+    showOnlineStatus: true,
+    allowDataCollection: true
   })
 
   // Fetch user profile data on component mount
@@ -115,6 +117,26 @@ export default function SettingsPage() {
           toast({
             title: "Warning",
             description: "Failed to load notification preferences",
+            variant: "destructive"
+          })
+        }
+
+        // Fetch privacy preferences
+        const privacyResponse = await fetch('/api/user/privacy')
+        if (privacyResponse.ok) {
+          const privacyData = await privacyResponse.json()
+          setPrivacy({
+            profileVisibility: privacyData.profileVisibility ?? "public",
+            showEmail: privacyData.showEmail ?? false,
+            showPhone: privacyData.showPhone ?? false,
+            allowMentorContact: privacyData.allowMentorContact ?? true,
+            showOnlineStatus: privacyData.showOnlineStatus ?? true,
+            allowDataCollection: privacyData.allowDataCollection ?? true
+          })
+        } else {
+          toast({
+            title: "Warning",
+            description: "Failed to load privacy preferences",
             variant: "destructive"
           })
         }
@@ -197,6 +219,40 @@ export default function SettingsPage() {
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to update preferences. Please try again.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handlePrivacySave = async () => {
+    setIsLoading(true)
+    try {
+      const response = await fetch('/api/user/privacy', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(privacy)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update privacy settings')
+      }
+
+      const result = await response.json()
+      toast({
+        title: "Success",
+        description: "Privacy settings updated successfully!",
+        variant: "default"
+      })
+    } catch (error) {
+      console.error('Error updating privacy settings:', error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update privacy settings. Please try again.",
         variant: "destructive"
       })
     } finally {
@@ -650,7 +706,42 @@ export default function SettingsPage() {
                     }
                   />
                 </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Show Online Status</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Let others see when you're online
+                    </p>
+                  </div>
+                  <Switch
+                    checked={privacy.showOnlineStatus}
+                    onCheckedChange={(checked) => 
+                      setPrivacy({...privacy, showOnlineStatus: checked})
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Allow Data Collection</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Allow collection of usage data for analytics
+                    </p>
+                  </div>
+                  <Switch
+                    checked={privacy.allowDataCollection}
+                    onCheckedChange={(checked) => 
+                      setPrivacy({...privacy, allowDataCollection: checked})
+                    }
+                  />
+                </div>
               </div>
+
+              <Button onClick={handlePrivacySave} disabled={isLoading}>
+                <Save className="mr-2 h-4 w-4" />
+                {isLoading ? "Saving..." : "Save Privacy Settings"}
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -676,7 +767,16 @@ export default function SettingsPage() {
                       Update your account password
                     </p>
                   </div>
-                  <Button variant="outline">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      toast({
+                        title: "Feature Coming Soon",
+                        description: "Password change functionality will be available soon.",
+                        variant: "default"
+                      })
+                    }}
+                  >
                     Change Password
                   </Button>
                 </div>
@@ -688,7 +788,16 @@ export default function SettingsPage() {
                       Add an extra layer of security to your account
                     </p>
                   </div>
-                  <Button variant="outline">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      toast({
+                        title: "Feature Coming Soon",
+                        description: "Two-factor authentication will be available soon.",
+                        variant: "default"
+                      })
+                    }}
+                  >
                     Enable 2FA
                   </Button>
                 </div>
@@ -700,7 +809,16 @@ export default function SettingsPage() {
                       Manage your active login sessions
                     </p>
                   </div>
-                  <Button variant="outline">
+                  <Button 
+                    variant="outline"
+                    onClick={() => {
+                      toast({
+                        title: "Current Session",
+                        description: "You have 1 active session (current device).",
+                        variant: "default"
+                      })
+                    }}
+                  >
                     View Sessions
                   </Button>
                 </div>
