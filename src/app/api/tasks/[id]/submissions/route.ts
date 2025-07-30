@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { AnalyticsHooksService } from '@/lib/services/analytics-hooks.service';
 
 const createSubmissionSchema = z.object({
   content: z.string().min(1, 'Content is required'),
@@ -84,6 +85,11 @@ export async function POST(
         data: { status: 'IN_PROGRESS' },
       });
     }
+
+    // Update user analytics after task submission
+    AnalyticsHooksService.onTaskSubmitted(session.user.id, params.id).catch(error => {
+      console.error('Failed to update analytics after task submission:', error)
+    })
 
     return NextResponse.json(submission, { status: 201 });
   } catch (error) {

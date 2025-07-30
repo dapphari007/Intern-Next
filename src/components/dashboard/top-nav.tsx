@@ -24,19 +24,19 @@ export function TopNavigation() {
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
       case 'ADMIN':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+        return 
       case 'MENTOR':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+        return 
       case 'INTERN':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+        return 
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
+        return ''
     }
   }
 
   return (
-    <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="flex h-14 items-center px-6">
+    <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 h-16 flex-shrink-0">
+      <div className="flex items-center px-4 h-full">
         <div className="ml-auto flex items-center space-x-4">
           {/* User Info */}
           <div className="flex items-center space-x-3">
@@ -44,9 +44,6 @@ export function TopNavigation() {
               <p className="text-sm font-medium leading-none">
                 {session?.user?.name || session?.user?.email}
               </p>
-              <Badge className={`text-xs mt-1 ${getRoleBadgeColor(session?.user?.role || 'USER')}`}>
-                {session?.user?.role || 'USER'}
-              </Badge>
             </div>
           </div>
 

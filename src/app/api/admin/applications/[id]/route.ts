@@ -3,7 +3,6 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
-import { AnalyticsHooksService } from '@/lib/services/analytics-hooks.service';
 
 const updateApplicationSchema = z.object({
   status: z.enum(['PENDING', 'ACCEPTED', 'REJECTED']),
@@ -16,9 +15,9 @@ export async function PUT(
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user?.id) {
+    if (!session?.user?.id || session.user.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized - Admin access required' },
         { status: 401 }
       );
     }
@@ -27,6 +26,7 @@ export async function PUT(
       where: { id: params.id },
       include: {
         internship: true,
+        user: true,
       },
     });
 
@@ -34,14 +34,6 @@ export async function PUT(
       return NextResponse.json(
         { error: 'Application not found' },
         { status: 404 }
-      );
-    }
-
-    // Check if user is the mentor of this internship
-    if (application.internship.mentorId !== session.user.id) {
-      return NextResponse.json(
-        { error: 'Only the mentor can update this application' },
-        { status: 403 }
       );
     }
 
@@ -78,15 +70,22 @@ export async function PUT(
       },
     });
 
-    // If application is accepted, create a project room
+    // If application is accepted, create a project room and award credits
     if (validatedData.status === 'ACCEPTED') {
-      await db.projectRoom.create({
-        data: {
-          internshipId: application.internshipId,
-          name: `${application.internship.title} - Project Room`,
-          description: `Collaboration space for ${application.internship.title}`,
-        },
+      // Check if project room already exists
+      const existingRoom = await db.projectRoom.findFirst({
+        where: { internshipId: application.internshipId },
       });
+
+      if (!existingRoom) {
+        await db.projectRoom.create({
+          data: {
+            internshipId: application.internshipId,
+            name: `${application.internship.title} - Project Room`,
+            description: `Collaboration space for ${application.internship.title}`,
+          },
+        });
+      }
 
       // Award bonus credits for getting accepted
       await db.creditHistory.create({
@@ -94,7 +93,7 @@ export async function PUT(
           userId: application.userId,
           amount: 50,
           type: 'BONUS',
-          description: 'Internship application accepted',
+          description: 'Internship application accepted by admin',
         },
       });
 
@@ -106,25 +105,7 @@ export async function PUT(
           },
         },
       });
-
-      // Update analytics after credits awarded
-      AnalyticsHooksService.onCreditsAwarded(
-        application.userId, 
-        50, 
-        'Internship application accepted'
-      ).catch(error => {
-        console.error('Failed to update analytics after credits awarded:', error)
-      })
     }
-
-    // Update analytics after application status change
-    AnalyticsHooksService.onApplicationStatusChanged(
-      application.userId, 
-      application.internshipId, 
-      validatedData.status
-    ).catch(error => {
-      console.error('Failed to update analytics after application status change:', error)
-    })
 
     return NextResponse.json(updatedApplication);
   } catch (error) {
@@ -138,6 +119,45 @@ export async function PUT(
     console.error('Error updating application:', error);
     return NextResponse.json(
       { error: 'Failed to update application' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.id || session.user.role !== 'ADMIN') {
+      return NextResponse.json(
+        { error: 'Unauthorized - Admin access required' },
+        { status: 401 }
+      );
+    }
+
+    const application = await db.internshipApplication.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!application) {
+      return NextResponse.json(
+        { error: 'Application not found' },
+        { status: 404 }
+      );
+    }
+
+    await db.internshipApplication.delete({
+      where: { id: params.id },
+    });
+
+    return NextResponse.json({ message: 'Application deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting application:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete application' },
       { status: 500 }
     );
   }

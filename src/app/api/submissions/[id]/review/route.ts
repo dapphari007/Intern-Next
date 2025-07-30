@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { AnalyticsHooksService } from '@/lib/services/analytics-hooks.service';
 
 const reviewSubmissionSchema = z.object({
   status: z.enum(['APPROVED', 'REJECTED', 'NEEDS_REVISION']),
@@ -113,7 +114,27 @@ export async function PUT(
         where: { id: submission.taskId },
         data: { status: 'COMPLETED' },
       });
+
+      // Update analytics after credits awarded
+      if (validatedData.creditsAwarded > 0) {
+        AnalyticsHooksService.onCreditsAwarded(
+          submission.userId, 
+          validatedData.creditsAwarded, 
+          `Task completed: ${submission.task.title}`
+        ).catch(error => {
+          console.error('Failed to update analytics after credits awarded:', error)
+        })
+      }
     }
+
+    // Update analytics after task review
+    AnalyticsHooksService.onTaskReviewed(
+      submission.userId, 
+      submission.taskId, 
+      validatedData.status === 'APPROVED'
+    ).catch(error => {
+      console.error('Failed to update analytics after task review:', error)
+    })
 
     return NextResponse.json(updatedSubmission);
   } catch (error) {

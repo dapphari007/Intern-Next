@@ -128,18 +128,13 @@ const sidebarItems = {
   ADMIN: [
     {
       title: "Dashboard",
-      href: "/dashboard",
+      href: "/admin",
       icon: "LayoutDashboard",
     },
     {
       title: "Explore",
       href: "/explore",
       icon: "Search",
-    },
-    {
-      title: "Admin Panel",
-      href: "/admin",
-      icon: "Shield",
     },
     {
       title: "Users",
@@ -334,32 +329,23 @@ export function DashboardSidebar() {
 
   return (
     <div className={cn(
-      "border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300 h-screen flex-shrink-0",
+      "border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300 h-full flex-shrink-0",
       isCollapsed ? "w-16" : "w-64"
     )}>
       <div className="flex flex-col h-full overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between px-4 border-b h-16 flex-shrink-0">
           {!isCollapsed && (
-            <div className="flex flex-col">
-              <h2 className="text-lg font-semibold">Dashboard</h2>
-              <div className="flex items-center space-x-2 mt-1">
-                <Badge variant="secondary" className="text-xs">
-                  {session.user.role}
-                </Badge>
-                {userStats && (
-                  <Badge variant="outline" className="text-xs">
-                    {userStats.skillCredits} Credits
-                  </Badge>
-                )}
-              </div>
-            </div>
+            <div className="flex items-center space-x-2">
+  <h2 className="text-lg font-semibold">InternHub</h2>
+</div>
+
           )}
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="h-8 w-8"
+            className="h-8 w-8 flex-shrink-0"
           >
             {isCollapsed ? (
               <ChevronRight className="h-4 w-4" />

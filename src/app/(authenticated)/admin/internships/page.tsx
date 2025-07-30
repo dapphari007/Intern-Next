@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -33,6 +35,7 @@ import {
   User
 } from "lucide-react"
 import Link from "next/link"
+import { AddInternshipModal } from "@/components/admin/add-internship-modal"
 
 interface Internship {
   id: string
@@ -51,13 +54,15 @@ interface Internship {
   maxInterns: number
   skills: string[]
   postedAt: string
-  status: 'active' | 'inactive' | 'pending' | 'completed'
+  status: 'active' | 'inactive' | 'completed' | 'pending'
   requirements: string[]
   responsibilities: string[]
   benefits: string[]
 }
 
 export default function AdminInternshipsPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [internships, setInternships] = useState<Internship[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
@@ -65,7 +70,26 @@ export default function AdminInternshipsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [selectedInternship, setSelectedInternship] = useState<Internship | null>(null)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [showAddInternshipModal, setShowAddInternshipModal] = useState(false)
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
+  const [statusChangeConfirmOpen, setStatusChangeConfirmOpen] = useState(false)
+  const [pendingAction, setPendingAction] = useState<{
+    internshipId: string
+    newStatus: 'active' | 'inactive' | 'completed'
+    actionType: 'activate' | 'deactivate' | 'complete'
+  } | null>(null)
+  const [internshipToDelete, setInternshipToDelete] = useState<string | null>(null)
   const { toast } = useToast()
+
+  // Check authentication and authorization
+  useEffect(() => {
+    if (status === "loading") return
+
+    if (!session?.user || session.user.role !== 'ADMIN') {
+      router.push("/dashboard")
+      return
+    }
+  }, [session, status, router])
 
   // Fetch internships from database
   useEffect(() => {
@@ -75,168 +99,14 @@ export default function AdminInternshipsPage() {
   const fetchInternships = async () => {
     try {
       setLoading(true)
-      // In a real app, this would be an API call
-      // For now, we'll use the mock data from our JSON files
-      const mockInternships: Internship[] = [
-        {
-          id: "1",
-          title: "Frontend Developer Intern",
-          company: "TechCorp",
-          location: "Remote",
-          duration: 12,
-          isPaid: true,
-          stipend: 1500,
-          domain: "Web Development",
-          description: "Work on React applications and learn modern frontend technologies. You'll be building user interfaces, implementing responsive designs, and collaborating with our design team.",
-          mentor: "Sarah Johnson",
-          mentorId: "mentor_1",
-          rating: 4.8,
-          applicants: 45,
-          maxInterns: 2,
-          skills: ["React", "TypeScript", "Tailwind CSS", "Next.js", "JavaScript"],
-          postedAt: "2024-01-08",
-          status: "active",
-          requirements: [
-            "Basic knowledge of HTML, CSS, and JavaScript",
-            "Familiarity with React framework",
-            "Understanding of responsive design principles",
-            "Good communication skills"
-          ],
-          responsibilities: [
-            "Develop user-facing features using React",
-            "Collaborate with designers to implement UI/UX designs",
-            "Write clean, maintainable code",
-            "Participate in code reviews",
-            "Learn and apply best practices in frontend development"
-          ],
-          benefits: [
-            "Mentorship from senior developers",
-            "Flexible working hours",
-            "Access to learning resources",
-            "Certificate upon completion",
-            "Potential for full-time offer"
-          ]
-        },
-        {
-          id: "2",
-          title: "Data Science Intern",
-          company: "DataFlow Inc",
-          location: "New York, NY",
-          duration: 16,
-          isPaid: true,
-          stipend: 2000,
-          domain: "Data Science",
-          description: "Analyze large datasets and build machine learning models. Work with real-world data to extract insights and create predictive models.",
-          mentor: "Dr. Michael Chen",
-          mentorId: "mentor_2",
-          rating: 4.9,
-          applicants: 78,
-          maxInterns: 1,
-          skills: ["Python", "Machine Learning", "SQL", "Pandas", "Scikit-learn"],
-          postedAt: "2024-01-05",
-          status: "active",
-          requirements: [
-            "Strong foundation in Python programming",
-            "Basic understanding of statistics and mathematics",
-            "Familiarity with data manipulation libraries",
-            "Interest in machine learning concepts"
-          ],
-          responsibilities: [
-            "Clean and preprocess large datasets",
-            "Build and evaluate machine learning models",
-            "Create data visualizations and reports",
-            "Collaborate with data engineering team",
-            "Present findings to stakeholders"
-          ],
-          benefits: [
-            "Work with cutting-edge ML technologies",
-            "Access to premium datasets",
-            "Conference attendance opportunities",
-            "Research publication opportunities",
-            "Networking with data science professionals"
-          ]
-        },
-        {
-          id: "3",
-          title: "UX Design Intern",
-          company: "DesignStudio",
-          location: "San Francisco, CA",
-          duration: 10,
-          isPaid: false,
-          stipend: 0,
-          domain: "Design",
-          description: "Create user-centered designs for mobile and web applications. Learn design thinking methodology and work on real client projects.",
-          mentor: "Emma Wilson",
-          mentorId: "mentor_3",
-          rating: 4.7,
-          applicants: 32,
-          maxInterns: 3,
-          skills: ["Figma", "User Research", "Prototyping", "Adobe Creative Suite"],
-          postedAt: "2024-01-10",
-          status: "pending",
-          requirements: [
-            "Portfolio showcasing design work",
-            "Proficiency in design tools (Figma, Sketch, etc.)",
-            "Understanding of UX principles",
-            "Strong visual communication skills"
-          ],
-          responsibilities: [
-            "Conduct user research and usability testing",
-            "Create wireframes and prototypes",
-            "Design user interfaces for web and mobile",
-            "Collaborate with development teams",
-            "Maintain design systems and style guides"
-          ],
-          benefits: [
-            "Portfolio development opportunities",
-            "Mentorship from senior designers",
-            "Client interaction experience",
-            "Design tool licenses provided",
-            "Industry networking events"
-          ]
-        },
-        {
-          id: "4",
-          title: "Backend Developer Intern",
-          company: "ServerTech",
-          location: "Remote",
-          duration: 14,
-          isPaid: true,
-          stipend: 1800,
-          domain: "Backend Development",
-          description: "Build scalable APIs and work with cloud infrastructure. Learn about microservices architecture and database optimization.",
-          mentor: "James Rodriguez",
-          mentorId: "mentor_4",
-          rating: 4.6,
-          applicants: 56,
-          maxInterns: 2,
-          skills: ["Node.js", "PostgreSQL", "AWS", "Docker", "REST APIs"],
-          postedAt: "2024-01-07",
-          status: "active",
-          requirements: [
-            "Strong programming skills in JavaScript or Python",
-            "Understanding of database concepts",
-            "Basic knowledge of web APIs",
-            "Familiarity with version control (Git)"
-          ],
-          responsibilities: [
-            "Develop and maintain REST APIs",
-            "Optimize database queries and performance",
-            "Implement authentication and authorization",
-            "Deploy applications to cloud platforms",
-            "Write comprehensive tests for backend services"
-          ],
-          benefits: [
-            "Cloud platform credits for learning",
-            "Exposure to enterprise-level systems",
-            "DevOps and deployment experience",
-            "Code review and mentorship",
-            "Potential for remote work continuation"
-          ]
-        }
-      ]
+      const response = await fetch('/api/admin/internships')
       
-      setInternships(mockInternships)
+      if (!response.ok) {
+        throw new Error('Failed to fetch internships')
+      }
+      
+      const data = await response.json()
+      setInternships(data)
     } catch (error) {
       console.error('Error fetching internships:', error)
       toast({
@@ -260,41 +130,87 @@ export default function AdminInternshipsPage() {
     return matchesSearch && matchesDomain && matchesStatus
   })
 
-  const handleUpdateInternshipStatus = async (internshipId: string, newStatus: 'active' | 'inactive' | 'pending') => {
-    try {
-      // In a real app, this would be an API call
-      setInternships(prev => prev.map(internship => 
-        internship.id === internshipId ? { ...internship, status: newStatus } : internship
-      ))
-      
-      toast({
-        title: "Success",
-        description: `Internship status updated to ${newStatus}`,
-      })
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update internship status",
-        variant: "destructive",
-      })
-    }
-  }
+
 
   const handleDeleteInternship = async (internshipId: string) => {
+    setInternshipToDelete(internshipId)
+    setDeleteConfirmOpen(true)
+  }
+
+  const confirmDeleteInternship = async () => {
+    if (!internshipToDelete) return
+
     try {
-      // In a real app, this would be an API call
-      setInternships(prev => prev.filter(internship => internship.id !== internshipId))
+      const response = await fetch(`/api/admin/internships/${internshipToDelete}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete internship')
+      }
+
+      setInternships(prev => prev.filter(internship => internship.id !== internshipToDelete))
       
       toast({
         title: "Success",
         description: "Internship deleted successfully",
       })
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error deleting internship:', error)
       toast({
         title: "Error",
-        description: "Failed to delete internship",
+        description: error.message || "Failed to delete internship",
         variant: "destructive",
       })
+    } finally {
+      setDeleteConfirmOpen(false)
+      setInternshipToDelete(null)
+    }
+  }
+
+  const handleStatusChange = (internshipId: string, newStatus: 'active' | 'inactive' | 'completed') => {
+    const actionType = newStatus === 'active' ? 'activate' : newStatus === 'inactive' ? 'deactivate' : 'complete'
+    setPendingAction({ internshipId, newStatus, actionType })
+    setStatusChangeConfirmOpen(true)
+  }
+
+  const confirmStatusChange = async () => {
+    if (!pendingAction) return
+
+    try {
+      const response = await fetch(`/api/admin/internships/${pendingAction.internshipId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: pendingAction.newStatus }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update internship status')
+      }
+
+      const updatedInternship = await response.json()
+      
+      setInternships(prev => prev.map(internship => 
+        internship.id === pendingAction.internshipId ? updatedInternship : internship
+      ))
+      
+      toast({
+        title: "Success",
+        description: `Internship ${pendingAction.actionType}d successfully`,
+      })
+    } catch (error) {
+      console.error('Error updating internship status:', error)
+      toast({
+        title: "Error",
+        description: "Failed to update internship status",
+        variant: "destructive",
+      })
+    } finally {
+      setStatusChangeConfirmOpen(false)
+      setPendingAction(null)
     }
   }
 
@@ -302,7 +218,6 @@ export default function AdminInternshipsPage() {
     switch (status) {
       case 'active': return 'default'
       case 'inactive': return 'secondary'
-      case 'pending': return 'outline'
       case 'completed': return 'destructive'
       default: return 'outline'
     }
@@ -313,7 +228,7 @@ export default function AdminInternshipsPage() {
     return domains
   }
 
-  if (loading) {
+  if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-background">
         <Navigation />
@@ -327,6 +242,10 @@ export default function AdminInternshipsPage() {
         </div>
       </div>
     )
+  }
+
+  if (!session?.user || session.user.role !== 'ADMIN') {
+    return null
   }
 
   return (
@@ -352,7 +271,7 @@ export default function AdminInternshipsPage() {
                   ← Back to Dashboard
                 </Link>
               </Button>
-              <Button>
+              <Button onClick={() => setShowAddInternshipModal(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Internship
               </Button>
@@ -457,7 +376,6 @@ export default function AdminInternshipsPage() {
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                 </SelectContent>
@@ -559,25 +477,38 @@ export default function AdminInternshipsPage() {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                        {internship.status === 'pending' && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleUpdateInternshipStatus(internship.id, 'active')}
-                              className="text-green-600 hover:text-green-600"
-                            >
-                              <CheckCircle className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleUpdateInternshipStatus(internship.id, 'inactive')}
-                              className="text-red-600 hover:text-red-600"
-                            >
-                              <XCircle className="h-4 w-4" />
-                            </Button>
-                          </>
+                        {internship.status === 'active' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleStatusChange(internship.id, 'inactive')}
+                            className="text-orange-600 hover:text-orange-600"
+                            title="Deactivate internship"
+                          >
+                            <XCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {internship.status === 'inactive' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleStatusChange(internship.id, 'active')}
+                            className="text-green-600 hover:text-green-600"
+                            title="Activate internship"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {(internship.status === 'active' || internship.status === 'inactive') && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleStatusChange(internship.id, 'completed')}
+                            className="text-blue-600 hover:text-blue-600"
+                            title="Mark as completed"
+                          >
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
                         )}
                         <Button
                           variant="ghost"
@@ -738,32 +669,121 @@ export default function AdminInternshipsPage() {
                   <p className="text-sm text-muted-foreground">
                     Posted on {new Date(selectedInternship.postedAt).toLocaleDateString()}
                   </p>
-                  {selectedInternship.status === 'pending' && (
-                    <div className="flex space-x-2">
+                  <div className="flex space-x-2">
+                    {selectedInternship.status === 'active' && (
                       <Button
                         variant="outline"
                         onClick={() => {
-                          handleUpdateInternshipStatus(selectedInternship.id, 'inactive')
+                          handleStatusChange(selectedInternship.id, 'inactive')
                           setIsViewDialogOpen(false)
                         }}
                       >
                         <XCircle className="mr-2 h-4 w-4" />
-                        Reject
+                        Deactivate
                       </Button>
+                    )}
+                    {selectedInternship.status === 'inactive' && (
                       <Button
                         onClick={() => {
-                          handleUpdateInternshipStatus(selectedInternship.id, 'active')
+                          handleStatusChange(selectedInternship.id, 'active')
                           setIsViewDialogOpen(false)
                         }}
                       >
                         <CheckCircle className="mr-2 h-4 w-4" />
-                        Approve
+                        Activate
                       </Button>
-                    </div>
-                  )}
+                    )}
+                    {(selectedInternship.status === 'active' || selectedInternship.status === 'inactive') && (
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          handleStatusChange(selectedInternship.id, 'completed')
+                          setIsViewDialogOpen(false)
+                        }}
+                      >
+                        <CheckCircle className="mr-2 h-4 w-4" />
+                        Mark Complete
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Internship Modal */}
+        <AddInternshipModal
+          open={showAddInternshipModal}
+          onOpenChange={setShowAddInternshipModal}
+          onSuccess={fetchInternships}
+        />
+
+        {/* Delete Confirmation Modal */}
+        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Internship</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this internship? This action cannot be undone.
+                All applications and related data will be permanently removed.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmDeleteInternship}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete Internship
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Status Change Confirmation Modal */}
+        <Dialog open={statusChangeConfirmOpen} onOpenChange={setStatusChangeConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                {pendingAction?.actionType === 'activate' && 'Activate Internship'}
+                {pendingAction?.actionType === 'deactivate' && 'Deactivate Internship'}
+                {pendingAction?.actionType === 'complete' && 'Mark Internship as Completed'}
+              </DialogTitle>
+              <DialogDescription>
+                {pendingAction?.actionType === 'activate' && 
+                  'This will make the internship visible to students and allow new applications.'}
+                {pendingAction?.actionType === 'deactivate' && 
+                  'This will hide the internship from students and prevent new applications.'}
+                {pendingAction?.actionType === 'complete' && 
+                  'This will mark the internship as completed. No further applications will be accepted.'}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setStatusChangeConfirmOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={confirmStatusChange}>
+                {pendingAction?.actionType === 'activate' && (
+                  <>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Activate
+                  </>
+                )}
+                {pendingAction?.actionType === 'deactivate' && (
+                  <>
+                    <XCircle className="mr-2 h-4 w-4" />
+                    Deactivate
+                  </>
+                )}
+                {pendingAction?.actionType === 'complete' && (
+                  <>
+                    <CheckCircle className="mr-2 h-4 w-4" />
+                    Mark Complete
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>

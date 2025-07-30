@@ -3,6 +3,15 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { UserService } from '@/lib/services/user.service'
 import { UserRole } from '@prisma/client'
+import { z } from 'zod'
+
+const createUserSchema = z.object({
+  name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Valid email is required'),
+  role: z.enum(['INTERN', 'MENTOR', 'ADMIN', 'COMPANY_ADMIN', 'COMPANY_MANAGER', 'HR_MANAGER', 'COMPANY_COORDINATOR']),
+  bio: z.string().optional(),
+  image: z.string().optional(),
+})
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,14 +29,18 @@ export async function GET(request: NextRequest) {
     // Get query parameters for filtering and pagination
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
+    const limit = parseInt(searchParams.get('limit') || '50')
     const roleParam = searchParams.get('role')
+    const statusParam = searchParams.get('status')
+    const searchTerm = searchParams.get('search')
     const role = roleParam && roleParam !== 'all' ? roleParam as UserRole : undefined
 
     const result = await UserService.getAllUsers(
       page, 
       limit, 
-      role
+      role,
+      statusParam && statusParam !== 'all' ? statusParam : undefined,
+      searchTerm
     )
 
     // Transform the data to match the expected format
@@ -139,6 +152,60 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true, message: 'User deleted successfully' })
   } catch (error) {
     console.error('Error deleting user:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    if (session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const body = await request.json()
+    const validatedData = createUserSchema.parse(body)
+
+    // Check if user with email already exists
+    const existingUser = await UserService.getUserByEmail(validatedData.email)
+    if (existingUser) {
+      return NextResponse.json({ error: 'User with this email already exists' }, { status: 400 })
+    }
+
+    const newUser = await UserService.createUser(validatedData)
+
+    return NextResponse.json({
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      avatar: newUser.image,
+      bio: newUser.bio,
+      skillCredits: newUser.skillCredits,
+      joinedAt: newUser.createdAt.toISOString().split('T')[0],
+      status: 'active',
+      completedInternships: 0,
+      currentInternships: 0,
+      createdAt: newUser.createdAt,
+      updatedAt: newUser.updatedAt
+    }, { status: 201 })
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Validation failed', details: error.errors },
+        { status: 400 }
+      )
+    }
+
+    console.error('Error creating user:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

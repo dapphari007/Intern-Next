@@ -80,18 +80,22 @@ model VerificationToken {
 }
 
 model Internship {
-  id          String           @id @default(cuid())
-  title       String
-  description String           @db.Text
-  domain      String
-  duration    Int              // in weeks
-  isPaid      Boolean          @default(false)
-  stipend     Float?
-  mentorId    String
-  status      InternshipStatus @default(ACTIVE)
-  maxInterns  Int              @default(1)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id              String           @id @default(cuid())
+  title           String
+  description     String           @db.Text
+  domain          String
+  duration        Int              // in weeks
+  isPaid          Boolean          @default(false)
+  stipend         Float?
+  mentorId        String
+  status          InternshipStatus @default(ACTIVE)
+  maxInterns      Int              @default(1)
+  skills          Json?            // Array of required skills
+  requirements    Json?            // Array of requirements
+  responsibilities Json?           // Array of responsibilities
+  benefits        Json?            // Array of benefits
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 
   mentor       User                    @relation("MentorInternships", fields: [mentorId], references: [id])
   applications InternshipApplication[]
@@ -106,6 +110,15 @@ model InternshipApplication {
   internshipId String
   userId       String
   status       ApplicationStatus     @default(PENDING)
+  coverLetter  String?               @db.Text
+  resumeUrl    String?
+  resumeLink   String?
+  phone        String?
+  linkedin     String?
+  github       String?
+  portfolio    String?
+  experience   String?               @db.Text
+  motivation   String?               @db.Text
   appliedAt    DateTime              @default(now())
   updatedAt    DateTime              @updatedAt
 

@@ -168,10 +168,21 @@ export class UserService {
     })
   }
 
-  static async getAllUsers(page = 1, limit = 10, role?: UserRole) {
+  static async getAllUsers(page = 1, limit = 10, role?: UserRole, status?: string, search?: string) {
     const skip = (page - 1) * limit
     
-    const where = role ? { role } : {}
+    const where: any = {}
+    
+    if (role) {
+      where.role = role
+    }
+    
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } }
+      ]
+    }
     
     const [users, total] = await Promise.all([
       db.user.findMany({
@@ -217,6 +228,25 @@ export class UserService {
   static async deleteUser(id: string) {
     return await db.user.delete({
       where: { id }
+    })
+  }
+
+  static async createUser(data: {
+    name: string
+    email: string
+    role: UserRole
+    bio?: string
+    image?: string
+  }) {
+    return await db.user.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        bio: data.bio,
+        image: data.image,
+        skillCredits: 0
+      }
     })
   }
 

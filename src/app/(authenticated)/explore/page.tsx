@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { InternshipApplicationModal } from "@/components/internship-application-modal"
 import { 
   Search, 
   MapPin, 
@@ -27,6 +28,10 @@ interface Internship {
   isPaid: boolean
   stipend: number | null
   maxInterns: number
+  skills?: string[]
+  requirements?: string[]
+  responsibilities?: string[]
+  benefits?: string[]
   createdAt: string
   mentor: {
     name: string | null
@@ -46,6 +51,9 @@ export default function ExplorePage() {
   const [internships, setInternships] = useState<Internship[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selectedInternship, setSelectedInternship] = useState<Internship | null>(null)
+  const [modalMode, setModalMode] = useState<'view' | 'apply'>('view')
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   // Fetch internships from API
   useEffect(() => {
@@ -94,6 +102,23 @@ export default function ExplorePage() {
         return 0
     }
   })
+
+  const handleLearnMore = (internship: Internship) => {
+    setSelectedInternship(internship)
+    setModalMode('view')
+    setIsModalOpen(true)
+  }
+
+  const handleApplyNow = (internship: Internship) => {
+    setSelectedInternship(internship)
+    setModalMode('apply')
+    setIsModalOpen(true)
+  }
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false)
+    setSelectedInternship(null)
+  }
 
   return (
     <div className="h-full overflow-y-auto">
@@ -244,10 +269,15 @@ export default function ExplorePage() {
                     <span>{internship.maxInterns} position{internship.maxInterns > 1 ? 's' : ''}</span>
                   </div>
                   <div className="flex space-x-2">
-                    <Button variant="outline">
+                    <Button 
+                      variant="outline"
+                      onClick={() => handleLearnMore(internship)}
+                    >
                       Learn More
                     </Button>
-                    <Button>
+                    <Button
+                      onClick={() => handleApplyNow(internship)}
+                    >
                       Apply Now
                     </Button>
                   </div>
@@ -284,6 +314,14 @@ export default function ExplorePage() {
           </Button>
         </div>
       )}
+
+      {/* Application Modal */}
+      <InternshipApplicationModal
+        internship={selectedInternship}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        mode={modalMode}
+      />
     </div>
     </div>
   )

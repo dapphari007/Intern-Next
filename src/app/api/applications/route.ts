@@ -3,9 +3,19 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { AnalyticsHooksService } from '@/lib/services/analytics-hooks.service';
 
 const createApplicationSchema = z.object({
   internshipId: z.string().min(1, 'Internship ID is required'),
+  coverLetter: z.string().optional(),
+  resumeUrl: z.string().optional(),
+  resumeLink: z.string().optional(),
+  phone: z.string().optional(),
+  linkedin: z.string().optional(),
+  github: z.string().optional(),
+  portfolio: z.string().optional(),
+  experience: z.string().optional(),
+  motivation: z.string().optional(),
 });
 
 export async function GET(request: NextRequest) {
@@ -111,6 +121,15 @@ export async function POST(request: NextRequest) {
       data: {
         internshipId: validatedData.internshipId,
         userId: session.user.id,
+        coverLetter: validatedData.coverLetter,
+        resumeUrl: validatedData.resumeUrl,
+        resumeLink: validatedData.resumeLink,
+        phone: validatedData.phone,
+        linkedin: validatedData.linkedin,
+        github: validatedData.github,
+        portfolio: validatedData.portfolio,
+        experience: validatedData.experience,
+        motivation: validatedData.motivation,
       },
       include: {
         internship: {
@@ -127,6 +146,11 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    // Update analytics after application submission
+    AnalyticsHooksService.onApplicationSubmitted(session.user.id, validatedData.internshipId).catch(error => {
+      console.error('Failed to update analytics after application submission:', error)
+    })
 
     return NextResponse.json(application, { status: 201 });
   } catch (error) {

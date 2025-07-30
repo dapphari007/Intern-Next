@@ -55,59 +55,7 @@ interface User {
   github?: string
 }
 
-// Mock data for demonstration
-const mockUsers: User[] = [
-  {
-    id: "1",
-    name: "John Doe",
-    email: "john@example.com",
-    role: "INTERN",
-    avatar: "",
-    bio: "Computer Science student passionate about web development",
-    location: "New York, NY",
-    university: "NYU",
-    skills: ["React", "Node.js", "Python"],
-    joinedAt: "2024-01-15",
-    status: "active",
-    skillCredits: 150,
-    completedInternships: 2,
-    currentInternships: 1,
-    phone: "+1-555-0123",
-    linkedin: "linkedin.com/in/johndoe",
-    github: "github.com/johndoe"
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    email: "jane@example.com",
-    role: "MENTOR",
-    avatar: "",
-    bio: "Senior Software Engineer with 5+ years experience",
-    location: "San Francisco, CA",
-    company: "Tech Corp",
-    position: "Senior Developer",
-    skills: ["JavaScript", "React", "AWS"],
-    joinedAt: "2023-12-01",
-    status: "active",
-    phone: "+1-555-0124",
-    linkedin: "linkedin.com/in/janesmith",
-    github: "github.com/janesmith"
-  },
-  {
-    id: "3",
-    name: "Admin User",
-    email: "admin@example.com",
-    role: "ADMIN",
-    avatar: "",
-    bio: "Platform administrator",
-    location: "Remote",
-    joinedAt: "2023-11-01",
-    status: "active",
-    phone: "+1-555-0125",
-    linkedin: "linkedin.com/in/admin",
-    github: "github.com/admin"
-  }
-]
+
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([])
@@ -118,6 +66,7 @@ export default function AdminUsersPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const { toast } = useToast()
 
   // Fetch users from database
@@ -147,11 +96,6 @@ export default function AdminUsersPage() {
       const response = await fetch(`/api/users?${params.toString()}`)
       
       if (!response.ok) {
-        // If API doesn't exist, use mock data
-        if (response.status === 404) {
-          setUsers(mockUsers)
-          return
-        }
         throw new Error('Failed to fetch users')
       }
       
@@ -163,16 +107,15 @@ export default function AdminUsersPage() {
         setUsers(userData.users)
       } else {
         console.error('Invalid user data format:', userData)
-        setUsers(mockUsers) // Fallback to mock data
+        setUsers([]) // Fallback to empty array
       }
     } catch (error) {
       console.error('Error fetching users:', error)
-      // Use mock data as fallback
-      setUsers(mockUsers)
+      setUsers([])
       toast({
-        title: "Info",
-        description: "Using demo data. Connect to database for real users.",
-        variant: "default",
+        title: "Error",
+        description: "Failed to fetch users from database.",
+        variant: "destructive",
       })
     } finally {
       setLoading(false)
@@ -286,6 +229,48 @@ export default function AdminUsersPage() {
     }
   }
 
+  const handleAddUser = async (data: {
+    name: string
+    email: string
+    role: string
+    bio?: string
+  }) => {
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to create user')
+      }
+
+      const newUser = await response.json()
+
+      // Update local state
+      setUsers(prev => [newUser, ...prev])
+      
+      toast({
+        title: "Success",
+        description: "User created successfully",
+      })
+
+      setIsAddDialogOpen(false)
+    } catch (error) {
+      console.error('Error creating user:', error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create user",
+        variant: "destructive",
+      })
+      throw error
+    }
+  }
+
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
       case 'ADMIN': return 'destructive'
@@ -337,7 +322,7 @@ export default function AdminUsersPage() {
                   ← Back to Dashboard
                 </Link>
               </Button>
-              <Button>
+              <Button onClick={() => setIsAddDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add User
               </Button>
@@ -718,6 +703,22 @@ export default function AdminUsersPage() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Add User Dialog */}
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add New User</DialogTitle>
+              <DialogDescription>
+                Create a new user account for the platform
+              </DialogDescription>
+            </DialogHeader>
+            <AddUserForm 
+              onSave={handleAddUser}
+              onCancel={() => setIsAddDialogOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
     </div>
   )
 }
@@ -795,6 +796,106 @@ function EditUserForm({
         </Button>
         <Button type="submit" disabled={isLoading}>
           {isLoading ? 'Saving...' : 'Save Changes'}
+        </Button>
+      </DialogFooter>
+    </form>
+  )
+}
+
+// Add User Form Component
+function AddUserForm({ 
+  onSave, 
+  onCancel 
+}: { 
+  onSave: (data: { name: string; email: string; role: string; bio?: string }) => Promise<void>
+  onCancel: () => void 
+}) {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    role: 'INTERN',
+    bio: ''
+  })
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsLoading(true)
+    
+    try {
+      await onSave(formData)
+      // Reset form
+      setFormData({
+        name: '',
+        email: '',
+        role: 'INTERN',
+        bio: ''
+      })
+    } catch (error) {
+      console.error('Error creating user:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <Label htmlFor="add-name">Name</Label>
+        <Input
+          id="add-name"
+          value={formData.name}
+          onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+          placeholder="Enter full name"
+          required
+        />
+      </div>
+
+      <div>
+        <Label htmlFor="add-email">Email</Label>
+        <Input
+          id="add-email"
+          type="email"
+          value={formData.email}
+          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+          placeholder="Enter email address"
+          required
+        />
+      </div>
+      
+      <div>
+        <Label htmlFor="add-role">Role</Label>
+        <Select value={formData.role} onValueChange={(value) => setFormData(prev => ({ ...prev, role: value }))}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="INTERN">Intern</SelectItem>
+            <SelectItem value="MENTOR">Mentor</SelectItem>
+            <SelectItem value="ADMIN">Admin</SelectItem>
+            <SelectItem value="COMPANY_ADMIN">Company Admin</SelectItem>
+            <SelectItem value="HR_MANAGER">HR Manager</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div>
+        <Label htmlFor="add-bio">Bio (Optional)</Label>
+        <Textarea
+          id="add-bio"
+          value={formData.bio}
+          onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+          placeholder="Enter a brief bio"
+          rows={3}
+        />
+      </div>
+
+      <DialogFooter>
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? 'Creating...' : 'Create User'}
         </Button>
       </DialogFooter>
     </form>

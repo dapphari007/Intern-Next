@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { z } from 'zod';
+import { AnalyticsHooksService } from '@/lib/services/analytics-hooks.service';
 
 const createCertificateSchema = z.object({
   userId: z.string().min(1, 'User ID is required'),
@@ -126,6 +127,20 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    // Update analytics after certificate issuance
+    AnalyticsHooksService.onCertificateIssued(validatedData.userId, certificate.id).catch(error => {
+      console.error('Failed to update analytics after certificate issuance:', error)
+    })
+
+    // Update analytics after credits awarded
+    AnalyticsHooksService.onCreditsAwarded(
+      validatedData.userId, 
+      100, 
+      `Certificate issued: ${validatedData.title}`
+    ).catch(error => {
+      console.error('Failed to update analytics after credits awarded:', error)
+    })
 
     return NextResponse.json(certificate, { status: 201 });
   } catch (error) {
