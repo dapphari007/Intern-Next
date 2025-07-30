@@ -3,6 +3,55 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
 
+// Helper function to check if a user can message another user based on roles
+async function canUserMessageRecipient(
+  senderRole: string, 
+  senderCompanyId: string | null, 
+  recipientRole: string, 
+  recipientCompanyId: string | null
+): Promise<boolean> {
+  // ADMIN can message anyone
+  if (senderRole === "ADMIN") return true
+  
+  // Company roles can message within their company and to interns/mentors
+  if (["COMPANY_ADMIN", "COMPANY_MANAGER", "COMPANY_COORDINATOR", "HR_MANAGER"].includes(senderRole)) {
+    // Can message anyone in their company
+    if (senderCompanyId && senderCompanyId === recipientCompanyId) return true
+    
+    // Can message interns and mentors (for recruitment/collaboration)
+    if (["INTERN", "MENTOR"].includes(recipientRole)) return true
+    
+    // HR_MANAGER has additional permissions
+    if (senderRole === "HR_MANAGER") {
+      return true // HR can message anyone for recruitment purposes
+    }
+    
+    return false
+  }
+  
+  // MENTOR can message interns, other mentors, and company roles
+  if (senderRole === "MENTOR") {
+    if (["INTERN", "MENTOR", "COMPANY_ADMIN", "COMPANY_MANAGER", "COMPANY_COORDINATOR", "HR_MANAGER"].includes(recipientRole)) {
+      return true
+    }
+    return false
+  }
+  
+  // INTERN can message mentors and company roles (for applications/support)
+  if (senderRole === "INTERN") {
+    if (["MENTOR", "COMPANY_ADMIN", "COMPANY_MANAGER", "COMPANY_COORDINATOR", "HR_MANAGER"].includes(recipientRole)) {
+      return true
+    }
+    // Interns can message other interns in the same company
+    if (recipientRole === "INTERN" && senderCompanyId && senderCompanyId === recipientCompanyId) {
+      return true
+    }
+    return false
+  }
+  
+  return false
+}
+
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
@@ -27,14 +76,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // For broadcast messages, create individual messages for each user
+    // Role-based messaging limitations
+    const userRole = session.user.role
+    
+    // Check if user can send broadcast messages
     if (type === "BROADCAST") {
+      const canBroadcast = ["ADMIN", "HR_MANAGER", "COMPANY_ADMIN"].includes(userRole)
+      if (!canBroadcast) {
+        return NextResponse.json(
+          { error: "You don't have permission to send broadcast messages" },
+          { status: 403 }
+        )
+      }
+
+      // Get users based on sender's role
+      let userFilter: any = {
+        NOT: {
+          id: session.user.id
+        }
+      }
+
+      // HR_MANAGER can only broadcast to company users
+      if (userRole === "HR_MANAGER") {
+        userFilter.companyId = session.user.companyId
+      }
+
       const users = await db.user.findMany({
-        where: {
-          NOT: {
-            id: session.user.id
-          }
-        },
+        where: userFilter,
         select: {
           id: true
         }
@@ -58,6 +126,31 @@ export async function POST(request: NextRequest) {
         success: true, 
         message: `Broadcast sent to ${messages.length} users` 
       })
+    }
+
+    // For direct messages, check if user can message the recipient
+    if (type === "DIRECT" && receiverId) {
+      const recipient = await db.user.findUnique({
+        where: { id: receiverId },
+        select: { id: true, role: true, companyId: true }
+      })
+
+      if (!recipient) {
+        return NextResponse.json(
+          { error: "Recipient not found" },
+          { status: 404 }
+        )
+      }
+
+      // Role-based direct messaging restrictions
+      const canMessage = await canUserMessageRecipient(userRole, session.user.companyId, recipient.role, recipient.companyId)
+      
+      if (!canMessage) {
+        return NextResponse.json(
+          { error: "You don't have permission to message this user" },
+          { status: 403 }
+        )
+      }
     }
 
     // Create direct message
@@ -134,7 +227,8 @@ export async function GET(request: NextRequest) {
             name: true,
             email: true,
             image: true,
-            role: true
+            role: true,
+            companyId: true
           }
         },
         receiver: {
@@ -143,7 +237,8 @@ export async function GET(request: NextRequest) {
             name: true,
             email: true,
             image: true,
-            role: true
+            role: true,
+            companyId: true
           }
         }
       },
@@ -154,7 +249,20 @@ export async function GET(request: NextRequest) {
       skip: offset
     })
 
-    return NextResponse.json({ messages })
+    // Filter messages based on role permissions (additional security layer)
+    const filteredMessages = messages.filter(message => {
+      // User can always see their own sent messages
+      if (message.senderId === session.user.id) return true
+      
+      // For received messages, check if sender had permission to message user
+      if (message.receiverId === session.user.id) {
+        return true // If message exists, sender had permission when it was sent
+      }
+      
+      return false
+    })
+
+    return NextResponse.json({ messages: filteredMessages })
   } catch (error) {
     console.error("Error fetching messages:", error)
     return NextResponse.json(

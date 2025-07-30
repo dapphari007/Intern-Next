@@ -68,6 +68,23 @@ export function MessagePane() {
     }
   }
 
+  const markAsRead = async (messageId: string) => {
+    try {
+      const response = await fetch(`/api/messages/${messageId}/read`, {
+        method: 'PATCH'
+      })
+      
+      if (response.ok) {
+        // Update local state
+        setMessages(prev => prev.map(msg => 
+          msg.id === messageId ? { ...msg, isRead: true } : msg
+        ))
+      }
+    } catch (error) {
+      console.error('Error marking message as read:', error)
+    }
+  }
+
   const unreadMessages = messages.filter(msg => 
     msg.receiver?.id === session?.user?.id && !msg.isRead
   )
@@ -143,8 +160,13 @@ export function MessagePane() {
                   <div 
                     key={message.id} 
                     className={`p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${
-                      !message.isRead ? 'bg-blue-50 border-blue-200' : ''
+                      !message.isRead ? 'bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800' : ''
                     }`}
+                    onClick={() => {
+                      if (!message.isRead && message.receiver?.id === session?.user?.id) {
+                        markAsRead(message.id)
+                      }
+                    }}
                   >
                     <div className="flex items-start justify-between mb-1">
                       <div className="flex items-center space-x-2 min-w-0 flex-1">

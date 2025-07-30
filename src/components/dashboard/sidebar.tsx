@@ -68,6 +68,11 @@ const sidebarItems = {
       icon: "CheckSquare",
     },
     {
+      title: "Messages",
+      href: "/messages",
+      icon: "MessageSquare",
+    },
+    {
       title: "Project Room",
       href: "/project-room",
       icon: "MessageSquare",
@@ -103,6 +108,11 @@ const sidebarItems = {
       title: "Manage Tasks",
       href: "/dashboard/manage-tasks",
       icon: "CheckSquare",
+    },
+    {
+      title: "Messages",
+      href: "/messages",
+      icon: "MessageSquare",
     },
     {
       title: "Project Room",
@@ -147,6 +157,11 @@ const sidebarItems = {
       icon: "Briefcase",
     },
     {
+      title: "Messages",
+      href: "/messages",
+      icon: "MessageSquare",
+    },
+    {
       title: "Analytics",
       href: "/admin/analytics",
       icon: "BarChart3",
@@ -182,6 +197,11 @@ const sidebarItems = {
       title: "Job Postings",
       href: "/company/jobs",
       icon: "FileText",
+    },
+    {
+      title: "Messages",
+      href: "/messages",
+      icon: "MessageSquare",
     },
     {
       title: "Analytics",
@@ -221,6 +241,11 @@ const sidebarItems = {
       icon: "FileText",
     },
     {
+      title: "Messages",
+      href: "/messages",
+      icon: "MessageSquare",
+    },
+    {
       title: "Analytics",
       href: "/company/analytics",
       icon: "BarChart3",
@@ -253,6 +278,11 @@ const sidebarItems = {
       icon: "FileText",
     },
     {
+      title: "Messages",
+      href: "/messages",
+      icon: "MessageSquare",
+    },
+    {
       title: "Alumni Network",
       href: "/company/alumni",
       icon: "Award",
@@ -283,6 +313,11 @@ const sidebarItems = {
       title: "Applications",
       href: "/hr/applications",
       icon: "Briefcase",
+    },
+    {
+      title: "Messages",
+      href: "/messages",
+      icon: "MessageSquare",
     },
     {
       title: "Employee Relations",

@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -38,6 +39,7 @@ interface MessageComposerProps {
 }
 
 export function MessageComposer({ users }: MessageComposerProps) {
+  const { data: session } = useSession()
   const [open, setOpen] = useState(false)
   const [recipient, setRecipient] = useState<string>("")
   const [subject, setSubject] = useState("")
@@ -45,6 +47,9 @@ export function MessageComposer({ users }: MessageComposerProps) {
   const [messageType, setMessageType] = useState<"DIRECT" | "BROADCAST">("DIRECT")
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
+
+  // Check if user can send broadcast messages
+  const canBroadcast = session?.user?.role && ["ADMIN", "HR_MANAGER", "COMPANY_ADMIN"].includes(session.user.role)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -130,18 +135,20 @@ export function MessageComposer({ users }: MessageComposerProps) {
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="messageType">Message Type</Label>
-            <Select value={messageType} onValueChange={(value: "DIRECT" | "BROADCAST") => setMessageType(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select message type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="DIRECT">Direct Message</SelectItem>
-                <SelectItem value="BROADCAST">Broadcast to All</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          {canBroadcast && (
+            <div className="space-y-2">
+              <Label htmlFor="messageType">Message Type</Label>
+              <Select value={messageType} onValueChange={(value: "DIRECT" | "BROADCAST") => setMessageType(value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select message type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="DIRECT">Direct Message</SelectItem>
+                  <SelectItem value="BROADCAST">Broadcast to All</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {messageType === "DIRECT" && (
             <div className="space-y-2">
@@ -177,15 +184,15 @@ export function MessageComposer({ users }: MessageComposerProps) {
             </div>
           )}
 
-          {messageType === "BROADCAST" && (
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+          {canBroadcast && messageType === "BROADCAST" && (
+            <div className="p-3 bg-yellow-50 dark:bg-yellow-950/50 border border-yellow-200 dark:border-yellow-800 rounded-md">
               <div className="flex items-center space-x-2">
-                <Users className="h-4 w-4 text-yellow-600" />
-                <span className="text-sm font-medium text-yellow-800">
+                <Users className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                <span className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
                   Broadcast Message
                 </span>
               </div>
-              <p className="text-xs text-yellow-700 mt-1">
+              <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
                 This message will be sent to all users in the system.
               </p>
             </div>

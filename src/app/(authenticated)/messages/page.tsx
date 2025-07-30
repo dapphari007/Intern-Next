@@ -61,19 +61,51 @@ export default async function MessagesPage() {
     }
   })
 
-  // Fetch all users for composing messages (excluding current user)
-  const users = await db.user.findMany({
-    where: {
-      NOT: {
-        id: session.user.id
+  // Fetch users for composing messages based on role permissions
+  let userFilter: any = {
+    NOT: {
+      id: session.user.id
+    }
+  }
+
+  // Apply role-based filtering for user list
+  const userRole = session.user.role
+  
+  if (userRole === "INTERN") {
+    // Interns can message mentors, company roles, and other interns in same company
+    userFilter.OR = [
+      { role: { in: ["MENTOR", "COMPANY_ADMIN", "COMPANY_MANAGER", "COMPANY_COORDINATOR", "HR_MANAGER"] } },
+      { 
+        AND: [
+          { role: "INTERN" },
+          { companyId: session.user.companyId }
+        ]
       }
-    },
+    ]
+  } else if (userRole === "MENTOR") {
+    // Mentors can message interns, other mentors, and company roles
+    userFilter.role = { in: ["INTERN", "MENTOR", "COMPANY_ADMIN", "COMPANY_MANAGER", "COMPANY_COORDINATOR", "HR_MANAGER"] }
+  } else if (["COMPANY_ADMIN", "COMPANY_MANAGER", "COMPANY_COORDINATOR"].includes(userRole)) {
+    // Company roles can message anyone in their company + interns/mentors
+    userFilter.OR = [
+      { companyId: session.user.companyId },
+      { role: { in: ["INTERN", "MENTOR"] } }
+    ]
+  } else if (userRole === "HR_MANAGER") {
+    // HR can message anyone (for recruitment)
+    // No additional filter needed
+  }
+  // ADMIN can message anyone (no filter needed)
+
+  const users = await db.user.findMany({
+    where: userFilter,
     select: {
       id: true,
       name: true,
       email: true,
       image: true,
-      role: true
+      role: true,
+      companyId: true
     },
     orderBy: {
       name: 'asc'
@@ -205,7 +237,7 @@ export default async function MessagesPage() {
                 {receivedMessages.map((message) => (
                   <div 
                     key={message.id} 
-                    className={`p-4 border rounded-lg ${!message.isRead ? 'bg-blue-50 border-blue-200' : ''}`}
+                    className={`p-4 border rounded-lg ${!message.isRead ? 'bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800' : ''}`}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center space-x-2">
