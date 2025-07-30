@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
       limit, 
       role,
       statusParam && statusParam !== 'all' ? statusParam : undefined,
-      searchTerm
+      searchTerm || undefined
     )
 
     // Transform the data to match the expected format
@@ -53,7 +53,15 @@ export async function GET(request: NextRequest) {
       bio: user.bio,
       skillCredits: user.skillCredits,
       joinedAt: user.createdAt.toISOString().split('T')[0],
-      status: 'active', // Default status
+      status: user.isActive ? 'active' : 'inactive',
+      isEmailVerified: user.isEmailVerified,
+      emailVerifiedAt: user.emailVerifiedAt,
+      resumeGDriveLink: user.resumeGDriveLink,
+      phone: user.phone,
+      linkedin: user.linkedin,
+      github: user.github,
+      website: user.website,
+      location: user.location,
       completedInternships: user.certificates.length,
       currentInternships: user.role === 'INTERN' ? user.internships.length : user.mentorships.length,
       internships: user.role === 'INTERN' ? user.internships.map(app => app.internship) : user.mentorships,
@@ -96,9 +104,21 @@ export async function PUT(request: NextRequest) {
     const { userId, action, data } = body
 
     if (action === 'updateStatus') {
-      // Since status is not in the schema, we'll just return success
-      // In a real implementation, you'd add a status field to the User model
-      return NextResponse.json({ success: true, message: 'Status updated successfully' })
+      const updatedUser = await UserService.updateUserStatus(userId, data.status === 'active')
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Status updated successfully',
+        user: updatedUser
+      })
+    }
+
+    if (action === 'verifyEmail') {
+      const updatedUser = await UserService.verifyUserEmail(userId)
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Email verified successfully',
+        user: updatedUser
+      })
     }
 
     if (action === 'updateUser') {
@@ -106,7 +126,13 @@ export async function PUT(request: NextRequest) {
         name: data.name,
         bio: data.bio,
         role: data.role,
-        image: data.image
+        image: data.image,
+        resumeGDriveLink: data.resumeGDriveLink,
+        phone: data.phone,
+        linkedin: data.linkedin,
+        github: data.github,
+        website: data.website,
+        location: data.location
       })
 
       return NextResponse.json(updatedUser)

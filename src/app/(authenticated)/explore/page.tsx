@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -45,15 +45,26 @@ const domains = ["All", "Web Development", "Data Science", "Design", "Backend De
 
 export default function ExplorePage() {
   const [searchTerm, setSearchTerm] = useState("")
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("")
   const [selectedDomain, setSelectedDomain] = useState("All")
   const [isPaidFilter, setIsPaidFilter] = useState("All")
   const [sortBy, setSortBy] = useState("recent")
   const [internships, setInternships] = useState<Internship[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchLoading, setSearchLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedInternship, setSelectedInternship] = useState<Internship | null>(null)
   const [modalMode, setModalMode] = useState<'view' | 'apply'>('view')
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // Debounce search term
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchTerm])
 
   // Fetch internships from API
   useEffect(() => {
@@ -77,9 +88,10 @@ export default function ExplorePage() {
   }, [])
 
   const filteredInternships = internships.filter(internship => {
-    const matchesSearch = internship.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         internship.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         internship.domain.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesSearch = debouncedSearchTerm === "" || 
+                         internship.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                         internship.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                         internship.domain.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
     
     const matchesDomain = selectedDomain === "All" || internship.domain === selectedDomain
     
@@ -142,6 +154,11 @@ export default function ExplorePage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
+            {searchTerm !== debouncedSearchTerm && (
+              <div className="absolute right-3 top-3">
+                <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
+              </div>
+            )}
           </div>
           <Select value={selectedDomain} onValueChange={setSelectedDomain}>
             <SelectTrigger className="w-full md:w-48">
@@ -182,10 +199,23 @@ export default function ExplorePage() {
         <p className="text-muted-foreground">
           {loading ? "Loading..." : `Showing ${sortedInternships.length} of ${internships.length} internships`}
         </p>
-        <Button variant="outline" size="sm">
-          <Filter className="mr-2 h-4 w-4" />
-          More Filters
-        </Button>
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              setSearchTerm("")
+              setSelectedDomain("All")
+              setIsPaidFilter("All")
+            }}
+          >
+            Reset Filters
+          </Button>
+          <Button variant="outline" size="sm">
+            <Filter className="mr-2 h-4 w-4" />
+            More Filters
+          </Button>
+        </div>
       </div>
 
       {/* Loading State */}

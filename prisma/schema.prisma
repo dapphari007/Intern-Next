@@ -38,18 +38,27 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  emailVerified DateTime?
-  image         String?
-  role          UserRole  @default(INTERN)
-  bio           String?
-  resume        String?
-  skillCredits  Int       @default(0)
-  companyId     String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                  String    @id @default(cuid())
+  name                String?
+  email               String    @unique
+  emailVerified       DateTime?
+  isEmailVerified     Boolean   @default(false)
+  emailVerifiedAt     DateTime?
+  image               String?
+  role                UserRole  @default(INTERN)
+  bio                 String?
+  resume              String?
+  resumeGDriveLink    String?
+  skillCredits        Int       @default(0)
+  companyId           String?
+  isActive            Boolean   @default(true)
+  phone               String?
+  linkedin            String?
+  github              String?
+  website             String?
+  location            String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   accounts      Account[]
   sessions      Session[]
@@ -67,6 +76,8 @@ model User {
   companyApplications CompanyInternshipApplication[] @relation("CompanyApplications")
   jobApplications JobApplication[] @relation("JobApplications")
   analytics     StudentAnalytics? @relation("StudentAnalytics")
+  notificationPreferences NotificationPreferences? @relation("UserNotificationPreferences")
+  wallet        Wallet? @relation("UserWallet")
 
   @@map("users")
 }
@@ -413,4 +424,59 @@ enum MessageType {
   BROADCAST
   SYSTEM
   NOTIFICATION
+}
+
+model NotificationPreferences {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  emailNotifications  Boolean  @default(true)
+  taskReminders       Boolean  @default(true)
+  mentorMessages      Boolean  @default(true)
+  certificateUpdates  Boolean  @default(true)
+  marketingEmails     Boolean  @default(false)
+  pushNotifications   Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User @relation("UserNotificationPreferences", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
+}
+
+model Wallet {
+  id              String             @id @default(cuid())
+  userId          String             @unique
+  balance         Float              @default(0)
+  totalEarned     Float              @default(0)
+  totalSpent      Float              @default(0)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  user         User                @relation("UserWallet", fields: [userId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id          String                @id @default(cuid())
+  walletId    String
+  amount      Float
+  type        WalletTransactionType
+  description String
+  reference   String?               // Reference to related entity (task, internship, etc.)
+  createdAt   DateTime              @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  @@map("wallet_transactions")
+}
+
+enum WalletTransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  EARNED
+  SPENT
+  BONUS
+  REFUND
 }

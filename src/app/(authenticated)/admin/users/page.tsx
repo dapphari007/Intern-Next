@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal"
 
 import { useToast } from "@/hooks/use-toast"
 import { 
@@ -53,6 +54,10 @@ interface User {
   phone?: string
   linkedin?: string
   github?: string
+  website?: string
+  isEmailVerified?: boolean
+  emailVerifiedAt?: string
+  resumeGDriveLink?: string
 }
 
 
@@ -67,6 +72,8 @@ export default function AdminUsersPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [userToDelete, setUserToDelete] = useState<User | null>(null)
   const { toast } = useToast()
 
   // Fetch users from database
@@ -162,13 +169,44 @@ export default function AdminUsersPage() {
     }
   }
 
-  const handleDeleteUser = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-      return
+  const handleVerifyEmail = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/verify-email`, {
+        method: 'PATCH',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to verify email')
+      }
+
+      // Update local state
+      setUsers(prev => prev.map(user => 
+        user.id === userId ? { 
+          ...user, 
+          isEmailVerified: true,
+          emailVerifiedAt: new Date().toISOString()
+        } : user
+      ))
+      
+      toast({
+        title: "Success",
+        description: "Email verified successfully",
+      })
+    } catch (error) {
+      console.error('Error verifying email:', error)
+      toast({
+        title: "Error",
+        description: "Failed to verify email",
+        variant: "destructive",
+      })
     }
+  }
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return
 
     try {
-      const response = await fetch(`/api/users?userId=${userId}`, {
+      const response = await fetch(`/api/users?userId=${userToDelete.id}`, {
         method: 'DELETE',
       })
 
@@ -177,7 +215,7 @@ export default function AdminUsersPage() {
       }
 
       // Update local state
-      setUsers(prev => prev.filter(user => user.id !== userId))
+      setUsers(prev => prev.filter(user => user.id !== userToDelete.id))
       
       toast({
         title: "Success",
@@ -190,7 +228,13 @@ export default function AdminUsersPage() {
         description: "Failed to delete user",
         variant: "destructive",
       })
+      throw error
     }
+  }
+
+  const openDeleteModal = (user: User) => {
+    setUserToDelete(user)
+    setIsDeleteModalOpen(true)
   }
 
   const handleSaveUser = async (userId: string, data: Partial<User>) => {
@@ -450,6 +494,8 @@ export default function AdminUsersPage() {
                   <TableHead>User</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Email Status</TableHead>
+                  <TableHead>Resume</TableHead>
                   <TableHead>Joined</TableHead>
                   <TableHead>Activity</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -487,6 +533,36 @@ export default function AdminUsersPage() {
                       <Badge variant={getStatusBadgeVariant(user.status)}>
                         {user.status}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Badge variant={user.isEmailVerified ? 'default' : 'secondary'}>
+                          {user.isEmailVerified ? 'Verified' : 'Unverified'}
+                        </Badge>
+                        {!user.isEmailVerified && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleVerifyEmail(user.id)}
+                            className="text-xs"
+                          >
+                            Verify
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {user.resumeGDriveLink ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => window.open(user.resumeGDriveLink, '_blank')}
+                        >
+                          View Resume
+                        </Button>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">No resume</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center text-sm text-muted-foreground">
@@ -557,7 +633,7 @@ export default function AdminUsersPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDeleteUser(user.id)}
+                          onClick={() => openDeleteModal(user)}
                           className="text-destructive hover:text-destructive"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -719,6 +795,26 @@ export default function AdminUsersPage() {
             />
           </DialogContent>
         </Dialog>
+
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleDeleteUser}
+          title="Delete User"
+          description="This will permanently delete the user and all associated data."
+          itemName="user account"
+          itemDetails={userToDelete ? [
+            `Name: ${userToDelete.name}`,
+            `Email: ${userToDelete.email}`,
+            `Role: ${userToDelete.role}`,
+            `Joined: ${new Date(userToDelete.joinedAt).toLocaleDateString()}`,
+            `Skill Credits: ${userToDelete.skillCredits || 0}`,
+            `Completed Internships: ${userToDelete.completedInternships || 0}`
+          ] : []}
+          requireConfirmation={true}
+          confirmationText="DELETE"
+        />
     </div>
   )
 }

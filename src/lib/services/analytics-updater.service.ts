@@ -138,13 +138,15 @@ export class AnalyticsUpdaterService {
   }
 }
 
-// Auto-start the service in production
-if (process.env.NODE_ENV === 'production') {
-  // Start with 30-minute intervals in production
-  AnalyticsUpdaterService.start(30)
-} else if (process.env.NODE_ENV === 'development') {
-  // Start with 5-minute intervals in development for testing
-  AnalyticsUpdaterService.start(5)
+// Auto-start the service only in runtime, not during build
+if (typeof window === 'undefined' && process.env.NEXT_PHASE !== 'phase-production-build') {
+  if (process.env.NODE_ENV === 'production') {
+    // Start with 30-minute intervals in production
+    AnalyticsUpdaterService.start(30)
+  } else if (process.env.NODE_ENV === 'development') {
+    // Start with 5-minute intervals in development for testing
+    AnalyticsUpdaterService.start(5)
+  }
 }
 
 // Graceful shutdown

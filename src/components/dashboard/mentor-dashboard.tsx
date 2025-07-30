@@ -110,12 +110,6 @@ export function MentorDashboard({ user }: MentorDashboardProps) {
                 Analytics
               </Link>
             </Button>
-            <Button asChild>
-              <Link href="/dashboard/internships">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Internship
-              </Link>
-            </Button>
           </div>
         </div>
 

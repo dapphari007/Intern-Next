@@ -111,7 +111,7 @@ const sidebarItems = {
     },
     {
       title: "Analytics",
-      href: "/dashboard/analytics",
+      href: "/mentor/analytics",
       icon: "BarChart3",
     },
     {

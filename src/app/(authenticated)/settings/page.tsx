@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useToast } from "@/hooks/use-toast"
 import { 
   User, 
   Mail, 
@@ -23,24 +24,29 @@ import {
   Palette,
   Trash2,
   ExternalLink,
-  Wallet
+  Wallet,
+  Loader2
 } from "lucide-react"
 
 export default function SettingsPage() {
-  const { data: session } = useSession()
+  const { data: session, update } = useSession()
+  const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
-  const [message, setMessage] = useState("")
+  const [pageLoading, setPageLoading] = useState(true)
+  const [imageUploading, setImageUploading] = useState(false)
   
   // Form states
   const [profile, setProfile] = useState({
-    name: session?.user?.name || "",
-    email: session?.user?.email || "",
+    name: "",
+    email: "",
     bio: "",
     phone: "",
     location: "",
     website: "",
     linkedin: "",
-    github: ""
+    github: "",
+    resumeGDriveLink: "",
+    image: ""
   })
 
   const [notifications, setNotifications] = useState({
@@ -48,7 +54,8 @@ export default function SettingsPage() {
     taskReminders: true,
     mentorMessages: true,
     certificateUpdates: true,
-    marketingEmails: false
+    marketingEmails: false,
+    pushNotifications: true
   })
 
   const [privacy, setPrivacy] = useState({
@@ -58,15 +65,106 @@ export default function SettingsPage() {
     allowMentorContact: true
   })
 
+  // Fetch user profile data on component mount
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!session?.user?.id) return
+
+      try {
+        setPageLoading(true)
+        
+        // Fetch profile data
+        const profileResponse = await fetch('/api/user/profile')
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json()
+          if (profileData.success && profileData.user) {
+            setProfile({
+              name: profileData.user.name || "",
+              email: profileData.user.email || "",
+              bio: profileData.user.bio || "",
+              phone: profileData.user.phone || "",
+              location: profileData.user.location || "",
+              website: profileData.user.website || "",
+              linkedin: profileData.user.linkedin || "",
+              github: profileData.user.github || "",
+              resumeGDriveLink: profileData.user.resumeGDriveLink || "",
+              image: profileData.user.image || ""
+            })
+          }
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to load profile data",
+            variant: "destructive"
+          })
+        }
+
+        // Fetch notification preferences
+        const preferencesResponse = await fetch('/api/user/preferences')
+        if (preferencesResponse.ok) {
+          const preferencesData = await preferencesResponse.json()
+          setNotifications({
+            emailNotifications: preferencesData.emailNotifications ?? true,
+            taskReminders: preferencesData.taskReminders ?? true,
+            mentorMessages: preferencesData.mentorMessages ?? true,
+            certificateUpdates: preferencesData.certificateUpdates ?? true,
+            marketingEmails: preferencesData.marketingEmails ?? false,
+            pushNotifications: preferencesData.pushNotifications ?? true
+          })
+        } else {
+          toast({
+            title: "Warning",
+            description: "Failed to load notification preferences",
+            variant: "destructive"
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error)
+        toast({
+          title: "Error",
+          description: "Failed to load user data. Please refresh the page.",
+          variant: "destructive"
+        })
+      } finally {
+        setPageLoading(false)
+      }
+    }
+
+    fetchUserData()
+  }, [session?.user?.id, toast])
+
   const handleProfileSave = async () => {
     setIsLoading(true)
     try {
-      // API call would go here
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setMessage("Profile updated successfully!")
-      setTimeout(() => setMessage(""), 3000)
+      // Exclude email from the update payload since it shouldn't be updated
+      const { email, ...profileData } = profile
+      
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profileData)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update profile')
+      }
+
+      const result = await response.json()
+      toast({
+        title: "Success",
+        description: "Profile updated successfully!",
+        variant: "default"
+      })
     } catch (error) {
-      setMessage("Failed to update profile. Please try again.")
+      console.error('Error updating profile:', error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update profile. Please try again.",
+        variant: "destructive"
+      })
     } finally {
       setIsLoading(false)
     }
@@ -75,15 +173,140 @@ export default function SettingsPage() {
   const handleNotificationsSave = async () => {
     setIsLoading(true)
     try {
-      // API call would go here
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setMessage("Notification preferences updated!")
-      setTimeout(() => setMessage(""), 3000)
+      const response = await fetch('/api/user/preferences', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(notifications)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update preferences')
+      }
+
+      const result = await response.json()
+      toast({
+        title: "Success",
+        description: "Notification preferences updated successfully!",
+        variant: "default"
+      })
     } catch (error) {
-      setMessage("Failed to update preferences. Please try again.")
+      console.error('Error updating preferences:', error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update preferences. Please try again.",
+        variant: "destructive"
+      })
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid File Type",
+        description: "Please upload a JPEG, PNG, GIF, or WebP image.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    const maxSize = 2 * 1024 * 1024 // 2MB
+    if (file.size > maxSize) {
+      toast({
+        title: "File Too Large",
+        description: "Please upload an image smaller than 2MB.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    setImageUploading(true)
+    try {
+      // Convert to base64
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        const base64 = e.target?.result as string
+        
+        try {
+          const response = await fetch('/api/user/upload-image', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ image: base64 })
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(errorData.error || 'Failed to upload image')
+          }
+
+          const result = await response.json()
+          
+          // Update the local profile state with the new image
+          setProfile(prev => ({
+            ...prev,
+            image: result.imageUrl || base64
+          }))
+          
+          // Update the session with the new image
+          await update({ image: result.imageUrl || base64 })
+          
+          toast({
+            title: "Success",
+            description: "Profile image updated successfully!",
+            variant: "default"
+          })
+        } catch (error) {
+          console.error('Error uploading image:', error)
+          toast({
+            title: "Error",
+            description: error instanceof Error ? error.message : "Failed to upload image. Please try again.",
+            variant: "destructive"
+          })
+        } finally {
+          setImageUploading(false)
+        }
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      console.error('Error processing image:', error)
+      toast({
+        title: "Error",
+        description: "Failed to process image. Please try again.",
+        variant: "destructive"
+      })
+      setImageUploading(false)
+    }
+  }
+
+  // Show loading state while fetching data
+  if (pageLoading) {
+    return (
+      <div className="h-full overflow-y-auto">
+        <div className="space-y-6 pb-6">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">Settings</h1>
+            <p className="text-muted-foreground">
+              Manage your account settings and preferences
+            </p>
+          </div>
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin" />
+            <span className="ml-2">Loading your settings...</span>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -96,13 +319,6 @@ export default function SettingsPage() {
           Manage your account settings and preferences
         </p>
       </div>
-
-      {/* Success/Error Message */}
-      {message && (
-        <Alert className="mb-6">
-          <AlertDescription>{message}</AlertDescription>
-        </Alert>
-      )}
 
       <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className="grid w-full grid-cols-5">
@@ -129,15 +345,29 @@ export default function SettingsPage() {
               {/* Profile Picture */}
               <div className="flex items-center space-x-4">
                 <Avatar className="h-20 w-20">
-                  <AvatarImage src={session?.user?.image || ""} />
+                  <AvatarImage 
+                    src={profile.image || session?.user?.image || ""} 
+                  />
                   <AvatarFallback className="text-lg">
-                    {session?.user?.name?.charAt(0) || session?.user?.email?.charAt(0)}
+                    {profile.name?.charAt(0) || session?.user?.name?.charAt(0) || session?.user?.email?.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="space-y-2">
-                  <Button variant="outline" size="sm">
+                  <input
+                    type="file"
+                    id="image-upload"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => document.getElementById('image-upload')?.click()}
+                    disabled={imageUploading}
+                  >
                     <Upload className="mr-2 h-4 w-4" />
-                    Upload Photo
+                    {imageUploading ? 'Uploading...' : 'Upload Photo'}
                   </Button>
                   <p className="text-sm text-muted-foreground">
                     JPG, PNG or GIF. Max size 2MB.
@@ -161,8 +391,12 @@ export default function SettingsPage() {
                     id="email"
                     type="email"
                     value={profile.email}
-                    onChange={(e) => setProfile({...profile, email: e.target.value})}
+                    readOnly
+                    className="bg-muted cursor-not-allowed"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Email cannot be changed
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone</Label>
@@ -225,6 +459,15 @@ export default function SettingsPage() {
                       onChange={(e) => setProfile({...profile, github: e.target.value})}
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="resumeGDriveLink">Resume Google Drive Link</Label>
+                    <Input
+                      id="resumeGDriveLink"
+                      placeholder="https://drive.google.com/file/d/..."
+                      value={profile.resumeGDriveLink}
+                      onChange={(e) => setProfile({...profile, resumeGDriveLink: e.target.value})}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -232,27 +475,6 @@ export default function SettingsPage() {
                 <Save className="mr-2 h-4 w-4" />
                 {isLoading ? "Saving..." : "Save Changes"}
               </Button>
-            </CardContent>
-          </Card>
-
-          {/* Resume Upload */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Resume</CardTitle>
-              <CardDescription>
-                Upload your resume for mentors and employers to view
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-                <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-                <p className="text-sm text-muted-foreground mb-2">
-                  Drag and drop your resume here, or click to browse
-                </p>
-                <Button variant="outline" size="sm">
-                  Choose File
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -342,6 +564,21 @@ export default function SettingsPage() {
                     checked={notifications.marketingEmails}
                     onCheckedChange={(checked) => 
                       setNotifications({...notifications, marketingEmails: checked})
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Push Notifications</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Receive push notifications in your browser
+                    </p>
+                  </div>
+                  <Switch
+                    checked={notifications.pushNotifications}
+                    onCheckedChange={(checked) => 
+                      setNotifications({...notifications, pushNotifications: checked})
                     }
                   />
                 </div>
@@ -474,33 +711,144 @@ export default function SettingsPage() {
 
         {/* Wallet Tab */}
         <TabsContent value="wallet" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Wallet className="mr-2 h-5 w-5" />
-                Web3 Wallet
-              </CardTitle>
-              <CardDescription>
-                Connect your wallet for NFT certificates and blockchain features
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="text-center py-8">
-                <Wallet className="mx-auto h-16 w-16 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No Wallet Connected</h3>
-                <p className="text-muted-foreground mb-4">
-                  Connect your Web3 wallet to receive NFT certificates and access blockchain features
-                </p>
-                <Button>
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Connect Wallet
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <WalletSection />
         </TabsContent>
       </Tabs>
       </div>
+    </div>
+  )
+}
+
+// Wallet Section Component
+function WalletSection() {
+  const { toast } = useToast()
+  const [wallet, setWallet] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchWallet = async () => {
+      try {
+        const response = await fetch('/api/user/wallet')
+        if (response.ok) {
+          const walletData = await response.json()
+          setWallet(walletData)
+        } else {
+          toast({
+            title: "Error",
+            description: "Failed to load wallet data",
+            variant: "destructive"
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching wallet:', error)
+        toast({
+          title: "Error",
+          description: "Failed to load wallet data. Please refresh the page.",
+          variant: "destructive"
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchWallet()
+  }, [toast])
+
+  if (loading) {
+    return (
+      <Card>
+        <CardContent className="p-6">
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-muted rounded w-1/4"></div>
+            <div className="h-8 bg-muted rounded w-1/2"></div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <Wallet className="mr-2 h-5 w-5" />
+            Wallet Overview
+          </CardTitle>
+          <CardDescription>
+            Manage your skill credits and transaction history
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center p-4 border rounded-lg">
+              <div className="text-2xl font-bold text-primary">
+                ${wallet?.balance?.toFixed(2) || '0.00'}
+              </div>
+              <p className="text-sm text-muted-foreground">Current Balance</p>
+            </div>
+            <div className="text-center p-4 border rounded-lg">
+              <div className="text-2xl font-bold text-green-600">
+                ${wallet?.totalEarned?.toFixed(2) || '0.00'}
+              </div>
+              <p className="text-sm text-muted-foreground">Total Earned</p>
+            </div>
+            <div className="text-center p-4 border rounded-lg">
+              <div className="text-2xl font-bold text-red-600">
+                ${wallet?.totalSpent?.toFixed(2) || '0.00'}
+              </div>
+              <p className="text-sm text-muted-foreground">Total Spent</p>
+            </div>
+          </div>
+
+          <div className="flex space-x-2">
+            <Button variant="outline">
+              <ExternalLink className="mr-2 h-4 w-4" />
+              Withdraw Funds
+            </Button>
+            <Button variant="outline">
+              Add Funds
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Transactions</CardTitle>
+          <CardDescription>
+            Your latest wallet activity
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {wallet?.transactions?.length > 0 ? (
+            <div className="space-y-4">
+              {wallet.transactions.map((transaction: any) => (
+                <div key={transaction.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <p className="font-medium">{transaction.description}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(transaction.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className={`font-medium ${
+                    transaction.type === 'EARNED' || transaction.type === 'DEPOSIT' || transaction.type === 'BONUS'
+                      ? 'text-green-600' 
+                      : 'text-red-600'
+                  }`}>
+                    {transaction.type === 'EARNED' || transaction.type === 'DEPOSIT' || transaction.type === 'BONUS' ? '+' : '-'}
+                    ${Math.abs(transaction.amount).toFixed(2)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-center py-8">
+              No transactions yet
+            </p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

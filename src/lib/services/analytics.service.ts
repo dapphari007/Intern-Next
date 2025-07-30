@@ -42,6 +42,12 @@ export interface AnalyticsData {
   userStats: UserStats
   internshipStats: InternshipStats
   monthlyData: MonthlyData[]
+  completionRate?: {
+    totalInternships: number
+    completedInternships: number
+    completionRate: number
+    completionText: string
+  }
 }
 
 export class AnalyticsService {
@@ -188,6 +194,27 @@ export class AnalyticsService {
     return { active, completed, pending, cancelled }
   }
 
+  static async getInternshipCompletionRate(): Promise<{
+    totalInternships: number
+    completedInternships: number
+    completionRate: number
+    completionText: string
+  }> {
+    const [totalInternships, completedInternships] = await Promise.all([
+      db.internship.count(),
+      db.internship.count({ where: { status: InternshipStatus.COMPLETED } })
+    ])
+
+    const completionRate = totalInternships > 0 ? (completedInternships / totalInternships) * 100 : 0
+
+    return {
+      totalInternships,
+      completedInternships,
+      completionRate: Math.round(completionRate * 10) / 10,
+      completionText: `${completedInternships} out of ${totalInternships} finished internships`
+    }
+  }
+
   static async getMonthlyData(): Promise<MonthlyData[]> {
     const { sixMonthsAgo } = await this.getDateRanges()
     const months = []
@@ -246,18 +273,20 @@ export class AnalyticsService {
   }
 
   static async getCompleteAnalytics(): Promise<AnalyticsData> {
-    const [overview, userStats, internshipStats, monthlyData] = await Promise.all([
+    const [overview, userStats, internshipStats, monthlyData, completionRate] = await Promise.all([
       this.getOverviewStats(),
       this.getUserStats(),
       this.getInternshipStats(),
-      this.getMonthlyData()
+      this.getMonthlyData(),
+      this.getInternshipCompletionRate()
     ])
 
     return {
       overview,
       userStats,
       internshipStats,
-      monthlyData
+      monthlyData,
+      completionRate
     }
   }
 

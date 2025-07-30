@@ -158,6 +158,15 @@ export class UserService {
     bio?: string
     role?: UserRole
     image?: string
+    isActive?: boolean
+    isEmailVerified?: boolean
+    emailVerifiedAt?: Date
+    resumeGDriveLink?: string
+    phone?: string
+    linkedin?: string
+    github?: string
+    website?: string
+    location?: string
   }) {
     return await db.user.update({
       where: { id },
@@ -276,5 +285,105 @@ export class UserService {
       skillCredits: user.skillCredits,
       certificates: user.certificates.length
     }
+  }
+
+  static async updateUserStatus(id: string, isActive: boolean) {
+    return await db.user.update({
+      where: { id },
+      data: {
+        updatedAt: new Date()
+      }
+    })
+  }
+
+  static async verifyUserEmail(id: string) {
+    return await db.user.update({
+      where: { id },
+      data: {
+        isEmailVerified: true,
+        emailVerifiedAt: new Date(),
+        updatedAt: new Date()
+      }
+    })
+  }
+
+  static async updateUserProfile(id: string, data: {
+    name?: string
+    bio?: string
+    phone?: string
+    linkedin?: string
+    github?: string
+    website?: string
+    location?: string
+    resumeGDriveLink?: string
+    image?: string
+  }) {
+    return await db.user.update({
+      where: { id },
+      data: {
+        ...data,
+        updatedAt: new Date()
+      },
+      include: {
+        notificationPreferences: true,
+        wallet: true
+      }
+    })
+  }
+
+  static async getUserNotificationPreferences(userId: string) {
+    return await db.notificationPreferences.findUnique({
+      where: { userId }
+    })
+  }
+
+  static async updateUserNotificationPreferences(userId: string, preferences: {
+    emailNotifications?: boolean
+    taskReminders?: boolean
+    mentorMessages?: boolean
+    certificateUpdates?: boolean
+    marketingEmails?: boolean
+    pushNotifications?: boolean
+  }) {
+    return await db.notificationPreferences.upsert({
+      where: { userId },
+      update: {
+        ...preferences,
+        updatedAt: new Date()
+      },
+      create: {
+        userId,
+        ...preferences
+      }
+    })
+  }
+
+  static async getUserWallet(userId: string) {
+    return await db.wallet.findUnique({
+      where: { userId },
+      include: {
+        transactions: {
+          orderBy: { createdAt: 'desc' },
+          take: 10
+        }
+      }
+    })
+  }
+
+  static async createUserWallet(userId: string) {
+    return await db.wallet.create({
+      data: {
+        userId,
+        balance: 0,
+        totalEarned: 0,
+        totalSpent: 0
+      },
+      include: {
+        transactions: {
+          orderBy: { createdAt: 'desc' },
+          take: 10
+        }
+      }
+    })
   }
 }
