@@ -49,7 +49,7 @@ export function MessageComposer({ users }: MessageComposerProps) {
   const { toast } = useToast()
 
   // Check if user can send broadcast messages
-  const canBroadcast = session?.user?.role && ["ADMIN", "HR_MANAGER", "COMPANY_ADMIN"].includes(session.user.role)
+  const canBroadcast = session?.user?.role && ["ADMIN", "COMPANY_ADMIN"].includes(session.user.role)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

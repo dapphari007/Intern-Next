@@ -74,7 +74,7 @@ export default async function MessagesPage() {
   if (userRole === "INTERN") {
     // Interns can message mentors, company roles, and other interns in same company
     userFilter.OR = [
-      { role: { in: ["MENTOR", "COMPANY_ADMIN", "COMPANY_MANAGER", "COMPANY_COORDINATOR", "HR_MANAGER"] } },
+      { role: { in: ["MENTOR", "COMPANY_ADMIN"] } },
       { 
         AND: [
           { role: "INTERN" },
@@ -84,16 +84,13 @@ export default async function MessagesPage() {
     ]
   } else if (userRole === "MENTOR") {
     // Mentors can message interns, other mentors, and company roles
-    userFilter.role = { in: ["INTERN", "MENTOR", "COMPANY_ADMIN", "COMPANY_MANAGER", "COMPANY_COORDINATOR", "HR_MANAGER"] }
-  } else if (["COMPANY_ADMIN", "COMPANY_MANAGER", "COMPANY_COORDINATOR"].includes(userRole)) {
+    userFilter.role = { in: ["INTERN", "MENTOR", "COMPANY_ADMIN"] }
+  } else if (["COMPANY_ADMIN"].includes(userRole)) {
     // Company roles can message anyone in their company + interns/mentors
     userFilter.OR = [
       { companyId: session.user.companyId },
       { role: { in: ["INTERN", "MENTOR"] } }
     ]
-  } else if (userRole === "HR_MANAGER") {
-    // HR can message anyone (for recruitment)
-    // No additional filter needed
   }
   // ADMIN can message anyone (no filter needed)
 

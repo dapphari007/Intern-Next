@@ -6,14 +6,11 @@ A modern, full-stack internship management platform built with Next.js 14, TypeS
 
 ### 🔐 Authentication & Authorization
 - **NextAuth.js** with Google OAuth integration
-- **Role-based access control** with 7 distinct user roles:
+- **Role-based access control** with 4 distinct user roles:
   - `INTERN` - Students seeking internships
   - `MENTOR` - Guides and evaluates interns
   - `ADMIN` - Platform administrators
-  - `COMPANY_ADMIN` - Full company management access
-  - `COMPANY_MANAGER` - Limited company operations
-  - `HR_MANAGER` - Post-internship and recruitment focus
-  - `COMPANY_COORDINATOR` - General company page coordination
+  - `COMPANY_ADMIN` - Complete company management (consolidated from all company roles)
 - Protected routes with middleware
 - Session management with JWT tokens
 
@@ -43,11 +40,8 @@ A modern, full-stack internship management platform built with Next.js 14, TypeS
 - Analytics and reporting
 - Real-time message pane
 
-#### **Company Dashboards**
-- **Company Admin**: Full company management, internships, job postings, analytics
-- **Company Manager**: Limited operations, internship management
-- **HR Manager**: Alumni management, job postings, recruitment
-- **Company Coordinator**: General coordination and alumni management
+#### **Company Dashboard**
+- **Company Admin**: Complete company management including internships, job postings, HR functions, alumni management, talent pipeline, recruitment, analytics, and team management
 
 ### 🎯 Core Platform Features
 
@@ -137,9 +131,7 @@ src/
 ├── app/                          # Next.js App Router
 │   ├── (authenticated)/          # Protected routes
 │   │   ├── admin/                # Admin dashboard & pages
-│   │   ├── company/              # Company management pages
-│   │   ├── coordinator/          # Company coordinator pages
-│   │   ├── hr/                   # HR manager pages
+│   │   ├── company/              # Company management pages (COMPANY_ADMIN only)
 │   │   ├── mentor/               # Mentor-specific pages
 │   │   ├── dashboard/            # Main dashboards
 │   │   ├── messages/             # Messaging system
@@ -235,8 +227,11 @@ npx prisma generate
 # Run migrations
 npx prisma db push
 
-# Seed database (optional)
-npx prisma db seed
+# Seed database with consolidated roles
+npm run seed:consolidated
+
+# OR completely reset database and reseed
+npm run reset
 ```
 
 5. **Start Development Server**
@@ -245,6 +240,28 @@ npm run dev
 ```
 
 Visit `http://localhost:3000` to see the application.
+
+## 🔄 Role Consolidation Update
+
+**Recent Update**: The platform has been streamlined from 7 roles to 4 roles for better management:
+
+### **Removed Roles** (Consolidated into COMPANY_ADMIN):
+- ❌ `COMPANY_MANAGER` - Limited company operations
+- ❌ `HR_MANAGER` - Post-internship and recruitment focus  
+- ❌ `COMPANY_COORDINATOR` - General company coordination
+
+### **Enhanced COMPANY_ADMIN Role**:
+The `COMPANY_ADMIN` role now includes all functionality from the removed roles:
+- Complete internship lifecycle management
+- Full HR and recruitment capabilities
+- Alumni management and relations
+- Job posting creation and management
+- Company analytics and reporting
+- Team management and coordination
+- All messaging and broadcast capabilities
+
+### **Database Reset Command**:
+Use `npm run reset` to completely reset the database with the new consolidated role structure.
 
 ## 📊 User Roles & Permissions
 
@@ -271,30 +288,17 @@ Visit `http://localhost:3000` to see the application.
 - ✅ Platform configuration
 - ✅ All messaging capabilities
 
-### **COMPANY_ADMIN**
-- ✅ Full company management access
-- ✅ Manage company internships and job postings
-- ✅ Alumni management
+### **COMPANY_ADMIN** (Consolidated Role)
+- ✅ Complete company management access
+- ✅ Create and manage company internships
+- ✅ Create and manage job postings
+- ✅ Alumni management and relations
+- ✅ Talent pipeline and recruitment
+- ✅ Employee relations and HR functions
 - ✅ Company analytics and reporting
-- ✅ Team management
-
-### **COMPANY_MANAGER**
-- ✅ Limited company operations
-- ✅ Internship management
-- ✅ Job posting management
-- ✅ Alumni coordination
-
-### **HR_MANAGER**
-- ✅ Post-internship activities focus
-- ✅ Alumni management and recruitment
-- ✅ Job posting management
-- ✅ Recruitment pipeline
-
-### **COMPANY_COORDINATOR**
-- ✅ General company page coordination
-- ✅ Basic internship management
-- ✅ Alumni management
-- ✅ Administrative coordination
+- ✅ Team and user management
+- ✅ Company settings and configuration
+- ✅ All messaging capabilities including broadcasts
 
 ## 🎯 Key Features Implementation
 

@@ -970,7 +970,7 @@ function AddUserForm({
             <SelectItem value="MENTOR">Mentor</SelectItem>
             <SelectItem value="ADMIN">Admin</SelectItem>
             <SelectItem value="COMPANY_ADMIN">Company Admin</SelectItem>
-            <SelectItem value="HR_MANAGER">HR Manager</SelectItem>
+
           </SelectContent>
         </Select>
       </div>

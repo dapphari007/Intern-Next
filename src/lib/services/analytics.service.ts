@@ -144,7 +144,7 @@ export class AnalyticsService {
       db.user.count({ 
         where: { 
           role: { 
-            in: [UserRole.ADMIN, UserRole.COMPANY_ADMIN, UserRole.HR_MANAGER] 
+            in: [UserRole.ADMIN, UserRole.COMPANY_ADMIN] 
           } 
         } 
       }),

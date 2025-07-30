@@ -25,16 +25,8 @@ export default async function DashboardPage() {
   }
 
   // Company roles should go to their respective dashboards
-  if (['COMPANY_ADMIN', 'COMPANY_MANAGER'].includes(user.role)) {
+  if (user.role === 'COMPANY_ADMIN') {
     redirect("/company/dashboard")
-  }
-
-  if (user.role === 'HR_MANAGER') {
-    redirect("/hr/dashboard")
-  }
-
-  if (user.role === 'COMPANY_COORDINATOR') {
-    redirect("/coordinator/dashboard")
   }
 
   switch (user.role) {

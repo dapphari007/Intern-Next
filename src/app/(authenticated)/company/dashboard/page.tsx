@@ -22,7 +22,7 @@ import { MessagePane } from "@/components/dashboard/message-pane"
 export default async function CompanyDashboardPage() {
   const session = await getServerSession(authOptions)
 
-  if (!session?.user || !['COMPANY_ADMIN', 'COMPANY_MANAGER'].includes(session.user.role)) {
+  if (!session?.user || session.user.role !== 'COMPANY_ADMIN') {
     redirect("/dashboard")
   }
 

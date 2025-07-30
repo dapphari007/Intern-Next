@@ -185,7 +185,7 @@ const sidebarItems = {
     },
     {
       title: "Company Overview",
-      href: "/company/overview",
+      href: "/company/dashboard",
       icon: "Building",
     },
     {
@@ -199,6 +199,21 @@ const sidebarItems = {
       icon: "FileText",
     },
     {
+      title: "Alumni Management",
+      href: "/company/alumni",
+      icon: "Users",
+    },
+    {
+      title: "Talent Pipeline",
+      href: "/company/talent",
+      icon: "Users",
+    },
+    {
+      title: "Recruitment",
+      href: "/company/recruitment",
+      icon: "Users",
+    },
+    {
       title: "Messages",
       href: "/messages",
       icon: "MessageSquare",
@@ -209,7 +224,7 @@ const sidebarItems = {
       icon: "BarChart3",
     },
     {
-      title: "Users",
+      title: "User Management",
       href: "/company/users",
       icon: "Users",
     },
@@ -219,122 +234,7 @@ const sidebarItems = {
       icon: "Settings",
     },
   ],
-  COMPANY_MANAGER: [
-    {
-      title: "Dashboard",
-      href: "/dashboard",
-      icon: "LayoutDashboard",
-    },
-    {
-      title: "Team Overview",
-      href: "/company/team",
-      icon: "Users",
-    },
-    {
-      title: "Internships",
-      href: "/company/internships",
-      icon: "Briefcase",
-    },
-    {
-      title: "Applications",
-      href: "/company/applications",
-      icon: "FileText",
-    },
-    {
-      title: "Messages",
-      href: "/messages",
-      icon: "MessageSquare",
-    },
-    {
-      title: "Analytics",
-      href: "/company/analytics",
-      icon: "BarChart3",
-    },
-    {
-      title: "Settings",
-      href: "/settings",
-      icon: "Settings",
-    },
-  ],
-  COMPANY_COORDINATOR: [
-    {
-      title: "Dashboard",
-      href: "/dashboard",
-      icon: "LayoutDashboard",
-    },
-    {
-      title: "Internship Programs",
-      href: "/company/programs",
-      icon: "Briefcase",
-    },
-    {
-      title: "Student Relations",
-      href: "/company/students",
-      icon: "Users",
-    },
-    {
-      title: "Applications",
-      href: "/company/applications",
-      icon: "FileText",
-    },
-    {
-      title: "Messages",
-      href: "/messages",
-      icon: "MessageSquare",
-    },
-    {
-      title: "Alumni Network",
-      href: "/company/alumni",
-      icon: "Award",
-    },
-    {
-      title: "Settings",
-      href: "/settings",
-      icon: "Settings",
-    },
-  ],
-  HR_MANAGER: [
-    {
-      title: "Dashboard",
-      href: "/dashboard",
-      icon: "LayoutDashboard",
-    },
-    {
-      title: "Talent Pipeline",
-      href: "/hr/talent",
-      icon: "Users",
-    },
-    {
-      title: "Job Postings",
-      href: "/hr/jobs",
-      icon: "FileText",
-    },
-    {
-      title: "Applications",
-      href: "/hr/applications",
-      icon: "Briefcase",
-    },
-    {
-      title: "Messages",
-      href: "/messages",
-      icon: "MessageSquare",
-    },
-    {
-      title: "Employee Relations",
-      href: "/hr/relations",
-      icon: "MessageSquare",
-    },
-    {
-      title: "Analytics",
-      href: "/hr/analytics",
-      icon: "BarChart3",
-    },
-    {
-      title: "Settings",
-      href: "/settings",
-      icon: "Settings",
-    },
-  ],
+
 }
 
 export function DashboardSidebar() {

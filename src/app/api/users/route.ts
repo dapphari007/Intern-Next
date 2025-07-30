@@ -8,7 +8,7 @@ import { z } from 'zod'
 const createUserSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email('Valid email is required'),
-  role: z.enum(['INTERN', 'MENTOR', 'ADMIN', 'COMPANY_ADMIN', 'COMPANY_MANAGER', 'HR_MANAGER', 'COMPANY_COORDINATOR']),
+  role: z.enum(['INTERN', 'MENTOR', 'ADMIN', 'COMPANY_ADMIN']),
   bio: z.string().optional(),
   image: z.string().optional(),
 })

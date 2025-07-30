@@ -42,6 +42,14 @@ export default withAuth(
       }
     }
 
+    // Company routes (only COMPANY_ADMIN can access)
+    const companyRoutes = ['/company']
+    if (companyRoutes.some(route => pathname.startsWith(route))) {
+      if (token.role !== 'COMPANY_ADMIN' && token.role !== 'ADMIN') {
+        return NextResponse.redirect(new URL('/dashboard', req.url))
+      }
+    }
+
     // Redirect old routes to new authenticated routes
     if (pathname === '/explore') {
       return NextResponse.redirect(new URL('/explore', req.url))

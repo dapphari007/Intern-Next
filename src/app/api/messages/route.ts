@@ -14,16 +14,16 @@ async function canUserMessageRecipient(
   if (senderRole === "ADMIN") return true
   
   // Company roles can message within their company and to interns/mentors
-  if (["COMPANY_ADMIN", "COMPANY_MANAGER", "COMPANY_COORDINATOR", "HR_MANAGER"].includes(senderRole)) {
+  if (["COMPANY_ADMIN"].includes(senderRole)) {
     // Can message anyone in their company
     if (senderCompanyId && senderCompanyId === recipientCompanyId) return true
     
     // Can message interns and mentors (for recruitment/collaboration)
     if (["INTERN", "MENTOR"].includes(recipientRole)) return true
     
-    // HR_MANAGER has additional permissions
-    if (senderRole === "HR_MANAGER") {
-      return true // HR can message anyone for recruitment purposes
+    // COMPANY_ADMIN has full messaging permissions for company operations
+    if (senderRole === "COMPANY_ADMIN") {
+      return true // Company admin can message anyone for business purposes
     }
     
     return false
@@ -31,7 +31,7 @@ async function canUserMessageRecipient(
   
   // MENTOR can message interns, other mentors, and company roles
   if (senderRole === "MENTOR") {
-    if (["INTERN", "MENTOR", "COMPANY_ADMIN", "COMPANY_MANAGER", "COMPANY_COORDINATOR", "HR_MANAGER"].includes(recipientRole)) {
+    if (["INTERN", "MENTOR", "COMPANY_ADMIN"].includes(recipientRole)) {
       return true
     }
     return false
@@ -39,7 +39,7 @@ async function canUserMessageRecipient(
   
   // INTERN can message mentors and company roles (for applications/support)
   if (senderRole === "INTERN") {
-    if (["MENTOR", "COMPANY_ADMIN", "COMPANY_MANAGER", "COMPANY_COORDINATOR", "HR_MANAGER"].includes(recipientRole)) {
+    if (["MENTOR", "COMPANY_ADMIN"].includes(recipientRole)) {
       return true
     }
     // Interns can message other interns in the same company
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     
     // Check if user can send broadcast messages
     if (type === "BROADCAST") {
-      const canBroadcast = ["ADMIN", "HR_MANAGER", "COMPANY_ADMIN"].includes(userRole)
+      const canBroadcast = ["ADMIN", "COMPANY_ADMIN"].includes(userRole)
       if (!canBroadcast) {
         return NextResponse.json(
           { error: "You don't have permission to send broadcast messages" },
@@ -96,8 +96,8 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // HR_MANAGER can only broadcast to company users
-      if (userRole === "HR_MANAGER") {
+      // COMPANY_ADMIN can only broadcast to company users
+      if (userRole === "COMPANY_ADMIN") {
         userFilter.companyId = session.user.companyId
       }
 

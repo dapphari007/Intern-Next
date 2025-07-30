@@ -368,9 +368,6 @@ enum UserRole {
   MENTOR
   ADMIN
   COMPANY_ADMIN
-  COMPANY_MANAGER
-  HR_MANAGER
-  COMPANY_COORDINATOR
 }
 
 enum InternshipStatus {
