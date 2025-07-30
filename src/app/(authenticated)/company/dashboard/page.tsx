@@ -17,7 +17,7 @@ import {
   DollarSign,
   UserCheck
 } from "lucide-react"
-import { MessagePane } from "@/components/dashboard/message-pane"
+
 
 export default async function CompanyDashboardPage() {
   const session = await getServerSession(authOptions)
@@ -103,9 +103,7 @@ export default async function CompanyDashboardPage() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 pb-6">
-      {/* Main Content */}
-      <div className="lg:col-span-3 space-y-6">
+      <div className="space-y-6 pb-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">{company.name} Dashboard</h1>
@@ -313,12 +311,6 @@ export default async function CompanyDashboardPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
-
-      {/* Message Pane */}
-      <div className="lg:col-span-1">
-        <MessagePane />
-      </div>
       </div>
     </div>
   )
