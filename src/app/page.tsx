@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -44,10 +46,19 @@ interface Stat {
 }
 
 export default function HomePage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const [stats, setStats] = useState<Stat[]>([])
   const [testimonials, setTestimonials] = useState<Testimonial[]>([])
   const [loading, setLoading] = useState(true)
   const [testimonialsLoading, setTestimonialsLoading] = useState(true)
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (status === "authenticated" && session) {
+      router.push("/dashboard")
+    }
+  }, [session, status, router])
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -85,6 +96,20 @@ export default function HomePage() {
     fetchStats()
     fetchTestimonials()
   }, [])
+
+  // Show loading while checking authentication
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Only show landing page for unauthenticated users
   return (
     <div className="min-h-screen bg-background">
       <Navigation />

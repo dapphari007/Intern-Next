@@ -1,429 +1,480 @@
-# 🎓 InternHub - Internship Management Platform
+# 🎉 InternHub - Comprehensive Internship Management Platform
 
-A modern, full-stack internship management platform built with **Next.js 14**, **TypeScript**, **Tailwind CSS**, **Prisma**, and **PostgreSQL**. Features skill-based matching, gamified credits, mentor-intern collaboration, and blockchain-backed certificates.
+A modern, full-stack internship management platform built with Next.js 14, TypeScript, and PostgreSQL. This platform provides role-based access control for interns, mentors, administrators, and company personnel.
 
-## ✨ Features
+## 🚀 Features
 
-### 🎯 Core Features
-- **Skill-Based Internships** - Match interns with opportunities based on their skills
-- **Gamified Credit System** - Earn credits for completing tasks and achievements
-- **Mentor-Intern Collaboration** - Real-time project rooms with chat and file sharing
-- **Web3 Certificates** - Blockchain-verified certificates (NFT minting ready)
-- **Role-Based Access** - Separate dashboards for Interns, Mentors, and Admins
+### 🔐 Authentication & Authorization
+- **NextAuth.js** with Google OAuth integration
+- **Role-based access control** with 7 distinct user roles:
+  - `INTERN` - Students seeking internships
+  - `MENTOR` - Guides and evaluates interns
+  - `ADMIN` - Platform administrators
+  - `COMPANY_ADMIN` - Full company management access
+  - `COMPANY_MANAGER` - Limited company operations
+  - `HR_MANAGER` - Post-internship and recruitment focus
+  - `COMPANY_COORDINATOR` - General company page coordination
+- Protected routes with middleware
+- Session management with JWT tokens
 
-### 👥 User Roles
-- **Interns** - Apply for internships, complete tasks, earn credits, receive certificates
-- **Mentors** - Create internships, manage interns, review submissions, issue certificates
-- **Admins** - Platform management, user oversight, analytics, system monitoring
+### 📊 Role-Specific Dashboards
 
-### 🛠 Technical Features
-- **Modern UI/UX** - Built with ShadCN UI components and Tailwind CSS
-- **Dark Mode** - System-aware theme switching
-- **Responsive Design** - Mobile-first approach
-- **Type Safety** - Full TypeScript implementation
-- **Database ORM** - Prisma with PostgreSQL
-- **Authentication** - NextAuth.js with Google OAuth
-- **Real-time Ready** - Architecture prepared for WebSocket integration
+#### **Intern Dashboard**
+- Personal profile with skill tracking
+- Current internship progress monitoring
+- Task management interface
+- Skill credits display and history
+- Certificate collection view
+- Real-time message pane
 
-## 🚀 Tech Stack
+#### **Mentor Dashboard**
+- Assigned interns management
+- Task review and approval system
+- Student analytics and performance tracking
+- Progress monitoring with detailed metrics
+- Real-time message pane
+- Quick access to analytics
 
-| Technology | Purpose | Version |
-|------------|---------|---------|
-| **Next.js** | React Framework | 14+ (App Router) |
-| **TypeScript** | Type Safety | 5+ |
-| **Tailwind CSS** | Styling | 3+ |
-| **ShadCN UI** | Component Library | Latest |
-| **Prisma** | Database ORM | 5+ |
-| **PostgreSQL** | Database | 15+ |
-| **NextAuth.js** | Authentication | 4+ |
-| **React Hook Form** | Form Management | 7+ |
-| **Zod** | Validation | 3+ |
+#### **Admin Dashboard**
+- Platform statistics and health monitoring
+- User management with role assignment
+- Internship approval workflow
+- System alerts and notifications
+- Analytics and reporting
+- Real-time message pane
 
-## 📋 Prerequisites
+#### **Company Dashboards**
+- **Company Admin**: Full company management, internships, job postings, analytics
+- **Company Manager**: Limited operations, internship management
+- **HR Manager**: Alumni management, job postings, recruitment
+- **Company Coordinator**: General coordination and alumni management
 
-Before running this project, make sure you have:
+### 🎯 Core Platform Features
 
-- **Node.js** 18+ installed
-- **PostgreSQL** database running on port 5432
-- **npm** or **yarn** package manager
+#### **Internship Discovery**
+- Advanced search with multiple filters
+- Domain, duration, and compensation filtering
+- Sorting by relevance, date, rating, stipend
+- Professional internship cards
+- Detailed internship information
+- Application workflow
 
-## ✅ Setup Status
+#### **Project Collaboration**
+- Real-time project rooms
+- Chat interface with message history
+- Task management system
+- File upload and sharing interface
+- Progress tracking and visualization
+- Activity timeline
 
-- ✅ **Environment Configuration** - `.env` and `.env.local` files configured
-- ✅ **Database Setup** - PostgreSQL connected and schema deployed
-- ✅ **Database Seeding** - Sample data populated (7 users, 5 internships, 4 tasks, 2 certificates)
-- ✅ **Development Server** - Running at `http://localhost:3000`
-- ✅ **API Endpoints** - All REST APIs implemented and functional
-- 🎉 **Hardcoded Data Migration** - 100% complete, all JSON files removed, pure database-driven
+#### **Certificate System**
+- Professional certificate templates
+- Dynamic data population
+- NFT minting support (UI ready)
+- Verification system with unique IDs
+- Certificate preview and download
+- Blockchain integration ready
 
-## 🔧 Installation & Setup
+#### **Analytics & Reporting**
+- **Mentor Analytics**: Comprehensive student performance tracking
+  - Task completion rates and performance metrics
+  - Student progress tracking and submission statistics
+  - Student engagement and activity logs
+  - Custom reports and insights
+- **Company Analytics**: Business intelligence for company roles
+- **Admin Analytics**: Platform-wide statistics and insights
 
-### 1. Clone the Repository
-```bash
-git clone <repository-url>
-cd internship-management-platform
-```
+### 💬 Messaging System
+- **Real-time messaging** between all user roles
+- **Message pane** integrated into all dashboards
+- **Direct messages** and **broadcast messages**
+- Message status tracking (read/unread)
+- Message filtering and search
+- Compose messages with recipient selection
 
-### 2. Install Dependencies
-```bash
-npm install
-```
+### ⚙️ Settings & Profile Management
+- Comprehensive profile editor
+- Social links and portfolio integration
+- Resume upload system
+- Notification preferences
+- Privacy settings
+- Security configurations
+- Wallet connection (UI ready)
 
-### 3. Database Setup
-Make sure PostgreSQL is running on port 5432, then create a database:
-```sql
-CREATE DATABASE internship_db;
-```
+## 🛠️ Technical Stack
 
-### 4. Environment Configuration
-Copy the environment file and update the variables:
-```bash
-cp .env.local.example .env.local
-```
+### **Frontend**
+- **Next.js 14** with App Router
+- **TypeScript** for type safety
+- **Tailwind CSS** for styling
+- **ShadCN UI** component library
+- **Lucide React** icons
+- **React Hook Form** with Zod validation
 
-Update `.env.local` with your configuration:
-```env
-# Database
-DATABASE_URL="postgresql://postgres:admin@localhost:5432/internship_db"
+### **Backend**
+- **Next.js API Routes** (RESTful)
+- **Prisma ORM** with PostgreSQL
+- **NextAuth.js** for authentication
+- **Zod** for schema validation
+- **TypeScript** throughout
 
-# NextAuth
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-key-here-change-in-production"
+### **Database**
+- **PostgreSQL** with comprehensive schema
+- **Prisma** for type-safe database operations
+- **Database migrations** and seeding
+- **Relational data modeling**
 
-# Google OAuth (Optional)
-GOOGLE_CLIENT_ID="your-google-client-id"
-GOOGLE_CLIENT_SECRET="your-google-client-secret"
-
-# ThirdWeb (Optional)
-NEXT_PUBLIC_THIRDWEB_CLIENT_ID="your-thirdweb-client-id"
-```
-
-### 5. Database Migration & Seeding
-```bash
-# Generate Prisma client
-npm run db:generate
-
-# Push database schema
-npm run db:push
-
-# Seed the database with sample data
-npm run db:seed
-```
-
-### 6. Start Development Server
-```bash
-npm run dev
-```
-
-The application will be available at `http://localhost:3000`
-
-## 🎉 Hardcoded Data Migration - COMPLETED
-
-The platform has achieved **100% database-driven architecture** with complete removal of hardcoded data:
-
-### ✅ Migration Achievements
-- **All JSON Data Files Removed**: `/src/data/` directory completely eliminated
-- **Pure Database Approach**: No fallback data, all content from PostgreSQL
-- **Fallback Data Eliminated**: All hardcoded fallbacks removed from APIs and components
-- **Dynamic APIs Created**:
-  - `/api/testimonials` - Dynamic testimonials from user data
-  - `/api/admin/analytics` - Real-time admin dashboard metrics with live system alerts
-  - `/api/stats` - Live platform statistics
-- **Components Updated**: All pages now use database APIs exclusively
-- **Error Handling**: Proper error responses instead of fallback data
-- **Real-time System Monitoring**: Admin alerts generated from actual database activity
-
-### 📊 Migration Results
-- **5/5 Data Sources**: Fully migrated to database (100%)
-- **0 Hardcoded Files**: All JSON files removed from codebase
-- **0 Fallback Data**: All hardcoded fallbacks eliminated
-- **3 New APIs**: Created for complete data coverage
-- **100% Dynamic**: All content now updates in real-time from database
-- **Real-time Analytics**: Admin dashboard shows live system metrics
-- **Database-driven Alerts**: System notifications generated from actual data
-
-### 🔧 Technical Implementation Details
-
-**Before Migration:**
-```javascript
-// ❌ Old approach with fallbacks
-const [data, setData] = useState([])
-try {
-  const response = await fetch('/api/data')
-  setData(response.data)
-} catch (error) {
-  // Fallback to hardcoded data
-  setData(HARDCODED_FALLBACK_DATA)
-}
-```
-
-**After Migration:**
-```javascript
-// ✅ New pure database approach
-const [data, setData] = useState([])
-const [loading, setLoading] = useState(true)
-try {
-  const response = await fetch('/api/data')
-  if (response.ok) {
-    setData(response.data)
-  }
-} catch (error) {
-  console.error('Error:', error)
-  setData([]) // Empty state, no fallbacks
-} finally {
-  setLoading(false)
-}
-```
-
-**API Error Handling:**
-```javascript
-// ✅ Proper error responses
-export async function GET() {
-  try {
-    const data = await db.model.findMany()
-    return NextResponse.json(data)
-  } catch (error) {
-    console.error('Database error:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch data' }, 
-      { status: 500 }
-    )
-  }
-}
-```
-
-### 🎯 Fallback Removal Verification
-
-**APIs Verified (No Fallbacks):**
-- ✅ `/api/stats` - Returns proper errors, no hardcoded fallbacks
-- ✅ `/api/testimonials` - Database-driven testimonials, no fallbacks  
-- ✅ `/api/admin/analytics` - Real-time data, all mock values replaced
-- ✅ `/api/internships` - Pure database queries
-- ✅ `/api/certificates` - Database-driven certificates
-- ✅ `/api/users` - Database user management
-
-**Components Verified (No Fallbacks):**
-- ✅ Home page (`/`) - Empty states on API failure, no hardcoded data
-- ✅ Admin dashboard (`/admin`) - Loading states, proper error handling
-- ✅ Explore page (`/explore`) - Database-driven internship listings
-- ✅ Certificates page (`/certificates`) - API-driven certificate display
-
-**Error Handling Strategy:**
-```javascript
-// ✅ Current approach - No fallbacks
-catch (error) {
-  console.error('API Error:', error)
-  setData([]) // Empty state
-  // OR return proper HTTP error response
-  return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 })
-}
-```
-
-For detailed migration documentation, see `HARDCODED_DATA_AUDIT.md`
+### **Development Tools**
+- **ESLint** for code quality
+- **TypeScript** for enhanced DX
+- **Hot reload** for fast development
+- **Organized project structure**
 
 ## 📁 Project Structure
 
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── (auth)/            # Authentication routes
-│   │   ├── signin/        # Sign in page
-│   │   └── signup/        # Sign up page
-│   ├── dashboard/         # Dashboard routes
-│   │   └── page.tsx       # Main dashboard
-│   ├── explore/           # Internship exploration
-│   ├── project-room/      # Collaboration space
-│   ├── certificates/      # Certificate management
-│   ├── settings/          # User settings
-│   ├── admin/             # Admin panel
-│   ├── api/               # API routes
-│   │   └── auth/          # NextAuth configuration
-│   ├── globals.css        # Global styles
-│   ├── layout.tsx         # Root layout
-│   ├── page.tsx           # Landing page
-│   └── providers.tsx      # Context providers
-├── components/
-│   ├── ui/                # ShadCN UI components
-│   ├── dashboard/         # Dashboard-specific components
-│   ├── navigation.tsx     # Main navigation
-│   ├── theme-provider.tsx # Theme context
-│   └── theme-toggle.tsx   # Dark mode toggle
-├── lib/
-│   ├── auth.ts            # NextAuth configuration
-│   ├── db.ts              # Prisma client
-│   └── utils.ts           # Utility functions
-├── types/
-│   ├── index.ts           # Type definitions
-│   └── next-auth.d.ts     # NextAuth type extensions
-└── prisma/
-    ├── schema.prisma      # Database schema
-    └── seed.ts            # Database seeding
+├── app/                          # Next.js App Router
+│   ├── (authenticated)/          # Protected routes
+│   │   ├── admin/                # Admin dashboard & pages
+│   │   ├── company/              # Company management pages
+│   │   ├── coordinator/          # Company coordinator pages
+│   │   ├── hr/                   # HR manager pages
+│   │   ├── mentor/               # Mentor-specific pages
+│   │   ├── dashboard/            # Main dashboards
+│   │   ├── messages/             # Messaging system
+│   │   ├── certificates/         # Certificate management
+│   │   ├── explore/              # Internship discovery
+│   │   ├── project-room/         # Collaboration space
+│   │   └── settings/             # User settings
+│   ├── api/                      # API routes
+│   │   ├── messages/             # Message API endpoints
+│   │   ├── users/                # User management API
+│   │   └── auth/                 # Authentication API
+│   └── auth/                     # Authentication pages
+├── components/                   # Reusable components
+│   ├── dashboard/                # Dashboard components
+│   │   ├── intern-dashboard.tsx
+│   │   ├── mentor-dashboard.tsx
+│   │   └── message-pane.tsx
+│   ├── messages/                 # Messaging components
+│   ├── ui/                       # ShadCN UI components
+│   └── auth/                     # Authentication components
+├── lib/                          # Utility libraries
+│   ├── services/                 # Business logic services
+│   ├── auth.ts                   # NextAuth configuration
+│   ├── db.ts                     # Database connection
+│   └── utils.ts                  # Utility functions
+├── types/                        # TypeScript type definitions
+└── hooks/                        # Custom React hooks
 ```
 
-## 🎮 Usage Guide
+## 🗄️ Database Schema
 
-### For Interns
-1. **Sign Up** - Create an account and select "Intern" role
-2. **Explore** - Browse available internships by domain, duration, and compensation
-3. **Apply** - Submit applications for internships that match your skills
-4. **Collaborate** - Work with mentors in project rooms, complete tasks
-5. **Earn Credits** - Gain skill credits for completed tasks and achievements
-6. **Get Certified** - Receive blockchain-verified certificates upon completion
+### **Core Models**
+- **User** - User accounts with role-based access
+- **Company** - Company information and management
+- **Internship** - Regular internship programs
+- **CompanyInternship** - Company-managed internships
+- **InternshipApplication** - Application tracking
+- **Task** - Task management system
+- **TaskSubmission** - Submission tracking and review
+- **Message** - Messaging system
+- **Certificate** - Certificate management
+- **StudentAnalytics** - Performance tracking
+- **CreditHistory** - Skill credit transactions
+- **JobPosting** - Post-internship job opportunities
 
-### For Mentors
-1. **Sign Up** - Create an account and select "Mentor" role
-2. **Create Internships** - Post new internship opportunities
-3. **Manage Interns** - Review applications, accept interns
-4. **Assign Tasks** - Create and assign tasks to interns
-5. **Review Work** - Evaluate submissions, provide feedback, award credits
-6. **Issue Certificates** - Grant certificates for successful completion
+### **Key Features**
+- **Relational integrity** with foreign keys
+- **Enum types** for status management
+- **Comprehensive indexing** for performance
+- **Audit trails** with timestamps
+- **Flexible schema** for future extensions
 
-### For Admins
-1. **Dashboard** - Monitor platform statistics and health
-2. **User Management** - Oversee user accounts and roles
-3. **Internship Oversight** - Approve/reject internship postings
-4. **Analytics** - View platform metrics and performance data
-5. **System Management** - Handle platform settings and configurations
+## 🚀 Getting Started
 
-## 🔐 Authentication
+### **Prerequisites**
+- Node.js 18+ 
+- PostgreSQL database
+- Google OAuth credentials (optional)
 
-The platform supports multiple authentication methods:
+### **Installation**
 
-- **Email/Password** - Traditional credential-based authentication
-- **Google OAuth** - Sign in with Google account
-- **Role Selection** - Choose between Intern, Mentor, or Admin roles during signup
+1. **Clone the repository**
+```bash
+git clone <repository-url>
+cd internhub
+```
 
-## 💾 Database Schema
+2. **Install dependencies**
+```bash
+npm install
+```
 
-### Key Models
-- **User** - User accounts with roles and profile information
-- **Internship** - Internship opportunities with details and requirements
-- **InternshipApplication** - Applications submitted by interns
-- **Task** - Tasks assigned to interns within internships
-- **TaskSubmission** - Work submitted by interns for review
-- **Certificate** - Issued certificates with blockchain support
-- **CreditHistory** - Track of earned/spent skill credits
-- **ProjectRoom** - Collaboration spaces with chat functionality
+3. **Environment Setup**
+Create a `.env.local` file:
+```env
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/internhub"
 
-## 🎨 UI Components
+# NextAuth
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-secret-key"
 
-Built with **ShadCN UI** components including:
-- Cards, Buttons, Inputs, Forms
-- Navigation, Dropdowns, Modals
-- Data Tables, Progress Bars, Badges
-- Dark/Light theme support
-- Responsive design patterns
+# Google OAuth (optional)
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+```
 
-## 🚀 Current Status & Integrations
+4. **Database Setup**
+```bash
+# Generate Prisma client
+npx prisma generate
 
-### ✅ Phase 1 (Completed)
-- ✅ **Core Platform Setup**
-  - Next.js 14 with App Router
-  - TypeScript implementation
-  - Tailwind CSS + ShadCN UI components
-  - PostgreSQL database with Prisma ORM
-  - NextAuth.js authentication system
+# Run migrations
+npx prisma db push
 
-- ✅ **Database & Backend**
-  - Complete Prisma schema with all models
-  - Database migrations and seeding
-  - RESTful API routes for all core features
-  - Role-based access control
+# Seed database (optional)
+npx prisma db seed
+```
 
-- ✅ **User Management**
-  - Multi-role authentication (Intern, Mentor, Admin)
-  - User profiles and skill credits system
-  - Google OAuth integration ready
+5. **Start Development Server**
+```bash
+npm run dev
+```
 
-- ✅ **Internship System**
-  - Full CRUD operations for internships
-  - Application management system
-  - Skill-based matching foundation
-  - Mentor-intern relationship management
+Visit `http://localhost:3000` to see the application.
 
-- ✅ **Task & Submission System**
-  - Task creation and assignment
-  - Submission workflow with review process
-  - Credit awarding system
-  - Progress tracking
+## 📊 User Roles & Permissions
 
-- ✅ **Certificate System**
-  - Digital certificate issuance
-  - Blockchain-ready structure
-  - Credit rewards for achievements
+### **INTERN**
+- ✅ View and apply for internships
+- ✅ Access personal dashboard
+- ✅ Manage tasks and submissions
+- ✅ Track skill credits and certificates
+- ✅ Use messaging system
+- ✅ Access project rooms
 
-### ✅ Phase 2 (Completed)
-- ✅ **Enhanced UI Components**
-  - Interactive internship cards
-  - Task management interface
-  - Toast notification system
-  - Progress indicators and status badges
+### **MENTOR**
+- ✅ Create and manage internships
+- ✅ Review and approve task submissions
+- ✅ Access student analytics
+- ✅ Mentor assigned interns
+- ✅ Use messaging system
+- ✅ Issue certificates
 
-- ✅ **Complete API Integration**
-  - Complete REST API endpoints
-  - Error handling and validation
-  - Real-time data updates
-  - Dashboard statistics API
-  - Testimonials API with dynamic generation
-  - Admin analytics API with real-time data
+### **ADMIN**
+- ✅ Full platform administration
+- ✅ User management and role assignment
+- ✅ System analytics and monitoring
+- ✅ Platform configuration
+- ✅ All messaging capabilities
 
-- ✅ **Database-Driven Architecture**
-  - 100% removal of hardcoded JSON data files
-  - All components now use database APIs
-  - No fallback data - pure database approach
-  - Dynamic testimonials from user data
-  - Real-time admin analytics and metrics
+### **COMPANY_ADMIN**
+- ✅ Full company management access
+- ✅ Manage company internships and job postings
+- ✅ Alumni management
+- ✅ Company analytics and reporting
+- ✅ Team management
 
-### 🔄 Phase 3 (Next Steps - Optional Enhancements)
-- 🔄 **Advanced Features**
-  - Real-time chat and notifications
-  - File upload and management
-  - Advanced search and filtering
-  - Email notifications
-  - Mobile responsiveness improvements
+### **COMPANY_MANAGER**
+- ✅ Limited company operations
+- ✅ Internship management
+- ✅ Job posting management
+- ✅ Alumni coordination
 
-### 🔮 Phase 3 (Planned)
-- 🔮 **Web3 Integration**
-  - ThirdWeb integration for NFT certificates
-  - Blockchain verification system
-  - Cryptocurrency payment options
-  - Decentralized identity management
+### **HR_MANAGER**
+- ✅ Post-internship activities focus
+- ✅ Alumni management and recruitment
+- ✅ Job posting management
+- ✅ Recruitment pipeline
 
-- 🔮 **AI & Analytics**
-  - AI-powered skill matching
-  - Performance analytics dashboard
-  - Predictive insights
-  - Automated recommendations
+### **COMPANY_COORDINATOR**
+- ✅ General company page coordination
+- ✅ Basic internship management
+- ✅ Alumni management
+- ✅ Administrative coordination
 
-- 🔮 **Mobile & Extensions**
-  - React Native mobile app
-  - Browser extensions
-  - Desktop application
-  - API for third-party integrations
+## 🎯 Key Features Implementation
+
+### **Real-time Messaging**
+- Message composition with recipient selection
+- Broadcast messaging for announcements
+- Message status tracking (read/unread)
+- Integrated message panes in all dashboards
+- Message filtering and search capabilities
+
+### **Analytics Dashboard (Mentor)**
+- **Student Performance Metrics**:
+  - Task completion rates
+  - Submission statistics (on-time vs late)
+  - Approval rates and quality metrics
+  - Credit earning patterns
+- **Progress Tracking**:
+  - Individual student progress
+  - Internship-wise performance
+  - Time-based analytics
+- **Custom Reports**:
+  - Exportable data
+  - Visual charts and graphs
+  - Comparative analysis
+
+### **Company Management**
+- **Multi-role Support**: Different access levels for company personnel
+- **Internship Lifecycle**: From creation to completion
+- **Alumni Management**: Post-internship relationship management
+- **Job Posting System**: Recruitment pipeline integration
+- **Analytics**: Company-specific insights and metrics
+
+### **Database-Driven Architecture**
+- **No Hardcoded Data**: All information fetched from PostgreSQL
+- **Real-time Updates**: Live data synchronization
+- **Scalable Design**: Handles growing user base
+- **Data Integrity**: Comprehensive validation and constraints
+
+## 🔧 API Endpoints
+
+### **Authentication**
+- `POST /api/auth/signin` - User sign in
+- `POST /api/auth/signup` - User registration
+- `GET /api/auth/session` - Get current session
+
+### **Messages**
+- `GET /api/messages` - Fetch user messages
+- `POST /api/messages` - Send new message
+- `PATCH /api/messages/[id]/read` - Mark message as read
+- `DELETE /api/messages/[id]` - Delete message
+
+### **Users**
+- `GET /api/users/[id]/stats` - Get user statistics
+- `PATCH /api/users/[id]` - Update user profile
+- `GET /api/users` - List users (admin only)
+
+### **Analytics**
+- `GET /api/mentor/analytics` - Mentor analytics data
+- `GET /api/admin/analytics` - Admin analytics data
+- `GET /api/company/analytics` - Company analytics data
+
+## 🎨 UI/UX Features
+
+### **Design System**
+- **Modern Interface**: Clean, professional design
+- **Dark/Light Mode**: System preference detection
+- **Responsive Design**: Mobile-first approach
+- **Accessibility**: WCAG compliant components
+- **Smooth Animations**: Optimized transitions
+
+### **User Experience**
+- **Intuitive Navigation**: Role-based menu system
+- **Quick Actions**: Contextual shortcuts
+- **Real-time Updates**: Live data synchronization
+- **Error Handling**: Comprehensive error boundaries
+- **Loading States**: Smooth loading experiences
+
+## 📈 Performance & Optimization
+
+### **Frontend Optimization**
+- **Code Splitting**: Automatic route-based splitting
+- **Image Optimization**: Next.js Image component
+- **Bundle Analysis**: Optimized bundle sizes
+- **Caching**: Efficient caching strategies
+
+### **Backend Optimization**
+- **Database Indexing**: Optimized query performance
+- **Connection Pooling**: Efficient database connections
+- **API Caching**: Response caching where appropriate
+- **Error Handling**: Comprehensive error management
+
+## 🔒 Security Features
+
+### **Authentication Security**
+- **JWT Tokens**: Secure session management
+- **OAuth Integration**: Google OAuth support
+- **CSRF Protection**: Cross-site request forgery prevention
+- **XSS Protection**: Input sanitization
+
+### **Data Security**
+- **Input Validation**: Zod schema validation
+- **SQL Injection Prevention**: Prisma ORM protection
+- **Role-based Access**: Granular permission system
+- **Secure Headers**: Security-focused HTTP headers
+
+## 🚀 Deployment
+
+### **Vercel (Recommended)**
+1. Connect your GitHub repository to Vercel
+2. Configure environment variables
+3. Deploy with automatic CI/CD
+
+### **Docker Deployment**
+```dockerfile
+# Dockerfile included for containerization
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "start"]
+```
+
+### **Environment Variables for Production**
+```env
+DATABASE_URL="your-production-database-url"
+NEXTAUTH_URL="https://your-domain.com"
+NEXTAUTH_SECRET="your-production-secret"
+GOOGLE_CLIENT_ID="your-google-client-id"
+GOOGLE_CLIENT_SECRET="your-google-client-secret"
+```
+
+## 📊 Analytics & Monitoring
+
+### **Built-in Analytics**
+- **User Engagement**: Track user activity and engagement
+- **Performance Metrics**: Monitor application performance
+- **Business Intelligence**: Role-specific insights
+- **Custom Reports**: Exportable data and visualizations
+
+### **Monitoring**
+- **Error Tracking**: Comprehensive error logging
+- **Performance Monitoring**: Real-time performance metrics
+- **Database Monitoring**: Query performance and optimization
+- **User Activity**: Audit trails and activity logs
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### **Development Guidelines**
+1. **Code Style**: Follow ESLint configuration
+2. **Type Safety**: Maintain TypeScript coverage
+3. **Testing**: Write tests for new features
+4. **Documentation**: Update documentation for changes
 
-## 📄 License
+### **Pull Request Process**
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Write/update tests
+5. Submit a pull request
+
+## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
+- **Next.js Team** for the amazing framework
+- **Prisma Team** for the excellent ORM
 - **ShadCN** for the beautiful UI components
-- **Vercel** for the Next.js framework
-- **Prisma** for the excellent ORM
-- **Tailwind CSS** for the utility-first CSS framework
+- **Vercel** for hosting and deployment platform
 
 ## 📞 Support
 
-For support, email support@internhub.com or join our Discord community.
+For support, email support@internhub.com or join our Slack channel.
 
 ---
 
-**Built with ❤️ for the future of internship management**
+**Built with ❤️ by the InternHub Team**
+
+*Empowering the next generation of professionals through meaningful internship experiences.*

@@ -27,7 +27,7 @@ export default withAuth(
     }
 
     // Mentor routes
-    const mentorRoutes = ['/dashboard/internships', '/dashboard/manage-tasks']
+    const mentorRoutes = ['/dashboard/internships', '/dashboard/manage-tasks', '/dashboard/analytics']
     if (mentorRoutes.some(route => pathname.startsWith(route))) {
       if (token.role !== 'MENTOR' && token.role !== 'ADMIN') {
         return NextResponse.redirect(new URL('/dashboard', req.url))
@@ -40,6 +40,20 @@ export default withAuth(
       if (token.role !== 'INTERN' && token.role !== 'ADMIN') {
         return NextResponse.redirect(new URL('/dashboard', req.url))
       }
+    }
+
+    // Redirect old routes to new authenticated routes
+    if (pathname === '/explore') {
+      return NextResponse.redirect(new URL('/explore', req.url))
+    }
+    if (pathname === '/certificates') {
+      return NextResponse.redirect(new URL('/certificates', req.url))
+    }
+    if (pathname === '/settings') {
+      return NextResponse.redirect(new URL('/settings', req.url))
+    }
+    if (pathname === '/project-room') {
+      return NextResponse.redirect(new URL('/project-room', req.url))
     }
 
     return NextResponse.next()

@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useSession } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
@@ -21,7 +21,9 @@ import {
   CheckSquare,
   Briefcase,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LogOut,
+  Building
 } from "lucide-react"
 
 const getIcon = (iconName: string) => {
@@ -37,7 +39,8 @@ const getIcon = (iconName: string) => {
     Shield,
     FileText,
     CheckSquare,
-    Briefcase
+    Briefcase,
+    Building
   }
   return icons[iconName] || LayoutDashboard
 }
@@ -48,6 +51,11 @@ const sidebarItems = {
       title: "Dashboard",
       href: "/dashboard",
       icon: "LayoutDashboard",
+    },
+    {
+      title: "Explore",
+      href: "/explore",
+      icon: "Search",
     },
     {
       title: "My Applications",
@@ -82,6 +90,11 @@ const sidebarItems = {
       icon: "LayoutDashboard",
     },
     {
+      title: "Explore",
+      href: "/explore",
+      icon: "Search",
+    },
+    {
       title: "My Internships",
       href: "/dashboard/internships",
       icon: "Briefcase",
@@ -102,6 +115,11 @@ const sidebarItems = {
       icon: "BarChart3",
     },
     {
+      title: "Certificates",
+      href: "/certificates",
+      icon: "Award",
+    },
+    {
       title: "Settings",
       href: "/settings",
       icon: "Settings",
@@ -109,9 +127,19 @@ const sidebarItems = {
   ],
   ADMIN: [
     {
-      title: "Admin Dashboard",
-      href: "/admin",
+      title: "Dashboard",
+      href: "/dashboard",
       icon: "LayoutDashboard",
+    },
+    {
+      title: "Explore",
+      href: "/explore",
+      icon: "Search",
+    },
+    {
+      title: "Admin Panel",
+      href: "/admin",
+      icon: "Shield",
     },
     {
       title: "Users",
@@ -129,9 +157,152 @@ const sidebarItems = {
       icon: "BarChart3",
     },
     {
+      title: "Certificates",
+      href: "/certificates",
+      icon: "Award",
+    },
+    {
       title: "Settings",
-      href: "/admin/settings",
-      icon: "Shield",
+      href: "/settings",
+      icon: "Settings",
+    },
+  ],
+  COMPANY_ADMIN: [
+    {
+      title: "Dashboard",
+      href: "/dashboard",
+      icon: "LayoutDashboard",
+    },
+    {
+      title: "Company Overview",
+      href: "/company/overview",
+      icon: "Building",
+    },
+    {
+      title: "Internships",
+      href: "/company/internships",
+      icon: "Briefcase",
+    },
+    {
+      title: "Job Postings",
+      href: "/company/jobs",
+      icon: "FileText",
+    },
+    {
+      title: "Analytics",
+      href: "/company/analytics",
+      icon: "BarChart3",
+    },
+    {
+      title: "Users",
+      href: "/company/users",
+      icon: "Users",
+    },
+    {
+      title: "Settings",
+      href: "/settings",
+      icon: "Settings",
+    },
+  ],
+  COMPANY_MANAGER: [
+    {
+      title: "Dashboard",
+      href: "/dashboard",
+      icon: "LayoutDashboard",
+    },
+    {
+      title: "Team Overview",
+      href: "/company/team",
+      icon: "Users",
+    },
+    {
+      title: "Internships",
+      href: "/company/internships",
+      icon: "Briefcase",
+    },
+    {
+      title: "Applications",
+      href: "/company/applications",
+      icon: "FileText",
+    },
+    {
+      title: "Analytics",
+      href: "/company/analytics",
+      icon: "BarChart3",
+    },
+    {
+      title: "Settings",
+      href: "/settings",
+      icon: "Settings",
+    },
+  ],
+  COMPANY_COORDINATOR: [
+    {
+      title: "Dashboard",
+      href: "/dashboard",
+      icon: "LayoutDashboard",
+    },
+    {
+      title: "Internship Programs",
+      href: "/company/programs",
+      icon: "Briefcase",
+    },
+    {
+      title: "Student Relations",
+      href: "/company/students",
+      icon: "Users",
+    },
+    {
+      title: "Applications",
+      href: "/company/applications",
+      icon: "FileText",
+    },
+    {
+      title: "Alumni Network",
+      href: "/company/alumni",
+      icon: "Award",
+    },
+    {
+      title: "Settings",
+      href: "/settings",
+      icon: "Settings",
+    },
+  ],
+  HR_MANAGER: [
+    {
+      title: "Dashboard",
+      href: "/dashboard",
+      icon: "LayoutDashboard",
+    },
+    {
+      title: "Talent Pipeline",
+      href: "/hr/talent",
+      icon: "Users",
+    },
+    {
+      title: "Job Postings",
+      href: "/hr/jobs",
+      icon: "FileText",
+    },
+    {
+      title: "Applications",
+      href: "/hr/applications",
+      icon: "Briefcase",
+    },
+    {
+      title: "Employee Relations",
+      href: "/hr/relations",
+      icon: "MessageSquare",
+    },
+    {
+      title: "Analytics",
+      href: "/hr/analytics",
+      icon: "BarChart3",
+    },
+    {
+      title: "Settings",
+      href: "/settings",
+      icon: "Settings",
     },
   ],
 }
@@ -163,10 +334,10 @@ export function DashboardSidebar() {
 
   return (
     <div className={cn(
-      "border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300",
+      "border-r bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 transition-all duration-300 h-screen flex-shrink-0",
       isCollapsed ? "w-16" : "w-64"
     )}>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           {!isCollapsed && (
@@ -199,7 +370,8 @@ export function DashboardSidebar() {
         </div>
 
         {/* Navigation Items */}
-        <div className="flex-1 space-y-2 p-4">
+        <div className="flex-1 overflow-y-auto">
+          <div className="space-y-2 p-4">
           {items.map((item) => {
             const Icon = getIcon(item.icon)
             const isActive = isActivePath(item.href)
@@ -217,7 +389,7 @@ export function DashboardSidebar() {
                 )}
                 title={isCollapsed ? item.title : undefined}
               >
-                <Icon className={cn("h-4 w-4", !isCollapsed && "mr-3")} />
+                <Icon className={cn(isCollapsed ? "h-5 w-5" : "h-4 w-4", !isCollapsed && "mr-3")} />
                 {!isCollapsed && (
                   <span className="truncate">{item.title}</span>
                 )}
@@ -227,11 +399,13 @@ export function DashboardSidebar() {
               </Link>
             )
           })}
+          </div>
         </div>
 
-        {/* User Stats Footer */}
-        {!isCollapsed && userStats && (
-          <div className="p-4 border-t">
+        {/* User Profile & Logout Footer */}
+        <div className="p-4 border-t space-y-4">
+          {/* User Stats */}
+          {!isCollapsed && userStats && (
             <div className="space-y-2">
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Total Tasks:</span>
@@ -246,8 +420,36 @@ export function DashboardSidebar() {
                 <span>{userStats.certificates}</span>
               </div>
             </div>
+          )}
+          
+          {/* User Profile & Logout */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2 min-w-0 flex-1">
+              <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-medium">
+                {session?.user?.name?.charAt(0) || session?.user?.email?.charAt(0) || 'U'}
+              </div>
+              {!isCollapsed && (
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium truncate">
+                    {session?.user?.name || session?.user?.email}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {session?.user?.role}
+                  </p>
+                </div>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => signOut({ callbackUrl: '/' })}
+              className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+              title="Sign out"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
-        )}
+        </div>
       </div>
     </div>
   )

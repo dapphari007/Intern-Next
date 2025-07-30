@@ -47,6 +47,7 @@ model User {
   bio           String?
   resume        String?
   skillCredits  Int       @default(0)
+  companyId     String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -59,6 +60,13 @@ model User {
   creditHistory CreditHistory[]
   certificates  Certificate[]
   chatMessages  ChatMessage[]
+  company       Company? @relation(fields: [companyId], references: [id])
+  sentMessages  Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  companyMentorships CompanyInternship[] @relation("CompanyMentorships")
+  companyApplications CompanyInternshipApplication[] @relation("CompanyApplications")
+  jobApplications JobApplication[] @relation("JobApplications")
+  analytics     StudentAnalytics? @relation("StudentAnalytics")
 
   @@map("users")
 }
@@ -199,10 +207,145 @@ model ChatMessage {
   @@map("chat_messages")
 }
 
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  description String?  @db.Text
+  website     String?
+  logo        String?
+  industry    String?
+  size        String?
+  location    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  internships CompanyInternship[]
+  jobPostings JobPosting[]
+
+  @@map("companies")
+}
+
+model CompanyInternship {
+  id          String           @id @default(cuid())
+  companyId   String
+  title       String
+  description String           @db.Text
+  domain      String
+  duration    Int              // in weeks
+  isPaid      Boolean          @default(false)
+  stipend     Float?
+  mentorId    String?
+  status      InternshipStatus @default(ACTIVE)
+  maxInterns  Int              @default(1)
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  company      Company                    @relation(fields: [companyId], references: [id])
+  mentor       User?                      @relation("CompanyMentorships", fields: [mentorId], references: [id])
+  applications CompanyInternshipApplication[]
+
+  @@map("company_internships")
+}
+
+model CompanyInternshipApplication {
+  id           String                @id @default(cuid())
+  internshipId String
+  userId       String
+  status       ApplicationStatus     @default(PENDING)
+  appliedAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+
+  internship CompanyInternship @relation(fields: [internshipId], references: [id])
+  user       User              @relation("CompanyApplications", fields: [userId], references: [id])
+
+  @@unique([internshipId, userId])
+  @@map("company_internship_applications")
+}
+
+model JobPosting {
+  id          String    @id @default(cuid())
+  companyId   String
+  title       String
+  description String    @db.Text
+  requirements String?  @db.Text
+  location    String?
+  jobType     JobType   @default(FULL_TIME)
+  salaryMin   Float?
+  salaryMax   Float?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  company      Company           @relation(fields: [companyId], references: [id])
+  applications JobApplication[]
+
+  @@map("job_postings")
+}
+
+model JobApplication {
+  id          String            @id @default(cuid())
+  jobId       String
+  userId      String
+  status      ApplicationStatus @default(PENDING)
+  coverLetter String?           @db.Text
+  appliedAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  job  JobPosting @relation(fields: [jobId], references: [id])
+  user User       @relation("JobApplications", fields: [userId], references: [id])
+
+  @@unique([jobId, userId])
+  @@map("job_applications")
+}
+
+model Message {
+  id         String      @id @default(cuid())
+  senderId   String
+  receiverId String?
+  subject    String
+  content    String      @db.Text
+  type       MessageType @default(DIRECT)
+  isRead     Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  sender   User  @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User? @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@map("messages")
+}
+
+model StudentAnalytics {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  totalTasks        Int      @default(0)
+  completedTasks    Int      @default(0)
+  pendingTasks      Int      @default(0)
+  overdueTasks      Int      @default(0)
+  averageScore      Float    @default(0)
+  totalSubmissions  Int      @default(0)
+  onTimeSubmissions Int      @default(0)
+  lateSubmissions   Int      @default(0)
+  totalCredits      Int      @default(0)
+  lastActive        DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation("StudentAnalytics", fields: [userId], references: [id])
+
+  @@map("student_analytics")
+}
+
 enum UserRole {
   INTERN
   MENTOR
   ADMIN
+  COMPANY_ADMIN
+  COMPANY_MANAGER
+  HR_MANAGER
+  COMPANY_COORDINATOR
 }
 
 enum InternshipStatus {
@@ -242,4 +385,19 @@ enum CertificateStatus {
   ISSUED
   MINTED
   REVOKED
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  REMOTE
+}
+
+enum MessageType {
+  DIRECT
+  BROADCAST
+  SYSTEM
+  NOTIFICATION
 }

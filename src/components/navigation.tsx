@@ -35,7 +35,12 @@ import {
   Briefcase,
   Shield,
   BarChart,
-  ChevronDown
+  ChevronDown,
+  Building,
+  UserCheck,
+  Clipboard,
+  UserPlus,
+  MessageSquare
 } from "lucide-react"
 import { NavigationService } from "@/lib/services/navigation.service"
 import { cn } from "@/lib/utils"
@@ -71,7 +76,12 @@ export function Navigation() {
       BarChart,
       Award,
       Settings,
-      User
+      User,
+      Building,
+      UserCheck,
+      Clipboard,
+      UserPlus,
+      MessageSquare
     }
     return icons[iconName] || User
   }

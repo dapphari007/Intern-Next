@@ -9,21 +9,63 @@ export class UserService {
         internships: {
           include: {
             internship: {
-              select: {
-                id: true,
-                title: true,
-                domain: true,
-                status: true
+              include: {
+                mentor: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true
+                  }
+                }
               }
             }
           }
         },
         mentorships: {
-          select: {
-            id: true,
-            title: true,
-            domain: true,
-            status: true
+          include: {
+            applications: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    skillCredits: true
+                  }
+                }
+              }
+            },
+            tasks: {
+              include: {
+                submissions: {
+                  include: {
+                    user: {
+                      select: {
+                        id: true,
+                        name: true,
+                        email: true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        tasks: {
+          include: {
+            internship: {
+              select: {
+                id: true,
+                title: true
+              }
+            },
+            submissions: {
+              orderBy: {
+                submittedAt: 'desc'
+              },
+              take: 1
+            }
           }
         },
         certificates: {
@@ -47,6 +89,30 @@ export class UserService {
             createdAt: 'desc'
           },
           take: 10
+        },
+        company: {
+          include: {
+            internships: {
+              include: {
+                applications: {
+                  include: {
+                    user: true
+                  }
+                },
+                mentor: true
+              }
+            },
+            jobPostings: {
+              include: {
+                applications: {
+                  include: {
+                    user: true
+                  }
+                }
+              }
+            },
+            users: true
+          }
         }
       }
     })
