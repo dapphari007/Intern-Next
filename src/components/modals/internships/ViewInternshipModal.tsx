@@ -32,7 +32,7 @@ interface Internship {
     email: string
     image: string | null
   } | null
-  applications: Array<{
+  applications?: Array<{
     id: string
     status: string
     user: {
@@ -41,16 +41,16 @@ interface Internship {
       email: string
       image: string | null
     }
-  }>
+  }> | null
 }
 
 interface ViewInternshipModalProps {
   isOpen: boolean
   onClose: () => void
-  internship: Internship
-  onEdit: () => void
-  onDelete: () => void
-  onViewApplications: () => void
+  internship: Internship | null
+  onEdit?: () => void
+  onDelete?: () => void
+  onViewApplications?: () => void
 }
 
 export function ViewInternshipModal({
@@ -61,8 +61,15 @@ export function ViewInternshipModal({
   onDelete,
   onViewApplications
 }: ViewInternshipModalProps) {
-  const acceptedApplications = internship.applications.filter(app => app.status === 'ACCEPTED')
-  const pendingApplications = internship.applications.filter(app => app.status === 'PENDING')
+  // Guard clause: Don't render if internship is null
+  if (!internship) {
+    return null
+  }
+
+  // Add null safety checks for applications
+  const applications = internship.applications || []
+  const acceptedApplications = applications.filter(app => app.status === 'ACCEPTED')
+  const pendingApplications = applications.filter(app => app.status === 'PENDING')
 
   return (
     <BaseModal
@@ -151,7 +158,7 @@ export function ViewInternshipModal({
               <div className="grid grid-cols-3 gap-2 mb-4">
                 <div className="text-center p-3 border rounded-lg">
                   <div className="text-lg font-bold text-blue-600">
-                    {internship.applications.length}
+                    {applications.length}
                   </div>
                   <div className="text-xs text-muted-foreground">Total</div>
                 </div>

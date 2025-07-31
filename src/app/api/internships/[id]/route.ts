@@ -104,10 +104,7 @@ export async function PUT(
     }
 
     const internship = await db.internship.findUnique({
-      where: { id: params.id },
-      include: {
-        company: true
-      }
+      where: { id: params.id }
     });
 
     if (!internship) {
@@ -117,14 +114,8 @@ export async function PUT(
       );
     }
 
-    // Check if user is the mentor of this internship or company admin
-    const user = await db.user.findUnique({
-      where: { id: session.user.id },
-      include: { company: true }
-    });
-
-    const canUpdate = internship.mentorId === session.user.id || 
-                     (user?.role === 'COMPANY_ADMIN' && user?.companyId === internship.companyId);
+    // Check if user is the mentor of this internship
+    const canUpdate = internship.mentorId === session.user.id;
 
     if (!canUpdate) {
       return NextResponse.json(
@@ -187,10 +178,7 @@ export async function PATCH(
     }
 
     const internship = await db.internship.findUnique({
-      where: { id: params.id },
-      include: {
-        company: true
-      }
+      where: { id: params.id }
     });
 
     if (!internship) {
@@ -200,26 +188,22 @@ export async function PATCH(
       );
     }
 
-    // Check if user is company admin
-    const user = await db.user.findUnique({
-      where: { id: session.user.id },
-      include: { company: true }
-    });
-
-    if (user?.role !== 'COMPANY_ADMIN' || user?.companyId !== internship.companyId) {
+    // Check if user is the mentor
+    if (internship.mentorId !== session.user.id) {
       return NextResponse.json(
-        { error: 'Only company admin can toggle internship status' },
+        { error: 'Only the mentor can modify this internship' },
         { status: 403 }
       );
     }
 
     const body = await request.json();
     
-    // Toggle status if requested
+    // Toggle status if requested (using 'status' instead of 'isActive')
     if (body.action === 'toggle-status') {
+      const newStatus = internship.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
       const updatedInternship = await db.internship.update({
         where: { id: params.id },
-        data: { isActive: !internship.isActive },
+        data: { status: newStatus },
         include: {
           mentor: {
             select: {

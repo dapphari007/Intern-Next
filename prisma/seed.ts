@@ -3,28 +3,64 @@ import { PrismaClient, UserRole, InternshipStatus, ApplicationStatus, TaskStatus
 const prisma = new PrismaClient()
 
 async function main() {
-  console.log('🌱 Starting consolidated role-based seed...')
+  console.log('🌱 Starting comprehensive role-based seed with tasks...')
 
   // Clear existing data to prevent duplicates
   console.log('🧹 Cleaning existing data...')
-  await prisma.taskSubmission.deleteMany()
-  await prisma.task.deleteMany()
-  await prisma.certificate.deleteMany()
-  await prisma.creditHistory.deleteMany()
-  await prisma.message.deleteMany()
-  await prisma.chatMessage.deleteMany()
-  await prisma.companyInternshipApplication.deleteMany()
-  await prisma.jobApplication.deleteMany()
-  await prisma.internshipApplication.deleteMany()
-  await prisma.companyInternship.deleteMany()
-  await prisma.jobPosting.deleteMany()
-  await prisma.internship.deleteMany()
-  await prisma.projectRoom.deleteMany()
-  await prisma.studentAnalytics.deleteMany()
-  await prisma.session.deleteMany()
-  await prisma.account.deleteMany()
-  await prisma.user.deleteMany()
-  await prisma.company.deleteMany()
+  try {
+    await prisma.taskSubmission.deleteMany()
+  } catch (e) { console.log('No task submissions to delete') }
+  try {
+    await prisma.task.deleteMany()
+  } catch (e) { console.log('No tasks to delete') }
+  try {
+    await prisma.certificate.deleteMany()
+  } catch (e) { console.log('No certificates to delete') }
+  try {
+    await prisma.creditHistory.deleteMany()
+  } catch (e) { console.log('No credit history to delete') }
+  try {
+    await prisma.message.deleteMany()
+  } catch (e) { console.log('No messages to delete') }
+  try {
+    await prisma.chatMessage.deleteMany()
+  } catch (e) { console.log('No chat messages to delete') }
+  try {
+    await prisma.companyInternshipApplication.deleteMany()
+  } catch (e) { console.log('No company applications to delete') }
+  try {
+    await prisma.jobApplication.deleteMany()
+  } catch (e) { console.log('No job applications to delete') }
+  try {
+    await prisma.internshipApplication.deleteMany()
+  } catch (e) { console.log('No internship applications to delete') }
+  try {
+    await prisma.companyInternship.deleteMany()
+  } catch (e) { console.log('No company internships to delete') }
+  try {
+    await prisma.jobPosting.deleteMany()
+  } catch (e) { console.log('No job postings to delete') }
+  try {
+    await prisma.internship.deleteMany()
+  } catch (e) { console.log('No internships to delete') }
+  try {
+    await prisma.projectRoom.deleteMany()
+  } catch (e) { console.log('No project rooms to delete') }
+  try {
+    await prisma.studentAnalytics.deleteMany()
+  } catch (e) { console.log('No student analytics to delete') }
+  try {
+    await prisma.session.deleteMany()
+  } catch (e) { console.log('No sessions to delete') }
+  try {
+    await prisma.account.deleteMany()
+  } catch (e) { console.log('No accounts to delete') }
+  try {
+    await prisma.user.deleteMany()
+  } catch (e) { console.log('No users to delete') }
+  try {
+    await prisma.company.deleteMany()
+  } catch (e) { console.log('No companies to delete') }
 
   // Create companies first
   console.log('🏢 Creating companies...')
@@ -80,7 +116,7 @@ async function main() {
     }
   })
 
-  // ========== COMPANY ADMIN USERS (Consolidated Role) ==========
+  // ========== COMPANY ADMIN USERS ==========
   const companyAdmin1 = await prisma.user.upsert({
     where: { email: 'admin@techcorp.com' },
     update: {},
@@ -194,7 +230,7 @@ async function main() {
     }
   })
 
-  // Independent mentors (not tied to companies)
+  // Independent mentors
   const independentMentor1 = await prisma.user.upsert({
     where: { email: 'sarah.johnson@freelance.com' },
     update: {},
@@ -285,53 +321,34 @@ async function main() {
     }
   })
 
+  // Additional interns for better data
+  const intern6 = await prisma.user.upsert({
+    where: { email: 'frank.brown@student.edu' },
+    update: {},
+    create: {
+      name: 'Frank Brown',
+      email: 'frank.brown@student.edu',
+      role: UserRole.INTERN,
+      bio: 'CS student specializing in backend development and databases.',
+      skillCredits: 590,
+      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+    }
+  })
+
+  const intern7 = await prisma.user.upsert({
+    where: { email: 'grace.lee@student.edu' },
+    update: {},
+    create: {
+      name: 'Grace Lee',
+      email: 'grace.lee@student.edu',
+      role: UserRole.INTERN,
+      bio: 'Design student interested in UX/UI and digital marketing.',
+      skillCredits: 670,
+      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
+    }
+  })
+
   console.log('✅ All users created')
-
-  // ========== CREATE COMPANY INTERNSHIPS ==========
-  const companyInternship1 = await prisma.companyInternship.create({
-    data: {
-      title: 'Frontend Development Internship',
-      description: 'Work with our frontend team to build modern web applications using React, TypeScript, and Tailwind CSS. You will contribute to real projects and learn industry best practices.',
-      domain: 'Frontend Development',
-      duration: 12,
-      isPaid: true,
-      stipend: 1500,
-      isActive: true,
-      maxInterns: 3,
-      companyId: techCorp.id,
-      mentorId: mentor1.id,
-    }
-  })
-
-  const companyInternship2 = await prisma.companyInternship.create({
-    data: {
-      title: 'AI Research Internship',
-      description: 'Join our AI research team to work on cutting-edge machine learning projects. Learn about neural networks, deep learning, and AI model deployment.',
-      domain: 'Artificial Intelligence',
-      duration: 16,
-      isPaid: true,
-      stipend: 2200,
-      isActive: true,
-      maxInterns: 2,
-      companyId: innovateInc.id,
-      mentorId: mentor3.id,
-    }
-  })
-
-  const companyInternship3 = await prisma.companyInternship.create({
-    data: {
-      title: 'Digital Marketing Internship',
-      description: 'Learn digital marketing strategies, content creation, and campaign management. Work with real clients and gain hands-on experience.',
-      domain: 'Digital Marketing',
-      duration: 10,
-      isPaid: true,
-      stipend: 1200,
-      isActive: true,
-      maxInterns: 2,
-      companyId: digitalWorks.id,
-      mentorId: mentor5.id,
-    }
-  })
 
   // ========== CREATE INDEPENDENT INTERNSHIPS ==========
   const independentInternship1 = await prisma.internship.create({
@@ -361,80 +378,56 @@ async function main() {
     }
   })
 
-  console.log('✅ Internships created')
-
-  // ========== CREATE JOB POSTINGS ==========
-  const jobPosting1 = await prisma.jobPosting.create({
+  // ========== CREATE COMPANY INTERNSHIPS ==========
+  const companyInternship1 = await prisma.companyInternship.create({
     data: {
-      title: 'Senior Frontend Developer',
-      description: 'We are looking for an experienced frontend developer to join our team. You will work on large-scale applications and mentor junior developers.',
-      requirements: 'React, TypeScript, 5+ years experience, leadership skills',
-      location: 'San Francisco, CA',
-      jobType: JobType.FULL_TIME,
-      salaryMin: 120000,
-      salaryMax: 180000,
+      title: 'Frontend Development Internship',
+      description: 'Work with our frontend team to build modern web applications using React, TypeScript, and Tailwind CSS.',
+      domain: 'Frontend Development',
+      duration: 12,
+      isPaid: true,
+      stipend: 1500,
+      isActive: true,
+      maxInterns: 3,
       companyId: techCorp.id,
+      mentorId: mentor1.id,
     }
   })
 
-  const jobPosting2 = await prisma.jobPosting.create({
+  const companyInternship2 = await prisma.companyInternship.create({
     data: {
-      title: 'AI Research Scientist',
-      description: 'Join our research team to develop next-generation AI solutions. PhD preferred but not required for exceptional candidates.',
-      requirements: 'Machine Learning, Python, Research experience, PhD preferred',
-      location: 'New York, NY',
-      jobType: JobType.FULL_TIME,
-      salaryMin: 150000,
-      salaryMax: 250000,
+      title: 'AI Research Internship',
+      description: 'Join our AI research team to work on cutting-edge machine learning projects.',
+      domain: 'Artificial Intelligence',
+      duration: 16,
+      isPaid: true,
+      stipend: 2200,
+      isActive: true,
+      maxInterns: 2,
       companyId: innovateInc.id,
+      mentorId: mentor3.id,
     }
   })
 
-  // Create more job postings for better data
-  const jobPosting3 = await prisma.jobPosting.create({
+  const companyInternship3 = await prisma.companyInternship.create({
     data: {
-      title: 'UX/UI Designer',
-      description: 'Creative designer needed to work on user interface and experience design for our digital products.',
-      requirements: 'Figma, Adobe Creative Suite, 3+ years experience, portfolio required',
-      location: 'Austin, TX',
-      jobType: JobType.FULL_TIME,
-      salaryMin: 70000,
-      salaryMax: 95000,
+      title: 'Digital Marketing Internship',
+      description: 'Learn digital marketing strategies, content creation, and campaign management.',
+      domain: 'Digital Marketing',
+      duration: 10,
+      isPaid: true,
+      stipend: 1200,
+      isActive: true,
+      maxInterns: 2,
       companyId: digitalWorks.id,
+      mentorId: mentor5.id,
     }
   })
 
-  const jobPosting4 = await prisma.jobPosting.create({
-    data: {
-      title: 'Backend Developer',
-      description: 'Join our backend team to build scalable APIs and microservices using Node.js and cloud technologies.',
-      requirements: 'Node.js, PostgreSQL, AWS, 4+ years experience',
-      location: 'Remote',
-      jobType: JobType.REMOTE,
-      salaryMin: 100000,
-      salaryMax: 140000,
-      companyId: techCorp.id,
-    }
-  })
-
-  const jobPosting5 = await prisma.jobPosting.create({
-    data: {
-      title: 'Data Scientist',
-      description: 'Work with our data team to build predictive models and analyze large datasets.',
-      requirements: 'Python, R, Machine Learning, Statistics, 3+ years experience',
-      location: 'New York, NY',
-      jobType: JobType.FULL_TIME,
-      salaryMin: 110000,
-      salaryMax: 160000,
-      companyId: innovateInc.id,
-    }
-  })
-
-  // Create more company internships
   const companyInternship4 = await prisma.companyInternship.create({
     data: {
       title: 'Backend Development Internship',
-      description: 'Learn backend development with Node.js, Express, and database design. Work on API development and server-side logic.',
+      description: 'Learn backend development with Node.js, Express, and database design.',
       domain: 'Backend Development',
       duration: 14,
       isPaid: true,
@@ -461,26 +454,27 @@ async function main() {
     }
   })
 
-  const companyInternship6 = await prisma.companyInternship.create({
+  console.log('✅ Internships created')
+
+  // ========== CREATE APPLICATIONS ==========
+  await prisma.internshipApplication.create({
     data: {
-      title: 'UX/UI Design Internship',
-      description: 'Learn user experience and interface design principles while working on real client projects.',
-      domain: 'Design',
-      duration: 12,
-      isPaid: true,
-      stipend: 1400,
-      isActive: false, // Inactive for testing
-      maxInterns: 2,
-      companyId: digitalWorks.id,
-      mentorId: mentor5.id,
+      internshipId: independentInternship1.id,
+      userId: intern1.id,
+      status: ApplicationStatus.ACCEPTED,
+      coverLetter: 'I am very interested in this frontend development position.',
     }
   })
 
-  console.log('✅ Job postings created')
+  await prisma.internshipApplication.create({
+    data: {
+      internshipId: independentInternship2.id,
+      userId: intern2.id,
+      status: ApplicationStatus.ACCEPTED,
+      coverLetter: 'Interested in UX design and user research.',
+    }
+  })
 
-  // ========== CREATE COMPREHENSIVE APPLICATIONS ==========
-  
-  // Company Internship Applications
   await prisma.companyInternshipApplication.create({
     data: {
       internshipId: companyInternship1.id,
@@ -491,33 +485,9 @@ async function main() {
 
   await prisma.companyInternshipApplication.create({
     data: {
-      internshipId: companyInternship1.id,
-      userId: intern2.id,
-      status: ApplicationStatus.PENDING,
-    }
-  })
-
-  await prisma.companyInternshipApplication.create({
-    data: {
-      internshipId: companyInternship1.id,
-      userId: intern3.id,
-      status: ApplicationStatus.REJECTED,
-    }
-  })
-
-  await prisma.companyInternshipApplication.create({
-    data: {
       internshipId: companyInternship2.id,
       userId: intern5.id,
       status: ApplicationStatus.ACCEPTED,
-    }
-  })
-
-  await prisma.companyInternshipApplication.create({
-    data: {
-      internshipId: companyInternship2.id,
-      userId: intern4.id,
-      status: ApplicationStatus.PENDING,
     }
   })
 
@@ -532,375 +502,462 @@ async function main() {
   await prisma.companyInternshipApplication.create({
     data: {
       internshipId: companyInternship4.id,
-      userId: intern2.id,
-      status: ApplicationStatus.PENDING,
+      userId: intern6.id,
+      status: ApplicationStatus.ACCEPTED,
     }
   })
 
   await prisma.companyInternshipApplication.create({
     data: {
       internshipId: companyInternship5.id,
-      userId: intern5.id,
-      status: ApplicationStatus.PENDING,
-    }
-  })
-
-  // Job Applications
-  await prisma.jobApplication.create({
-    data: {
-      jobId: jobPosting1.id,
-      userId: intern1.id,
-      status: ApplicationStatus.PENDING,
-      coverLetter: 'I am excited to apply for the Senior Frontend Developer position. With my experience in React and TypeScript, I believe I would be a great fit for your team.',
-    }
-  })
-
-  await prisma.jobApplication.create({
-    data: {
-      jobId: jobPosting1.id,
       userId: intern2.id,
       status: ApplicationStatus.ACCEPTED,
-      coverLetter: 'I have been working with React for 3 years and would love to contribute to your frontend team.',
     }
   })
 
-  await prisma.jobApplication.create({
+  await prisma.companyInternshipApplication.create({
     data: {
-      jobId: jobPosting2.id,
-      userId: intern5.id,
-      status: ApplicationStatus.PENDING,
-      coverLetter: 'As a Data Science student with strong ML background, I am very interested in this AI Research Scientist position.',
-    }
-  })
-
-  await prisma.jobApplication.create({
-    data: {
-      jobId: jobPosting3.id,
-      userId: intern3.id,
-      status: ApplicationStatus.REJECTED,
-      coverLetter: 'I am passionate about UX/UI design and would love to work on your digital products.',
-    }
-  })
-
-  await prisma.jobApplication.create({
-    data: {
-      jobId: jobPosting4.id,
-      userId: intern4.id,
-      status: ApplicationStatus.PENDING,
-      coverLetter: 'I have experience with Node.js and cloud technologies and am excited about this backend role.',
-    }
-  })
-
-  await prisma.jobApplication.create({
-    data: {
-      jobId: jobPosting5.id,
-      userId: intern5.id,
+      internshipId: companyInternship3.id,
+      userId: intern7.id,
       status: ApplicationStatus.ACCEPTED,
-      coverLetter: 'My background in Data Science and passion for machine learning makes me a perfect fit for this role.',
-    }
-  })
-
-  // Independent Internship Applications
-  await prisma.internshipApplication.create({
-    data: {
-      internshipId: independentInternship1.id,
-      userId: intern2.id,
-      status: ApplicationStatus.ACCEPTED,
-      coverLetter: 'I am excited to work on React applications and learn modern frontend technologies.',
-      resumeUrl: 'https://example.com/resume-bob.pdf',
-      phone: '+1-555-0102',
-      linkedin: 'https://linkedin.com/in/bobjohnson',
-      github: 'https://github.com/bobjohnson',
-      experience: 'I have worked on several React projects during my studies and have experience with TypeScript and modern CSS frameworks.',
-      motivation: 'I want to gain real-world experience in frontend development and contribute to meaningful projects.',
-    }
-  })
-
-  await prisma.internshipApplication.create({
-    data: {
-      internshipId: independentInternship2.id,
-      userId: intern3.id,
-      status: ApplicationStatus.PENDING,
-      coverLetter: 'I am passionate about UX design and would love to learn from an experienced designer.',
-      resumeUrl: 'https://example.com/resume-carol.pdf',
-      phone: '+1-555-0103',
-      linkedin: 'https://linkedin.com/in/caroldavis',
-      portfolio: 'https://caroldavis.design',
-      experience: 'I have completed several design projects during my studies and have experience with Figma and Adobe Creative Suite.',
-      motivation: 'I want to learn user-centered design principles and work on real design challenges.',
     }
   })
 
   console.log('✅ Applications created')
 
-  // ========== CREATE CERTIFICATES ==========
-  await prisma.certificate.create({
-    data: {
-      userId: intern1.id,
-      title: 'Frontend Development Certificate',
-      description: 'Successfully completed the Frontend Development internship program at TechCorp Solutions.',
-      certificateUrl: 'https://certificates.techcorp.com/alice-smith-frontend-2024.pdf',
-      status: CertificateStatus.ISSUED,
-    }
-  })
+// ========== CREATE COMPREHENSIVE TASKS ==========
+console.log('📋 Creating comprehensive tasks...')
 
-  await prisma.certificate.create({
-    data: {
-      userId: intern2.id,
-      title: 'React Development Certificate',
-      description: 'Completed advanced React development training with excellent performance.',
-      certificateUrl: 'https://certificates.example.com/bob-johnson-react-2024.pdf',
-      status: CertificateStatus.ISSUED,
-    }
-  })
+// Frontend Development Tasks
+const frontendTask1 = await prisma.task.create({
+  data: {
+    title: 'Build Responsive Navigation Component',
+    description: 'Create a responsive navigation component using React and Tailwind CSS. The component should work on both desktop and mobile devices with a hamburger menu for mobile.',
+    internshipId: independentInternship1.id,
+    assignedTo: intern1.id,
+    status: TaskStatus.COMPLETED,
+    dueDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+  }
+})
 
-  await prisma.certificate.create({
-    data: {
-      userId: intern5.id,
-      title: 'AI Research Certificate',
-      description: 'Successfully completed AI Research internship at Innovate Inc with outstanding results.',
-      certificateUrl: 'https://certificates.innovateinc.com/eva-martinez-ai-2024.pdf',
-      status: CertificateStatus.ISSUED,
-    }
-  })
+const frontendTask2 = await prisma.task.create({
+  data: {
+    title: 'Implement User Authentication UI',
+    description: 'Design and implement login and registration forms with form validation and error handling.',
+    internshipId: independentInternship1.id,
+    assignedTo: intern1.id,
+    status: TaskStatus.IN_PROGRESS,
+    dueDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+  }
+})
 
-  await prisma.certificate.create({
-    data: {
-      userId: intern3.id,
-      title: 'Digital Marketing Certificate',
-      description: 'Completed Digital Marketing internship program at Digital Works.',
-      certificateUrl: 'https://certificates.digitalworks.com/carol-davis-marketing-2024.pdf',
-      status: CertificateStatus.ISSUED,
-    }
-  })
+const frontendTask3 = await prisma.task.create({
+  data: {
+    title: 'Create Dashboard Layout',
+    description: 'Build a dashboard layout with sidebar navigation, main content area, and responsive design.',
+    internshipId: independentInternship1.id,
+    assignedTo: intern1.id,
+    status: TaskStatus.PENDING,
+    dueDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000), // 10 days from now
+  }
+})
 
-  console.log('✅ Certificates created')
+// AI Research Tasks (assigned to frontend internship)
+const aiTask1 = await prisma.task.create({
+  data: {
+    title: 'Literature Review on Neural Networks',
+    description: 'Conduct a comprehensive literature review on recent advances in neural network architectures, focusing on transformer models.',
+    internshipId: independentInternship1.id,
+    assignedTo: intern5.id,
+    status: TaskStatus.COMPLETED,
+    dueDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), // 14 days ago
+  }
+})
 
-  // ========== CREATE TASKS AND SUBMISSIONS ==========
-  const task1 = await prisma.task.create({
-    data: {
-      title: 'Build React Component Library',
-      description: 'Create a reusable component library with common UI components using React and TypeScript.',
-      internshipId: independentInternship1.id,
-      assignedTo: intern2.id,
-      status: TaskStatus.COMPLETED,
-      dueDate: new Date('2024-02-15'),
-    }
-  })
+const aiTask2 = await prisma.task.create({
+  data: {
+    title: 'Implement Basic CNN Model',
+    description: 'Build and train a convolutional neural network for image classification using TensorFlow/PyTorch.',
+    internshipId: independentInternship1.id,
+    assignedTo: intern5.id,
+    status: TaskStatus.IN_PROGRESS,
+    dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
+  }
+})
 
-  const task2 = await prisma.task.create({
-    data: {
-      title: 'Design User Dashboard',
-      description: 'Create wireframes and high-fidelity designs for the user dashboard interface.',
-      internshipId: independentInternship2.id,
-      assignedTo: intern3.id,
-      status: TaskStatus.IN_PROGRESS,
-      dueDate: new Date('2024-02-20'),
-    }
-  })
+const aiTask3 = await prisma.task.create({
+  data: {
+    title: 'Data Preprocessing Pipeline',
+    description: 'Create a data preprocessing pipeline for cleaning and preparing large datasets for machine learning models.',
+    internshipId: independentInternship1.id,
+    assignedTo: intern5.id,
+    status: TaskStatus.OVERDUE,
+    dueDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+  }
+})
 
-  // Task submissions
-  await prisma.taskSubmission.create({
-    data: {
-      taskId: task1.id,
-      userId: intern2.id,
-      content: 'I have completed the React component library with 15 reusable components including buttons, forms, and navigation elements. All components are fully typed with TypeScript and include comprehensive documentation.',
-      fileUrl: 'https://github.com/bobjohnson/react-component-library',
-      status: SubmissionStatus.APPROVED,
-      feedback: 'Excellent work! The component library is well-structured and documented. Great use of TypeScript.',
-      creditsAwarded: 100,
-      reviewedAt: new Date('2024-02-16'),
-    }
-  })
+// Digital Marketing Tasks (assigned to design internship)
+const marketingTask1 = await prisma.task.create({
+  data: {
+    title: 'Social Media Campaign Analysis',
+    description: 'Analyze the performance of recent social media campaigns and provide insights for improvement.',
+    internshipId: independentInternship2.id,
+    assignedTo: intern3.id,
+    status: TaskStatus.COMPLETED,
+    dueDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+  }
+})
 
-  await prisma.taskSubmission.create({
-    data: {
-      taskId: task2.id,
-      userId: intern3.id,
-      content: 'I have created wireframes for the user dashboard and am currently working on the high-fidelity designs. The wireframes include all major sections and user flows.',
-      fileUrl: 'https://figma.com/file/dashboard-wireframes-carol',
-      status: SubmissionStatus.SUBMITTED,
-    }
-  })
+const marketingTask2 = await prisma.task.create({
+  data: {
+    title: 'Create Content Calendar',
+    description: 'Develop a comprehensive content calendar for Q1 2024 including blog posts, social media content, and email campaigns.',
+    internshipId: independentInternship2.id,
+    assignedTo: intern3.id,
+    status: TaskStatus.IN_PROGRESS,
+    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+  }
+})
 
-  console.log('✅ Tasks and submissions created')
+const marketingTask3 = await prisma.task.create({
+  data: {
+    title: 'SEO Audit Report',
+    description: 'Conduct a comprehensive SEO audit of the company website and provide recommendations.',
+    internshipId: independentInternship2.id,
+    assignedTo: intern7.id,
+    status: TaskStatus.PENDING,
+    dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+  }
+})
 
-  // ========== CREATE CREDIT HISTORY ==========
-  await prisma.creditHistory.create({
-    data: {
-      userId: intern1.id,
-      amount: 150,
-      type: CreditType.EARNED,
-      description: 'Completed Frontend Development project milestone',
-    }
-  })
+// Backend Development Tasks - MUST USE independentInternship1 (Task model only relates to Internship, not CompanyInternship)
+const backendTask1 = await prisma.task.create({
+  data: {
+    title: 'API Design and Documentation',
+    description: 'Design RESTful APIs for user management and create comprehensive documentation using Swagger.',
+    internshipId: independentInternship1.id,
+    assignedTo: intern6.id,
+    status: TaskStatus.COMPLETED,
+    dueDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000), // 10 days ago
+  }
+})
 
-  await prisma.creditHistory.create({
-    data: {
-      userId: intern2.id,
-      amount: 100,
-      type: CreditType.EARNED,
-      description: 'Excellent performance on React Component Library task',
-    }
-  })
+const backendTask2 = await prisma.task.create({
+  data: {
+    title: 'Database Schema Design',
+    description: 'Design and implement database schema for the internship management system using PostgreSQL.',
+    internshipId: independentInternship1.id,
+    assignedTo: intern6.id,
+    status: TaskStatus.IN_PROGRESS,
+    dueDate: new Date(Date.now() + 4 * 24 * 60 * 60 * 1000), // 4 days from now
+  }
+})
 
-  await prisma.creditHistory.create({
-    data: {
-      userId: intern5.id,
-      amount: 200,
-      type: CreditType.EARNED,
-      description: 'Outstanding contribution to AI research project',
-    }
-  })
+const backendTask3 = await prisma.task.create({
+  data: {
+    title: 'Authentication Middleware',
+    description: 'Implement JWT-based authentication middleware for securing API endpoints.',
+    internshipId: independentInternship1.id,
+    assignedTo: intern6.id,
+    status: TaskStatus.PENDING,
+    dueDate: new Date(Date.now() + 12 * 24 * 60 * 60 * 1000), // 12 days from now
+  }
+})
 
-  console.log('✅ Credit history created')
+// Data Science Tasks (assigned to design internship)
+const dataTask1 = await prisma.task.create({
+  data: {
+    title: 'Exploratory Data Analysis',
+    description: 'Perform comprehensive exploratory data analysis on customer behavior dataset using Python and Pandas.',
+    internshipId: independentInternship2.id,
+    assignedTo: intern2.id,
+    status: TaskStatus.COMPLETED,
+    dueDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
+  }
+})
 
-  // ========== CREATE COMPREHENSIVE MESSAGES ==========
-  await prisma.message.create({
-    data: {
-      senderId: companyAdmin1.id,
-      receiverId: intern1.id,
-      subject: 'Welcome to TechCorp!',
-      content: 'Welcome to your internship at TechCorp! We are excited to have you on board. Please check your email for onboarding instructions.',
-      type: MessageType.DIRECT,
-    }
-  })
+const dataTask2 = await prisma.task.create({
+  data: {
+    title: 'Predictive Model Development',
+    description: 'Build a machine learning model to predict customer churn using scikit-learn.',
+    internshipId: independentInternship2.id,
+    assignedTo: intern2.id,
+    status: TaskStatus.IN_PROGRESS,
+    dueDate: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000), // 6 days from now
+  }
+})
 
-  await prisma.message.create({
-    data: {
-      senderId: mentor1.id,
-      receiverId: intern1.id,
-      subject: 'First Week Tasks',
-      content: 'Hi Alice! Here are your tasks for the first week. Please let me know if you have any questions.',
-      type: MessageType.DIRECT,
-    }
-  })
+const dataTask3 = await prisma.task.create({
+  data: {
+    title: 'Data Visualization Dashboard',
+    description: 'Create interactive data visualizations using Plotly or D3.js to display key business metrics.',
+    internshipId: independentInternship2.id,
+    assignedTo: intern2.id,
+    status: TaskStatus.PENDING,
+    dueDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000), // 15 days from now
+  }
+})
 
-  await prisma.message.create({
-    data: {
-      senderId: companyAdmin2.id,
-      receiverId: intern5.id,
-      subject: 'AI Research Project Assignment',
-      content: 'Congratulations on being accepted to our AI Research internship! Your first project will be working on neural network optimization.',
-      type: MessageType.DIRECT,
-    }
-  })
+console.log('✅ Comprehensive tasks created')
 
-  await prisma.message.create({
-    data: {
-      senderId: companyAdmin3.id,
-      receiverId: intern3.id,
-      subject: 'Digital Marketing Campaign',
-      content: 'Welcome to Digital Works! You will be working on our latest client campaign. Looking forward to your creative input.',
-      type: MessageType.DIRECT,
-    }
-  })
+// ========== CREATE TASK SUBMISSIONS ==========
+console.log('📝 Creating task submissions...')
 
-  // Broadcast messages
-  await prisma.message.create({
-    data: {
-      senderId: companyAdmin1.id,
-      subject: 'Company All-Hands Meeting',
-      content: 'All team members are invited to our quarterly all-hands meeting next Friday at 2 PM PST.',
-      type: MessageType.BROADCAST,
-    }
-  })
+await prisma.taskSubmission.create({
+  data: {
+    taskId: frontendTask1.id,
+    userId: intern1.id,
+    content: 'I have successfully implemented the responsive navigation component. The component includes a mobile-friendly hamburger menu and smooth transitions.',
+    status: SubmissionStatus.APPROVED,
+    creditsAwarded: 100,
+    feedback: 'Excellent work! The navigation component is well-structured and responsive. Great attention to detail.',
+    submittedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+    reviewedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+  }
+})
 
-  await prisma.message.create({
-    data: {
-      senderId: companyAdmin2.id,
-      subject: 'New AI Research Lab Opening',
-      content: 'We are excited to announce the opening of our new AI research lab with state-of-the-art equipment.',
-      type: MessageType.BROADCAST,
-    }
-  })
+await prisma.taskSubmission.create({
+  data: {
+    taskId: aiTask1.id,
+    userId: intern5.id,
+    content: 'Completed comprehensive literature review covering latest transformer architectures including BERT, GPT-3, and Vision Transformers. Documented findings in a 20-page report.',
+    status: SubmissionStatus.APPROVED,
+    creditsAwarded: 150,
+    feedback: 'Outstanding research work! The literature review is thorough and well-organized. Great insights on recent developments.',
+    submittedAt: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000),
+    reviewedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
+  }
+})
 
-  console.log('✅ Comprehensive messages created')
+await prisma.taskSubmission.create({
+  data: {
+    taskId: marketingTask1.id,
+    userId: intern3.id,
+    content: 'Analyzed Q4 social media campaigns across Instagram, Facebook, and LinkedIn. Identified key performance metrics and provided actionable recommendations.',
+    status: SubmissionStatus.APPROVED,
+    creditsAwarded: 80,
+    feedback: 'Good analysis! The insights on engagement rates and optimal posting times are valuable.',
+    submittedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+    reviewedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+  }
+})
 
-  // ========== CREATE STUDENT ANALYTICS ==========
-  await prisma.studentAnalytics.create({
-    data: {
-      userId: intern1.id,
-      totalTasks: 8,
-      completedTasks: 6,
-      pendingTasks: 2,
-      overdueTasks: 0,
-      averageScore: 87.5,
-      totalSubmissions: 6,
-      onTimeSubmissions: 5,
-      lateSubmissions: 1,
-      totalCredits: 850,
-      lastActive: new Date(),
-    }
-  })
+await prisma.taskSubmission.create({
+  data: {
+    taskId: backendTask1.id,
+    userId: intern6.id,
+    content: 'Designed comprehensive RESTful API endpoints for user management, authentication, and internship operations. Created detailed Swagger documentation.',
+    status: SubmissionStatus.APPROVED,
+    creditsAwarded: 120,
+    feedback: 'Excellent API design! The documentation is clear and comprehensive. Well done on following REST principles.',
+    submittedAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
+    reviewedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000),
+  }
+})
 
-  await prisma.studentAnalytics.create({
-    data: {
-      userId: intern2.id,
-      totalTasks: 5,
-      completedTasks: 4,
-      pendingTasks: 1,
-      overdueTasks: 0,
-      averageScore: 92.0,
-      totalSubmissions: 4,
-      onTimeSubmissions: 4,
-      lateSubmissions: 0,
-      totalCredits: 720,
-      lastActive: new Date(),
-    }
-  })
+await prisma.taskSubmission.create({
+  data: {
+    taskId: dataTask1.id,
+    userId: intern2.id,
+    content: 'Completed exploratory data analysis on customer behavior dataset. Identified key patterns and correlations. Created visualizations and statistical summaries.',
+    status: SubmissionStatus.APPROVED,
+    creditsAwarded: 110,
+    feedback: 'Great analytical work! The visualizations clearly show important trends and patterns in the data.',
+    submittedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    reviewedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
+  }
+})
 
-  await prisma.studentAnalytics.create({
-    data: {
-      userId: intern3.id,
-      totalTasks: 6,
-      completedTasks: 4,
-      pendingTasks: 2,
-      overdueTasks: 0,
-      averageScore: 78.5,
-      totalSubmissions: 4,
-      onTimeSubmissions: 3,
-      lateSubmissions: 1,
-      totalCredits: 650,
-      lastActive: new Date(),
-    }
-  })
+// Partial submission for in-progress task
+await prisma.taskSubmission.create({
+  data: {
+    taskId: frontendTask2.id,
+    userId: intern1.id,
+    content: 'Progress update: Implemented login form with validation. Working on registration form and error handling.',
+    status: SubmissionStatus.SUBMITTED,
+    creditsAwarded: 0,
+    submittedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+  }
+})
 
-  await prisma.studentAnalytics.create({
-    data: {
-      userId: intern4.id,
-      totalTasks: 7,
-      completedTasks: 5,
-      pendingTasks: 1,
-      overdueTasks: 1,
-      averageScore: 85.0,
-      totalSubmissions: 5,
-      onTimeSubmissions: 4,
-      lateSubmissions: 1,
-      totalCredits: 780,
-      lastActive: new Date(),
-    }
-  })
+console.log('✅ Task submissions created')
 
-  await prisma.studentAnalytics.create({
-    data: {
-      userId: intern5.id,
-      totalTasks: 10,
-      completedTasks: 9,
-      pendingTasks: 1,
-      overdueTasks: 0,
-      averageScore: 95.5,
-      totalSubmissions: 9,
-      onTimeSubmissions: 9,
-      lateSubmissions: 0,
-      totalCredits: 920,
-      lastActive: new Date(),
-    }
-  })
+// ========== CREATE CERTIFICATES ==========
+await prisma.certificate.create({
+  data: {
+    userId: intern1.id,
+    title: 'Frontend Development Completion',
+    description: 'Successfully completed frontend development internship with outstanding performance.',
+    status: CertificateStatus.ISSUED,
+  }
+})
 
-  console.log('✅ Student analytics created')
+await prisma.certificate.create({
+  data: {
+    userId: intern5.id,
+    title: 'AI Research Excellence',
+    description: 'Demonstrated exceptional skills in AI research and machine learning.',
+    status: CertificateStatus.ISSUED,
+  }
+})
 
-  console.log('🎉 Consolidated seed completed successfully!')
+await prisma.certificate.create({
+  data: {
+    userId: intern3.id,
+    title: 'Digital Marketing Specialist',
+    description: 'Completed digital marketing internship with proficiency in campaign analysis and content strategy.',
+    status: CertificateStatus.ISSUED,
+  }
+})
+
+console.log('✅ Certificates created')
+
+// ========== CREATE CREDIT HISTORY ==========
+const creditHistoryEntries = [
+  { userId: intern1.id, amount: 100, type: CreditType.EARNED, description: 'Completed responsive navigation component task' },
+  { userId: intern1.id, amount: 50, type: CreditType.EARNED, description: 'Progress on authentication UI implementation' },
+  { userId: intern5.id, amount: 150, type: CreditType.EARNED, description: 'Outstanding literature review on neural networks' },
+  { userId: intern5.id, amount: 100, type: CreditType.EARNED, description: 'Progress on CNN model implementation' },
+  { userId: intern3.id, amount: 80, type: CreditType.EARNED, description: 'Excellent social media campaign analysis' },
+  { userId: intern6.id, amount: 120, type: CreditType.EARNED, description: 'Comprehensive API design and documentation' },
+  { userId: intern2.id, amount: 110, type: CreditType.EARNED, description: 'Thorough exploratory data analysis' },
+  { userId: intern7.id, amount: 50, type: CreditType.BONUS, description: 'Bonus for quick adaptation to new role' },
+]
+
+for (const entry of creditHistoryEntries) {
+  await prisma.creditHistory.create({ data: entry })
+}
+
+console.log('✅ Credit history created')
+
+// ========== CREATE MESSAGES ==========
+const messages = [
+  {
+    senderId: mentor1.id,
+    receiverId: intern1.id,
+    subject: 'Great work on navigation component!',
+    content: 'Hi Alice, I reviewed your navigation component submission and I\'m impressed with the quality. The responsive design is excellent!',
+    type: MessageType.DIRECT,
+  },
+  {
+    senderId: mentor3.id,
+    receiverId: intern5.id,
+    subject: 'Next steps for CNN implementation',
+    content: 'Eva, your literature review was outstanding. For the CNN task, I recommend starting with a simple architecture and gradually adding complexity.',
+    type: MessageType.DIRECT,
+  },
+  {
+    senderId: mentor5.id,
+    receiverId: intern3.id,
+    subject: 'Content calendar feedback',
+    content: 'Carol, your progress on the content calendar looks good. Make sure to include seasonal trends in your planning.',
+    type: MessageType.DIRECT,
+  },
+  {
+    senderId: companyAdmin1.id,
+    subject: 'Q1 Company All-Hands Meeting',
+    content: 'All team members and interns are invited to our Q1 all-hands meeting next Friday at 2 PM PST. We\'ll be discussing company goals and intern program updates.',
+    type: MessageType.BROADCAST,
+  },
+  {
+    senderId: companyAdmin2.id,
+    subject: 'New AI Research Lab Resources',
+    content: 'We\'ve acquired new GPU resources for our AI research lab. All AI interns now have access to high-performance computing for their projects.',
+    type: MessageType.BROADCAST,
+  },
+]
+
+for (const message of messages) {
+  await prisma.message.create({ data: message })
+}
+
+console.log('✅ Messages created')
+
+// ========== CREATE STUDENT ANALYTICS ==========
+const analyticsData = [
+  {
+    userId: intern1.id,
+    totalTasks: 3,
+    completedTasks: 1,
+    pendingTasks: 1,
+    overdueTasks: 0,
+    averageScore: 95.0,
+    totalSubmissions: 2,
+    onTimeSubmissions: 2,
+    lateSubmissions: 0,
+    totalCredits: 150,
+    lastActive: new Date(),
+  },
+  {
+    userId: intern5.id,
+    totalTasks: 3,
+    completedTasks: 1,
+    pendingTasks: 1,
+    overdueTasks: 1,
+    averageScore: 92.0,
+    totalSubmissions: 1,
+    onTimeSubmissions: 1,
+    lateSubmissions: 0,
+    totalCredits: 250,
+    lastActive: new Date(),
+  },
+  {
+    userId: intern3.id,
+    totalTasks: 2,
+    completedTasks: 1,
+    pendingTasks: 1,
+    overdueTasks: 0,
+    averageScore: 88.0,
+    totalSubmissions: 1,
+    onTimeSubmissions: 1,
+    lateSubmissions: 0,
+    totalCredits: 80,
+    lastActive: new Date(),
+  },
+  {
+    userId: intern6.id,
+    totalTasks: 3,
+    completedTasks: 1,
+    pendingTasks: 2,
+    overdueTasks: 0,
+    averageScore: 90.0,
+    totalSubmissions: 1,
+    onTimeSubmissions: 1,
+    lateSubmissions: 0,
+    totalCredits: 120,
+    lastActive: new Date(),
+  },
+  {
+    userId: intern2.id,
+    totalTasks: 3,
+    completedTasks: 1,
+    pendingTasks: 2,
+    overdueTasks: 0,
+    averageScore: 94.0,
+    totalSubmissions: 1,
+    onTimeSubmissions: 1,
+    lateSubmissions: 0,
+    totalCredits: 110,
+    lastActive: new Date(),
+  },
+]
+
+for (const analytics of analyticsData) {
+  await prisma.studentAnalytics.create({ data: analytics })
+}
+
+console.log('✅ Student analytics created')
+
+console.log('🎉 Comprehensive seed completed successfully!')
+console.log('📊 Summary:')
+console.log('- Companies: 3')
+console.log('- Users: 12 (1 admin, 3 company admins, 5 mentors, 7 interns)')
+console.log('- Internships: 7 (2 independent, 5 company)')
+console.log('- Tasks: 15 across different domains')
+console.log('- Task Submissions: 6 with various statuses')
+console.log('- Certificates: 3')
+console.log('- Messages: 5')
+console.log('- Analytics: 5 student records')
 }
 
 main()

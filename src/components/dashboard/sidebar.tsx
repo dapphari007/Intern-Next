@@ -152,6 +152,11 @@ const sidebarItems = {
       icon: "Briefcase",
     },
     {
+      title: "Task Management",
+      href: "/admin/tasks",
+      icon: "CheckSquare",
+    },
+    {
       title: "Messages",
       href: "/messages",
       icon: "MessageSquare",
@@ -183,20 +188,14 @@ const sidebarItems = {
       href: "/company/internships",
       icon: "Briefcase",
     },
+    {
+      title: "Task Management",
+      href: "/company/tasks",
+      icon: "CheckSquare",
+    },
      {
       title: "User Management",
       href: "/company/users",
-      icon: "Users",
-    },
-    {
-      title: "Job Postings",
-      href: "/company/jobs",
-      icon: "FileText",
-    },
-    
-    {
-      title: "Recruitment",
-      href: "/company/recruitment",
       icon: "Users",
     },
     {

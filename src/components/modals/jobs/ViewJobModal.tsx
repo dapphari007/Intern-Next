@@ -25,7 +25,7 @@ interface JobPosting {
   salaryMax: number | null
   isActive: boolean
   createdAt: Date
-  applications: Array<{
+  applications?: Array<{
     id: string
     status: string
     user: {
@@ -34,16 +34,16 @@ interface JobPosting {
       email: string
       image: string | null
     }
-  }>
+  }> | null
 }
 
 interface ViewJobModalProps {
   isOpen: boolean
   onClose: () => void
-  job: JobPosting
-  onEdit: () => void
-  onDelete: () => void
-  onViewApplications: () => void
+  job: JobPosting | null
+  onEdit?: () => void
+  onDelete?: () => void
+  onViewApplications?: () => void
 }
 
 const jobTypeColors = {
@@ -70,8 +70,15 @@ export function ViewJobModal({
   onDelete,
   onViewApplications
 }: ViewJobModalProps) {
-  const acceptedApplications = job.applications.filter(app => app.status === 'ACCEPTED')
-  const pendingApplications = job.applications.filter(app => app.status === 'PENDING')
+  // Guard clause: Don't render if job is null
+  if (!job) {
+    return null
+  }
+
+  // Add null safety checks for applications
+  const applications = job.applications || []
+  const acceptedApplications = applications.filter(app => app.status === 'ACCEPTED')
+  const pendingApplications = applications.filter(app => app.status === 'PENDING')
 
   const formatSalary = () => {
     if (!job.salaryMin && !job.salaryMax) return null
@@ -163,7 +170,7 @@ export function ViewJobModal({
               <div className="grid grid-cols-1 gap-2 mb-4">
                 <div className="text-center p-3 border rounded-lg">
                   <div className="text-lg font-bold text-blue-600">
-                    {job.applications.length}
+                    {applications.length}
                   </div>
                   <div className="text-xs text-muted-foreground">Total Applications</div>
                 </div>
@@ -183,11 +190,11 @@ export function ViewJobModal({
                 </div>
               </div>
 
-              {job.applications.length > 0 && (
+              {applications.length > 0 && (
                 <div>
                   <h4 className="text-sm font-medium mb-2">Recent Applicants</h4>
                   <div className="space-y-2">
-                    {job.applications.slice(0, 3).map((application) => (
+                    {applications.slice(0, 3).map((application) => (
                       <div key={application.id} className="flex items-center justify-between text-sm p-2 border rounded">
                         <span>{application.user.name || application.user.email}</span>
                         <Badge 
@@ -201,9 +208,9 @@ export function ViewJobModal({
                         </Badge>
                       </div>
                     ))}
-                    {job.applications.length > 3 && (
+                    {applications.length > 3 && (
                       <p className="text-xs text-muted-foreground text-center">
-                        +{job.applications.length - 3} more applications
+                        +{applications.length - 3} more applications
                       </p>
                     )}
                   </div>

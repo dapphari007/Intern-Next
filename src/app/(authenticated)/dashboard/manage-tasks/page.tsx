@@ -39,7 +39,7 @@ export default async function ManageTasksPage() {
       },
       tasks: {
         include: {
-          assignedToUser: {
+          assignee: {
             select: {
               id: true,
               name: true,
@@ -227,20 +227,20 @@ export default async function ManageTasksPage() {
                     </p>
                     
                     {/* Assigned User */}
-                    {task.assignedToUser && (
+                    {task.assignee && (
                       <div className="flex items-center space-x-3 p-3 bg-muted rounded-lg">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={task.assignedToUser.image || ""} alt={task.assignedToUser.name || ""} />
+                          <AvatarImage src={task.assignee.image || ""} alt={task.assignee.name || ""} />
                           <AvatarFallback>
-                            {task.assignedToUser.name?.charAt(0) || task.assignedToUser.email.charAt(0)}
+                            {task.assignee.name?.charAt(0) || task.assignee.email.charAt(0)}
                           </AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="text-sm font-medium">
-                            Assigned to: {task.assignedToUser.name || 'Unknown'}
+                            Assigned to: {task.assignee.name || 'Unknown'}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {task.assignedToUser.email}
+                            {task.assignee.email}
                           </p>
                         </div>
                       </div>
@@ -288,7 +288,7 @@ export default async function ManageTasksPage() {
                       </div>
                       
                       <div className="flex gap-2">
-                        {latestSubmission && latestSubmission.status === 'PENDING' && (
+                        {latestSubmission && latestSubmission.status === 'SUBMITTED' && (
                           <Button size="sm" variant="outline">
                             <Eye className="mr-2 h-4 w-4" />
                             Review Submission
