@@ -13,12 +13,15 @@ import {
   Plus,
   Edit,
   Eye,
-  Trash2
+  Trash2,
+  Power,
+  PowerOff
 } from "lucide-react"
 import { CreateInternshipModal } from "@/components/modals/internships/CreateInternshipModal"
 import { ViewInternshipModal } from "@/components/modals/internships/ViewInternshipModal"
 import { EditInternshipModal } from "@/components/modals/internships/EditInternshipModal"
 import { DeleteInternshipModal } from "@/components/modals/internships/DeleteInternshipModal"
+import { ViewApplicationsModal } from "@/components/modals/internships/ViewApplicationsModal"
 
 interface Internship {
   id: string
@@ -40,7 +43,17 @@ interface Internship {
   } | null
   applications: Array<{
     id: string
-    status: string
+    status: 'PENDING' | 'ACCEPTED' | 'REJECTED'
+    createdAt: string
+    coverLetter?: string
+    resumeUrl?: string
+    resumeLink?: string
+    phone?: string
+    linkedin?: string
+    github?: string
+    portfolio?: string
+    experience?: string
+    motivation?: string
     user: {
       id: string
       name: string | null
@@ -73,7 +86,8 @@ export function InternshipsPageClient({
     create: false,
     view: false,
     edit: false,
-    delete: false
+    delete: false,
+    applications: false
   })
 
   const openModal = (type: keyof typeof modals, internship?: Internship) => {
@@ -90,6 +104,35 @@ export function InternshipsPageClient({
     // In a real app, you'd refetch the data here
     // For now, we'll just close the modal
     window.location.reload()
+  }
+
+  const toggleInternshipStatus = async (internshipId: string) => {
+    try {
+      const response = await fetch(`/api/internships/${internshipId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action: 'toggle-status' })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle internship status')
+      }
+
+      const updatedInternship = await response.json()
+      
+      // Update local state
+      setInternships(prev => 
+        prev.map(internship => 
+          internship.id === internshipId 
+            ? { ...internship, isActive: updatedInternship.isActive }
+            : internship
+        )
+      )
+    } catch (error) {
+      console.error('Error toggling internship status:', error)
+    }
   }
 
   return (
@@ -233,6 +276,14 @@ export function InternshipsPageClient({
                         <Button 
                           variant="outline" 
                           size="sm" 
+                          onClick={() => toggleInternshipStatus(internship.id)}
+                          className={internship.isActive ? "text-red-600 hover:text-red-700" : "text-green-600 hover:text-green-700"}
+                        >
+                          {internship.isActive ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
                           onClick={() => openModal('view', internship)}
                         >
                           <Eye className="h-4 w-4" />
@@ -283,7 +334,8 @@ export function InternshipsPageClient({
                 openModal('delete', selectedInternship)
               }}
               onViewApplications={() => {
-                // TODO: Implement applications modal
+                closeModal('view')
+                openModal('applications', selectedInternship)
               }}
             />
 
@@ -299,6 +351,12 @@ export function InternshipsPageClient({
               onClose={() => closeModal('delete')}
               internship={selectedInternship}
               onSuccess={refreshInternships}
+            />
+
+            <ViewApplicationsModal
+              isOpen={modals.applications}
+              onClose={() => closeModal('applications')}
+              internship={selectedInternship}
             />
           </>
         )}

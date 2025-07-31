@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { UserService } from '@/lib/services/user.service'
+import { db } from '@/lib/db'
 
 export async function GET(
   request: NextRequest,
@@ -115,6 +116,68 @@ export async function PUT(
   }
 }
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await request.json()
+    const { action } = body
+
+    // Check if user is company admin
+    const currentUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      include: { company: true }
+    })
+
+    const targetUser = await db.user.findUnique({
+      where: { id: params.id },
+      include: { company: true }
+    })
+
+    if (!targetUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // Check if current user is company admin and both users are in the same company
+    if (currentUser?.role !== 'COMPANY_ADMIN' || 
+        currentUser?.companyId !== targetUser?.companyId) {
+      return NextResponse.json({ error: 'Only company admin can manage users' }, { status: 403 })
+    }
+
+    // Prevent self-modification
+    if (session.user.id === params.id) {
+      return NextResponse.json({ error: 'Cannot modify your own account' }, { status: 400 })
+    }
+
+    if (action === 'toggle-status') {
+      const updatedUser = await db.user.update({
+        where: { id: params.id },
+        data: { isActive: !targetUser.isActive }
+      })
+
+      return NextResponse.json({
+        id: updatedUser.id,
+        isActive: updatedUser.isActive
+      })
+    }
+
+    return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
+  } catch (error) {
+    console.error('Error updating user:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -122,13 +185,29 @@ export async function DELETE(
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.email) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Only admins can delete users
-    if (session.user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    // Check if user is company admin
+    const currentUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      include: { company: true }
+    })
+
+    const targetUser = await db.user.findUnique({
+      where: { id: params.id },
+      include: { company: true }
+    })
+
+    if (!targetUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // Check if current user is company admin and both users are in the same company
+    if (currentUser?.role !== 'COMPANY_ADMIN' || 
+        currentUser?.companyId !== targetUser?.companyId) {
+      return NextResponse.json({ error: 'Only company admin can delete users' }, { status: 403 })
     }
 
     // Prevent self-deletion
@@ -136,9 +215,16 @@ export async function DELETE(
       return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 })
     }
 
-    await UserService.deleteUser(params.id)
+    // Soft delete: remove user from company and deactivate
+    await db.user.update({
+      where: { id: params.id },
+      data: { 
+        companyId: null,
+        isActive: false
+      }
+    })
 
-    return NextResponse.json({ success: true, message: 'User deleted successfully' })
+    return NextResponse.json({ success: true, message: 'User removed from company successfully' })
   } catch (error) {
     console.error('Error deleting user:', error)
     return NextResponse.json(

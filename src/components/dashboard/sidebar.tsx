@@ -183,21 +183,17 @@ const sidebarItems = {
       href: "/company/internships",
       icon: "Briefcase",
     },
+     {
+      title: "User Management",
+      href: "/company/users",
+      icon: "Users",
+    },
     {
       title: "Job Postings",
       href: "/company/jobs",
       icon: "FileText",
     },
-    {
-      title: "Alumni Management",
-      href: "/company/alumni",
-      icon: "Users",
-    },
-    {
-      title: "Talent Pipeline",
-      href: "/company/talent",
-      icon: "Users",
-    },
+    
     {
       title: "Recruitment",
       href: "/company/recruitment",
@@ -214,8 +210,13 @@ const sidebarItems = {
       icon: "BarChart3",
     },
     {
-      title: "User Management",
-      href: "/company/users",
+      title: "Talent Pipeline",
+      href: "/company/talent",
+      icon: "Users",
+    },
+    {
+      title: "Alumni Management",
+      href: "/company/alumni",
       icon: "Users",
     },
     {
