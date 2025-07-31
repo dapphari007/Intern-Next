@@ -83,8 +83,35 @@ export default async function MessagesPage() {
       }
     ]
   } else if (userRole === "MENTOR") {
-    // Mentors can message interns, other mentors, and company roles
-    userFilter.role = { in: ["INTERN", "MENTOR", "COMPANY_ADMIN"] }
+    // Mentors can only message their assigned interns and company admin
+    const mentorInternships = await db.internship.findMany({
+      where: { mentorId: session.user.id },
+      include: {
+        applications: {
+          where: { status: 'ACCEPTED' },
+          select: { userId: true }
+        }
+      }
+    })
+    
+    const assignedInternIds = mentorInternships.flatMap(internship => 
+      internship.applications.map(app => app.userId)
+    )
+    
+    userFilter.OR = [
+      { 
+        AND: [
+          { role: "INTERN" },
+          { id: { in: assignedInternIds } }
+        ]
+      },
+      { 
+        AND: [
+          { role: "COMPANY_ADMIN" },
+          { companyId: session.user.companyId }
+        ]
+      }
+    ]
   } else if (["COMPANY_ADMIN"].includes(userRole)) {
     // Company roles can message anyone in their company + interns/mentors
     userFilter.OR = [

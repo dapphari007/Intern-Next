@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -40,6 +41,7 @@ interface Channel {
 
 export default function ProjectRoomPage() {
   const { data: session } = useSession()
+  const router = useRouter()
   const [selectedChannel, setSelectedChannel] = useState<string>('general')
   const [message, setMessage] = useState('')
   const [messages, setMessages] = useState<Message[]>([])
@@ -50,8 +52,18 @@ export default function ProjectRoomPage() {
     { id: 'voice-1', name: 'Voice Channel 1', type: 'voice' },
   ])
 
+  // Redirect mentors away from project room
+  useEffect(() => {
+    if (session?.user?.role === 'MENTOR') {
+      router.push('/dashboard')
+      return
+    }
+  }, [session, router])
+
   // Mock messages
   useEffect(() => {
+    if (session?.user?.role === 'MENTOR') return
+    
     setMessages([
       {
         id: '1',
@@ -108,6 +120,18 @@ export default function ProjectRoomPage() {
       default:
         return 'bg-green-100 text-green-800'
     }
+  }
+
+  // Don't render anything for mentors while redirecting
+  if (session?.user?.role === 'MENTOR') {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold mb-2">Access Restricted</h2>
+          <p className="text-muted-foreground">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    )
   }
 
   return (

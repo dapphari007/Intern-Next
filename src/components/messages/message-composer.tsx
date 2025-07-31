@@ -49,7 +49,7 @@ export function MessageComposer({ users }: MessageComposerProps) {
   const { toast } = useToast()
 
   // Check if user can send broadcast messages
-  const canBroadcast = session?.user?.role && ["ADMIN", "COMPANY_ADMIN"].includes(session.user.role)
+  const canBroadcast = session?.user?.role && ["ADMIN", "COMPANY_ADMIN", "MENTOR"].includes(session.user.role)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -193,7 +193,10 @@ export function MessageComposer({ users }: MessageComposerProps) {
                 </span>
               </div>
               <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
-                This message will be sent to all users in the system.
+                {session?.user?.role === 'MENTOR' 
+                  ? 'This message will be sent to all your assigned interns and your company admin.'
+                  : 'This message will be sent to all users in the system.'
+                }
               </p>
             </div>
           )}

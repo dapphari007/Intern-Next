@@ -115,11 +115,6 @@ const sidebarItems = {
       icon: "MessageSquare",
     },
     {
-      title: "Project Room",
-      href: "/project-room",
-      icon: "MessageSquare",
-    },
-    {
       title: "Analytics",
       href: "/mentor/analytics",
       icon: "BarChart3",

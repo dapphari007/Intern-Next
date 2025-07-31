@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
     
     // Check if user can send broadcast messages
     if (type === "BROADCAST") {
-      const canBroadcast = ["ADMIN", "COMPANY_ADMIN"].includes(userRole)
+      const canBroadcast = ["ADMIN", "COMPANY_ADMIN", "MENTOR"].includes(userRole)
       if (!canBroadcast) {
         return NextResponse.json(
           { error: "You don't have permission to send broadcast messages" },
@@ -99,6 +99,38 @@ export async function POST(request: NextRequest) {
       // COMPANY_ADMIN can only broadcast to company users
       if (userRole === "COMPANY_ADMIN") {
         userFilter.companyId = session.user.companyId
+      }
+
+      // MENTOR can only broadcast to their assigned interns and company admin
+      if (userRole === "MENTOR") {
+        const mentorInternships = await db.internship.findMany({
+          where: { mentorId: session.user.id },
+          include: {
+            applications: {
+              where: { status: 'ACCEPTED' },
+              select: { userId: true }
+            }
+          }
+        })
+        
+        const assignedInternIds = mentorInternships.flatMap(internship => 
+          internship.applications.map(app => app.userId)
+        )
+        
+        userFilter.OR = [
+          { 
+            AND: [
+              { role: "INTERN" },
+              { id: { in: assignedInternIds } }
+            ]
+          },
+          { 
+            AND: [
+              { role: "COMPANY_ADMIN" },
+              { companyId: session.user.companyId }
+            ]
+          }
+        ]
       }
 
       const users = await db.user.findMany({

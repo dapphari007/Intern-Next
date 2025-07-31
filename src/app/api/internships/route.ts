@@ -73,14 +73,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user is a mentor
+    // Check if user is authorized to create internships (only COMPANY_ADMIN and ADMIN)
     const user = await db.user.findUnique({
       where: { id: session.user.id },
     });
 
-    if (user?.role !== 'MENTOR') {
+    if (!user || !['COMPANY_ADMIN', 'ADMIN'].includes(user.role)) {
       return NextResponse.json(
-        { error: 'Only mentors can create internships' },
+        { error: 'Only company admins and system admins can create internships' },
         { status: 403 }
       );
     }

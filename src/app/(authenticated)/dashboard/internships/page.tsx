@@ -15,11 +15,24 @@ export default async function InternshipsPage() {
     redirect("/dashboard")
   }
 
-  // Fetch mentor's internships
-  const internships = await db.internship.findMany({
-    where: {
+  // Fetch internships based on user role
+  let whereClause: any = {}
+  
+  if (session.user.role === 'MENTOR') {
+    // Mentors can only view internships they are assigned to
+    whereClause = {
       mentorId: session.user.id
-    },
+    }
+  } else if (session.user.role === 'ADMIN') {
+    // Admins can view all internships
+    whereClause = {}
+  } else {
+    // Other roles should not access this page
+    redirect("/dashboard")
+  }
+
+  const internships = await db.internship.findMany({
+    where: whereClause,
     include: {
       applications: {
         include: {
@@ -72,15 +85,22 @@ export default async function InternshipsPage() {
     <div className="space-y-6 mb-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">My Internships</h1>
+          <h1 className="text-3xl font-bold">
+            {session.user.role === 'MENTOR' ? 'Assigned Internships' : 'My Internships'}
+          </h1>
           <p className="text-muted-foreground">
-            Manage your internship programs and mentor interns
+            {session.user.role === 'MENTOR' 
+              ? 'View and manage internships assigned to you'
+              : 'Manage your internship programs and mentor interns'
+            }
           </p>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Create New Internship
-        </Button>
+        {session.user.role === 'ADMIN' && (
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Create New Internship
+          </Button>
+        )}
       </div>
 
       {/* Stats Overview */}
@@ -121,14 +141,21 @@ export default async function InternshipsPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Briefcase className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Internships Created</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              {session.user.role === 'MENTOR' ? 'No Internships Assigned' : 'No Internships Created'}
+            </h3>
             <p className="text-muted-foreground text-center mb-4">
-              Start mentoring by creating your first internship program.
+              {session.user.role === 'MENTOR' 
+                ? 'You have not been assigned to any internship programs yet. Contact your company admin for assignments.'
+                : 'Start mentoring by creating your first internship program.'
+              }
             </p>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Your First Internship
-            </Button>
+            {session.user.role === 'ADMIN' && (
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Your First Internship
+              </Button>
+            )}
           </CardContent>
         </Card>
       ) : (

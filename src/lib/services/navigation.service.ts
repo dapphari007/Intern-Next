@@ -69,12 +69,6 @@ export class NavigationService {
           href: '/mentor/analytics',
           icon: 'BarChart',
           roles: ['MENTOR']
-        },
-        {
-          label: 'Project Room',
-          href: '/project-room',
-          icon: 'Users',
-          roles: ['MENTOR']
         }
       )
     }

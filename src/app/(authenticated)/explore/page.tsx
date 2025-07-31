@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { useSession } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -44,6 +45,7 @@ interface Internship {
 const domains = ["All", "Web Development", "Data Science", "Design", "Backend Development", "Mobile Development", "DevOps", "Cybersecurity", "Artificial Intelligence"]
 
 export default function ExplorePage() {
+  const { data: session } = useSession()
   const [searchTerm, setSearchTerm] = useState("")
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("")
   const [selectedDomain, setSelectedDomain] = useState("All")
@@ -299,17 +301,26 @@ export default function ExplorePage() {
                     <span>{internship.maxInterns} position{internship.maxInterns > 1 ? 's' : ''}</span>
                   </div>
                   <div className="flex space-x-2">
-                    <Button 
+                    {/* <Button 
                       variant="outline"
                       onClick={() => handleLearnMore(internship)}
                     >
                       Learn More
-                    </Button>
-                    <Button
-                      onClick={() => handleApplyNow(internship)}
-                    >
-                      Apply Now
-                    </Button>
+                    </Button> */}
+                    {session?.user?.role === 'INTERN' ? (
+                      <Button
+                        onClick={() => handleApplyNow(internship)}
+                      >
+                        Apply Now
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        onClick={() => handleLearnMore(internship)}
+                      >
+                        View Details
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>
