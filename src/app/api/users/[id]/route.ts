@@ -53,6 +53,14 @@ export async function GET(
           }
         },
         mentorships: true,
+        companyMentorships: {
+          select: {
+            id: true,
+            title: true,
+            domain: true,
+            status: true
+          }
+        },
         certificates: true,
         creditHistory: {
           orderBy: { createdAt: 'desc' },
@@ -93,6 +101,7 @@ export async function GET(
       } : null,
       internships: user.role === 'INTERN' ? user.internships.map(app => app.internship) : user.companyApplications.map(app => app.internship),
       mentorships: user.mentorships,
+      assignedDomains: user.companyMentorships?.map(mentorship => mentorship.domain) || [],
       certificates: user.certificates,
       creditHistory: user.creditHistory
     }

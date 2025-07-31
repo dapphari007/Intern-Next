@@ -54,6 +54,7 @@ interface UserProfile {
   mentorships?: any[]
   certificates?: any[]
   creditHistory?: any[]
+  assignedDomains?: string[]
 }
 
 interface CompanyInternship {
@@ -434,6 +435,36 @@ export function UserProfileModal({
           )}
 
           {/* Current Internships/Mentorships */}
+          {user.role === 'MENTOR' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <GraduationCap className="h-5 w-5" />
+                  <span>Assigned Domains</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {user.assignedDomains && user.assignedDomains.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {user.assignedDomains.map((domain, index) => (
+                      <Badge key={index} variant="default" className="px-3 py-1">
+                        {domain}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-6">
+                    <div className="text-muted-foreground mb-2">
+                      <Briefcase className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No domains assigned</p>
+                      <p className="text-xs">This mentor is currently unassigned to any domain</p>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
           {((user.internships && user.internships.length > 0) || 
             (user.mentorships && user.mentorships.length > 0)) && (
             <Card>

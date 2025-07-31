@@ -1,10 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { 
   Briefcase, 
   Users, 
@@ -15,7 +17,9 @@ import {
   Eye,
   Trash2,
   Power,
-  PowerOff
+  PowerOff,
+  Search,
+  Filter
 } from "lucide-react"
 import { CreateInternshipModal } from "@/components/modals/internships/CreateInternshipModal"
 import { ViewInternshipModal } from "@/components/modals/internships/ViewInternshipModal"
@@ -81,7 +85,11 @@ export function InternshipsPageClient({
   avgStipend
 }: InternshipsPageClientProps) {
   const [internships, setInternships] = useState(initialInternships)
+  const [filteredInternships, setFilteredInternships] = useState(initialInternships)
   const [selectedInternship, setSelectedInternship] = useState<Internship | null>(null)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [domainFilter, setDomainFilter] = useState<string>("all")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
   const [modals, setModals] = useState({
     create: false,
     view: false,
@@ -89,6 +97,33 @@ export function InternshipsPageClient({
     delete: false,
     applications: false
   })
+
+  // Filter internships based on search and filters
+  useEffect(() => {
+    let filtered = internships
+
+    // Filter by search term
+    if (searchTerm) {
+      filtered = filtered.filter(internship => 
+        internship.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        internship.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        internship.domain.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    }
+
+    // Filter by domain
+    if (domainFilter !== "all") {
+      filtered = filtered.filter(internship => internship.domain === domainFilter)
+    }
+
+    // Filter by status
+    if (statusFilter !== "all") {
+      const isActive = statusFilter === "active"
+      filtered = filtered.filter(internship => internship.isActive === isActive)
+    }
+
+    setFilteredInternships(filtered)
+  }, [internships, searchTerm, domainFilter, statusFilter])
 
   const openModal = (type: keyof typeof modals, internship?: Internship) => {
     if (internship) setSelectedInternship(internship)
@@ -150,6 +185,47 @@ export function InternshipsPageClient({
             <Plus className="h-4 w-4 mr-2" />
             Create Internship
           </Button>
+        </div>
+
+        {/* Search and Filters */}
+        <div className="flex items-center space-x-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by title, description, or domain..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+          </div>
+          <Select value={domainFilter} onValueChange={setDomainFilter}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Filter by domain" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Domains</SelectItem>
+              <SelectItem value="WEB_DEVELOPMENT">Web Development</SelectItem>
+              <SelectItem value="MOBILE_DEVELOPMENT">Mobile Development</SelectItem>
+              <SelectItem value="DATA_SCIENCE">Data Science</SelectItem>
+              <SelectItem value="AI_ML">AI/ML</SelectItem>
+              <SelectItem value="DEVOPS">DevOps</SelectItem>
+              <SelectItem value="CYBERSECURITY">Cybersecurity</SelectItem>
+              <SelectItem value="UI_UX">UI/UX Design</SelectItem>
+              <SelectItem value="PRODUCT_MANAGEMENT">Product Management</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="inactive">Inactive</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Statistics Cards */}
@@ -215,24 +291,34 @@ export function InternshipsPageClient({
         <Card>
           <CardHeader>
             <CardTitle>All Internships</CardTitle>
-            <CardDescription>Manage your company's internship programs</CardDescription>
+            <CardDescription>
+              {filteredInternships.length} of {internships.length} internships
+              {searchTerm && ` matching "${searchTerm}"`}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            {internships.length === 0 ? (
+            {filteredInternships.length === 0 ? (
               <div className="text-center py-12">
                 <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No internships yet</h3>
+                <h3 className="text-lg font-medium mb-2">
+                  {internships.length === 0 ? "No internships yet" : "No internships match your search"}
+                </h3>
                 <p className="text-muted-foreground mb-4">
-                  Create your first internship program to start attracting talent.
+                  {internships.length === 0 
+                    ? "Create your first internship program to start attracting talent."
+                    : "Try adjusting your search criteria or filters."
+                  }
                 </p>
-                <Button onClick={() => openModal('create')}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Internship
-                </Button>
+                {internships.length === 0 && (
+                  <Button onClick={() => openModal('create')}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Internship
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
-                {internships.map((internship) => (
+                {filteredInternships.map((internship) => (
                   <div key={internship.id} className="border rounded-lg p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">

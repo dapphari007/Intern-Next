@@ -29,6 +29,8 @@ import {
 import Link from "next/link"
 import { UserProfileModal } from "@/components/modals/users/UserProfileModal"
 import { DeleteUserModal } from "@/components/modals/users/DeleteUserModal"
+import { UserManagementModal } from "@/components/modals/users/UserManagementModal"
+import { InviteUserModal } from "@/components/modals/users/InviteUserModal"
 
 interface User {
   id: string
@@ -41,6 +43,7 @@ interface User {
   phone: string | null
   location: string | null
   createdAt: string
+  assignedDomains?: string[]
 }
 
 interface UsersPageClientProps {
@@ -74,6 +77,9 @@ export function UsersPageClient({
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [userToManage, setUserToManage] = useState<User | null>(null)
+  const [isManagementModalOpen, setIsManagementModalOpen] = useState(false)
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -167,6 +173,11 @@ export function UsersPageClient({
     setIsDeleteModalOpen(true)
   }
 
+  const openManagementModal = (user: User) => {
+    setUserToManage(user)
+    setIsManagementModalOpen(true)
+  }
+
   const openChatModal = (userId: string) => {
     // Open user profile modal when chat icon is clicked
     openProfileModal(userId)
@@ -224,7 +235,7 @@ export function UsersPageClient({
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <Button>
+            <Button onClick={() => setIsInviteModalOpen(true)}>
               <UserPlus className="h-4 w-4 mr-2" />
               Invite User
             </Button>
@@ -345,7 +356,7 @@ export function UsersPageClient({
                   }
                 </p>
                 {users.length === 0 && (
-                  <Button>
+                  <Button onClick={() => setIsInviteModalOpen(true)}>
                     <UserPlus className="h-4 w-4 mr-2" />
                     Invite First User
                   </Button>
@@ -386,6 +397,25 @@ export function UsersPageClient({
                               {user.bio}
                             </p>
                           )}
+                          {/* Assigned Domains */}
+                          {user.role === 'MENTOR' && (
+                            <div className="mb-3">
+                              <div className="flex items-center flex-wrap gap-1">
+                                <span className="text-sm text-muted-foreground mr-2">Domains:</span>
+                                {user.assignedDomains && user.assignedDomains.length > 0 ? (
+                                  user.assignedDomains.map((domain, index) => (
+                                    <Badge key={index} variant="outline" className="text-xs">
+                                      {domain}
+                                    </Badge>
+                                  ))
+                                ) : (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Unassigned
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          )}
                           <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                             {user.phone && (
                               <span className="flex items-center">
@@ -415,7 +445,6 @@ export function UsersPageClient({
                           <Eye className="h-4 w-4" />
                         </Button>
 
-                        
                         <Button variant="outline" size="sm" asChild>
                           <Link href={`/messages?to=${user.id}`}>
                           <MessageCircle className="h-4 w-4" />
@@ -424,43 +453,16 @@ export function UsersPageClient({
 
                         {user.id !== currentUserId && currentUserRole === 'COMPANY_ADMIN' && (
                           <>
-                            {/* Role Toggle Buttons */}
-                            {user.role === 'INTERN' && (
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => updateUserRole(user.id, 'MENTOR')}
-                                disabled={isLoading}
-                                className="text-blue-600 hover:text-blue-700"
-                                title="Promote to Mentor"
-                              >
-                                <UserCheck className="h-4 w-4" />
-                              </Button>
-                            )}
-
-                            {user.role === 'MENTOR' && (
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => updateUserRole(user.id, 'INTERN')}
-                                disabled={isLoading}
-                                className="text-orange-600 hover:text-orange-700"
-                                title="Downgrade to Intern"
-                              >
-                                <UserMinus className="h-4 w-4" />
-                              </Button>
-                            )}
-
-                            {/* Status Toggle Button */}
+                            {/* Consolidated Edit Button */}
                             <Button 
                               variant="outline" 
                               size="sm"
-                              onClick={() => toggleUserStatus(user.id)}
+                              onClick={() => openManagementModal(user)}
                               disabled={isLoading}
-                              className={user.isActive ? "text-red-600 hover:text-red-700" : "text-green-600 hover:text-green-700"}
-                              title={user.isActive ? "Deactivate User" : "Activate User"}
+                              className="text-blue-600 hover:text-blue-700"
+                              title="Manage User"
                             >
-                              {user.isActive ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
+                              <Edit className="h-4 w-4" />
                             </Button>
 
                             {/* Delete Button */}
@@ -508,6 +510,29 @@ export function UsersPageClient({
         }}
         user={userToDelete}
         onUserDeleted={handleUserDeleted}
+      />
+
+      <UserManagementModal
+        isOpen={isManagementModalOpen}
+        onClose={() => {
+          setIsManagementModalOpen(false)
+          setUserToManage(null)
+        }}
+        user={userToManage}
+        currentUserRole={currentUserRole}
+        onSuccess={() => {
+          // Refresh the page to get updated user data
+          window.location.reload()
+        }}
+      />
+
+      <InviteUserModal
+        isOpen={isInviteModalOpen}
+        onClose={() => setIsInviteModalOpen(false)}
+        onSuccess={() => {
+          // Refresh users list
+          window.location.reload()
+        }}
       />
     </div>
   )

@@ -211,7 +211,7 @@ export function ViewJobModal({
               )}
             </div>
 
-            <div className="p-4 bg-gray-50 rounded-lg">
+            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <h4 className="font-medium mb-2">Job Details</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">

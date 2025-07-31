@@ -12,12 +12,16 @@ import {
   Edit,
   Eye,
   Trash2,
-  MapPin
+  MapPin,
+  Power,
+  PowerOff
 } from "lucide-react"
 import { CreateJobModal } from "@/components/modals/jobs/CreateJobModal"
 import { ViewJobModal } from "@/components/modals/jobs/ViewJobModal"
 import { EditJobModal } from "@/components/modals/jobs/EditJobModal"
 import { DeleteJobModal } from "@/components/modals/jobs/DeleteJobModal"
+import { ViewApplicationsModal } from "@/components/modals/internships/ViewApplicationsModal"
+import { useToast } from "@/hooks/use-toast"
 
 interface JobPosting {
   id: string
@@ -75,12 +79,15 @@ export function JobsPageClient({
 }: JobsPageClientProps) {
   const [jobs, setJobs] = useState(initialJobs)
   const [selectedJob, setSelectedJob] = useState<JobPosting | null>(null)
+  const [isLoading, setIsLoading] = useState<string | null>(null)
   const [modals, setModals] = useState({
     create: false,
     view: false,
     edit: false,
-    delete: false
+    delete: false,
+    applications: false
   })
+  const { toast } = useToast()
 
   const openModal = (type: keyof typeof modals, job?: JobPosting) => {
     if (job) setSelectedJob(job)
@@ -95,6 +102,43 @@ export function JobsPageClient({
   const refreshJobs = async () => {
     // In a real app, you'd refetch the data here
     window.location.reload()
+  }
+
+  const handleToggleJobStatus = async (jobId: string, currentStatus: boolean) => {
+    setIsLoading(jobId)
+    try {
+      const response = await fetch(`/api/company/jobs/${jobId}/toggle-status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive: !currentStatus })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update job status')
+      }
+
+      // Update local state
+      setJobs(prev => prev.map(job => 
+        job.id === jobId 
+          ? { ...job, isActive: !currentStatus }
+          : job
+      ))
+
+      toast({
+        title: "Success",
+        description: `Job ${!currentStatus ? 'activated' : 'deactivated'} successfully`,
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update job status",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(null)
+    }
   }
 
   const formatSalary = (job: JobPosting) => {
@@ -242,6 +286,22 @@ export function JobsPageClient({
                       <div className="flex items-center space-x-2 ml-4">
                         <Button 
                           variant="outline" 
+                          size="sm"
+                          onClick={() => handleToggleJobStatus(job.id, job.isActive)}
+                          disabled={isLoading === job.id}
+                          className={job.isActive ? "text-orange-600 hover:text-orange-700" : "text-green-600 hover:text-green-700"}
+                          title={job.isActive ? "Deactivate Job" : "Activate Job"}
+                        >
+                          {isLoading === job.id ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+                          ) : job.isActive ? (
+                            <PowerOff className="h-4 w-4" />
+                          ) : (
+                            <Power className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button 
+                          variant="outline" 
                           size="sm" 
                           onClick={() => openModal('view', job)}
                         >
@@ -293,7 +353,8 @@ export function JobsPageClient({
                 openModal('delete', selectedJob)
               }}
               onViewApplications={() => {
-                // TODO: Implement applications modal
+                closeModal('view')
+                openModal('applications', selectedJob)
               }}
             />
 
@@ -309,6 +370,25 @@ export function JobsPageClient({
               onClose={() => closeModal('delete')}
               job={selectedJob}
               onSuccess={refreshJobs}
+            />
+
+            <ViewApplicationsModal
+              isOpen={modals.applications}
+              onClose={() => closeModal('applications')}
+              internship={{
+                id: selectedJob.id,
+                title: selectedJob.title,
+                domain: selectedJob.jobType,
+                applications: selectedJob.applications.map(app => ({
+                  ...app,
+                  status: app.status as 'PENDING' | 'ACCEPTED' | 'REJECTED',
+                  createdAt: new Date().toISOString(),
+                  user: {
+                    ...app.user,
+                    name: app.user.name
+                  }
+                }))
+              }}
             />
           </>
         )}

@@ -19,6 +19,15 @@ export default async function CompanyUsersPage() {
       company: {
         include: {
           users: {
+            include: {
+              companyMentorships: {
+                select: {
+                  id: true,
+                  title: true,
+                  domain: true
+                }
+              }
+            },
             orderBy: {
               createdAt: 'desc'
             }
@@ -51,7 +60,8 @@ export default async function CompanyUsersPage() {
   const transformedUsers = companyUsers.map(user => ({
     ...user,
     createdAt: user.createdAt.toISOString(),
-    updatedAt: user.updatedAt.toISOString()
+    updatedAt: user.updatedAt.toISOString(),
+    assignedDomains: user.companyMentorships?.map(mentorship => mentorship.domain) || []
   }))
 
   // Calculate statistics
