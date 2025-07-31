@@ -150,9 +150,11 @@ export default async function CompanyTalentPage() {
               <Filter className="h-4 w-4 mr-2" />
               Filter
             </Button>
-            <Button>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Talent
+            <Button asChild>
+              <Link href="/company/internships">
+                <UserPlus className="h-4 w-4 mr-2" />
+                Add Talent
+              </Link>
             </Button>
           </div>
         </div>

@@ -222,23 +222,30 @@ export function CreateInternshipModal({
             </Select>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             <div className="flex items-center space-x-2">
               <Switch
                 id="isPaid"
                 checked={formData.isPaid}
                 onCheckedChange={(checked) => handleInputChange('isPaid', checked)}
               />
-              <Label htmlFor="isPaid">Paid Internship</Label>
+              <Label htmlFor="isPaid" className="text-sm font-medium">
+                Paid Internship
+              </Label>
             </div>
             {formData.isPaid && (
-              <Input
-                type="number"
-                min="0"
-                value={formData.stipend}
-                onChange={(e) => handleInputChange('stipend', parseInt(e.target.value))}
-                placeholder="Monthly stipend amount"
-              />
+              <div className="mt-2">
+                <Label htmlFor="stipend" className="text-sm">Monthly Stipend</Label>
+                <Input
+                  id="stipend"
+                  type="number"
+                  min="0"
+                  value={formData.stipend}
+                  onChange={(e) => handleInputChange('stipend', parseInt(e.target.value))}
+                  placeholder="Enter amount"
+                  className="mt-1"
+                />
+              </div>
             )}
           </div>
         </div>

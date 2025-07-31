@@ -5,60 +5,64 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('🌱 Starting consolidated role-based seed...')
 
+  // Clear existing data to prevent duplicates
+  console.log('🧹 Cleaning existing data...')
+  await prisma.taskSubmission.deleteMany()
+  await prisma.task.deleteMany()
+  await prisma.certificate.deleteMany()
+  await prisma.creditHistory.deleteMany()
+  await prisma.message.deleteMany()
+  await prisma.chatMessage.deleteMany()
+  await prisma.companyInternshipApplication.deleteMany()
+  await prisma.jobApplication.deleteMany()
+  await prisma.internshipApplication.deleteMany()
+  await prisma.companyInternship.deleteMany()
+  await prisma.jobPosting.deleteMany()
+  await prisma.internship.deleteMany()
+  await prisma.projectRoom.deleteMany()
+  await prisma.studentAnalytics.deleteMany()
+  await prisma.session.deleteMany()
+  await prisma.account.deleteMany()
+  await prisma.user.deleteMany()
+  await prisma.company.deleteMany()
+
   // Create companies first
-  let techCorp = await prisma.company.findFirst({
-    where: { name: 'TechCorp Solutions' }
+  console.log('🏢 Creating companies...')
+  const techCorp = await prisma.company.create({
+    data: {
+      name: 'TechCorp Solutions',
+      description: 'Leading technology solutions provider specializing in web development, mobile apps, and cloud services.',
+      website: 'https://techcorp.com',
+      industry: 'Technology',
+      size: '100-500',
+      location: 'San Francisco, CA',
+      logo: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200&h=200&fit=crop&crop=center',
+    }
   })
 
-  if (!techCorp) {
-    techCorp = await prisma.company.create({
-      data: {
-        name: 'TechCorp Solutions',
-        description: 'Leading technology solutions provider specializing in web development, mobile apps, and cloud services.',
-        website: 'https://techcorp.com',
-        industry: 'Technology',
-        size: '100-500',
-        location: 'San Francisco, CA',
-        logo: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=200&h=200&fit=crop&crop=center',
-      }
-    })
-  }
-
-  let innovateInc = await prisma.company.findFirst({
-    where: { name: 'Innovate Inc' }
+  const innovateInc = await prisma.company.create({
+    data: {
+      name: 'Innovate Inc',
+      description: 'Innovative startup focused on AI and machine learning solutions.',
+      website: 'https://innovateinc.com',
+      industry: 'Artificial Intelligence',
+      size: '50-100',
+      location: 'New York, NY',
+      logo: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=200&h=200&fit=crop&crop=center',
+    }
   })
 
-  if (!innovateInc) {
-    innovateInc = await prisma.company.create({
-      data: {
-        name: 'Innovate Inc',
-        description: 'Innovative startup focused on AI and machine learning solutions.',
-        website: 'https://innovateinc.com',
-        industry: 'Artificial Intelligence',
-        size: '50-100',
-        location: 'New York, NY',
-        logo: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=200&h=200&fit=crop&crop=center',
-      }
-    })
-  }
-
-  let digitalWorks = await prisma.company.findFirst({
-    where: { name: 'Digital Works' }
+  const digitalWorks = await prisma.company.create({
+    data: {
+      name: 'Digital Works',
+      description: 'Full-service digital agency providing web design, development, and digital marketing solutions.',
+      website: 'https://digitalworks.com',
+      industry: 'Digital Marketing',
+      size: '25-50',
+      location: 'Austin, TX',
+      logo: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=200&h=200&fit=crop&crop=center',
+    }
   })
-
-  if (!digitalWorks) {
-    digitalWorks = await prisma.company.create({
-      data: {
-        name: 'Digital Works',
-        description: 'Full-service digital agency providing web design, development, and digital marketing solutions.',
-        website: 'https://digitalworks.com',
-        industry: 'Digital Marketing',
-        size: '25-50',
-        location: 'Austin, TX',
-        logo: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=200&h=200&fit=crop&crop=center',
-      }
-    })
-  }
 
   console.log('✅ Companies created')
 

@@ -28,16 +28,16 @@ interface Internship {
   createdAt: Date
   mentor: {
     id: string
-    name: string
+    name: string | null
     email: string
     image: string | null
-  }
+  } | null
   applications: Array<{
     id: string
     status: string
     user: {
       id: string
-      name: string
+      name: string | null
       email: string
       image: string | null
     }
@@ -125,14 +125,14 @@ export function ViewInternshipModal({
               <h3 className="font-semibold mb-3">Mentor</h3>
               <div className="flex items-center space-x-3 p-3 border rounded-lg">
                 <Avatar className="h-10 w-10">
-                  <AvatarImage src={internship.mentor.image || undefined} />
+                  <AvatarImage src={internship.mentor?.image || undefined} />
                   <AvatarFallback>
-                    {internship.mentor.name.charAt(0)}
+                    {internship.mentor?.name?.charAt(0) || 'M'}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium">{internship.mentor.name}</p>
-                  <p className="text-sm text-muted-foreground">{internship.mentor.email}</p>
+                  <p className="font-medium">{internship.mentor?.name || 'No mentor assigned'}</p>
+                  <p className="text-sm text-muted-foreground">{internship.mentor?.email || ''}</p>
                 </div>
               </div>
             </div>

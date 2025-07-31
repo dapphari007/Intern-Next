@@ -19,7 +19,7 @@ interface Internship {
   stipend: number | null
   isActive: boolean
   maxInterns: number
-  mentorId: string
+  mentorId: string | null
 }
 
 interface EditInternshipModalProps {
@@ -31,7 +31,7 @@ interface EditInternshipModalProps {
 
 interface Mentor {
   id: string
-  name: string
+  name: string | null
   email: string
 }
 
@@ -210,7 +210,7 @@ export function EditInternshipModal({
 
           <div className="space-y-2">
             <Label htmlFor="mentor">Mentor *</Label>
-            <Select value={formData.mentorId} onValueChange={(value) => handleInputChange('mentorId', value)}>
+            <Select value={formData.mentorId || undefined} onValueChange={(value) => handleInputChange('mentorId', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Select mentor" />
               </SelectTrigger>
@@ -224,14 +224,16 @@ export function EditInternshipModal({
             </Select>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2 mb-2">
+          <div className="space-y-3">
+            <div className="flex items-center space-x-2">
               <Switch
                 id="isActive"
                 checked={formData.isActive}
                 onCheckedChange={(checked) => handleInputChange('isActive', checked)}
               />
-              <Label htmlFor="isActive">Active (Accepting Applications)</Label>
+              <Label htmlFor="isActive" className="text-sm font-medium">
+                Active (Accepting Applications)
+              </Label>
             </div>
             <div className="flex items-center space-x-2">
               <Switch
@@ -239,16 +241,23 @@ export function EditInternshipModal({
                 checked={formData.isPaid}
                 onCheckedChange={(checked) => handleInputChange('isPaid', checked)}
               />
-              <Label htmlFor="isPaid">Paid Internship</Label>
+              <Label htmlFor="isPaid" className="text-sm font-medium">
+                Paid Internship
+              </Label>
             </div>
             {formData.isPaid && (
-              <Input
-                type="number"
-                min="0"
-                value={formData.stipend}
-                onChange={(e) => handleInputChange('stipend', parseInt(e.target.value))}
-                placeholder="Monthly stipend amount"
-              />
+              <div className="mt-2">
+                <Label htmlFor="stipend" className="text-sm">Monthly Stipend</Label>
+                <Input
+                  id="stipend"
+                  type="number"
+                  min="0"
+                  value={formData.stipend}
+                  onChange={(e) => handleInputChange('stipend', parseInt(e.target.value))}
+                  placeholder="Enter amount"
+                  className="mt-1"
+                />
+              </div>
             )}
           </div>
         </div>

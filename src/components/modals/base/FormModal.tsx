@@ -44,13 +44,15 @@ export function FormModal({
       description={description}
       size={size}
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="max-h-[60vh] overflow-y-auto">
-          {children}
+      <form onSubmit={handleSubmit} className="flex flex-col h-full">
+        <div className="flex-1 overflow-y-auto px-1 py-2">
+          <div className="space-y-4">
+            {children}
+          </div>
         </div>
         
         {showFooter && (
-          <div className="flex justify-end space-x-2 pt-4 border-t">
+          <div className="flex justify-end space-x-2 pt-4 border-t mt-4 flex-shrink-0">
             <Button
               type="button"
               variant="outline"

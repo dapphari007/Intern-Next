@@ -162,19 +162,21 @@ export function CreateJobModal({
           </div>
 
           <div className="space-y-2">
-            <Label>Salary Range (Optional)</Label>
+            <Label htmlFor="salary">Salary Range (Optional)</Label>
             <div className="grid grid-cols-2 gap-2">
               <Input
+                id="salaryMin"
                 type="number"
                 min="0"
-                value={formData.salaryMin}
+                value={formData.salaryMin || ''}
                 onChange={(e) => handleInputChange('salaryMin', parseInt(e.target.value) || 0)}
                 placeholder="Min salary"
               />
               <Input
+                id="salaryMax"
                 type="number"
                 min="0"
-                value={formData.salaryMax}
+                value={formData.salaryMax || ''}
                 onChange={(e) => handleInputChange('salaryMax', parseInt(e.target.value) || 0)}
                 placeholder="Max salary"
               />

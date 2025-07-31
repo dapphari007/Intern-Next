@@ -17,8 +17,8 @@ interface BaseModalProps {
 const sizeClasses = {
   sm: "max-w-md",
   md: "max-w-lg", 
-  lg: "max-w-2xl",
-  xl: "max-w-4xl",
+  lg: "max-w-3xl",
+  xl: "max-w-5xl",
   full: "max-w-[95vw] h-[95vh]"
 }
 
@@ -33,14 +33,20 @@ export function BaseModal({
 }: BaseModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={cn(sizeClasses[size], className)}>
-        <DialogHeader>
+      <DialogContent className={cn(
+        sizeClasses[size], 
+        "max-h-[90vh] overflow-hidden flex flex-col",
+        className
+      )}>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>{title}</DialogTitle>
           {description && (
             <DialogDescription>{description}</DialogDescription>
           )}
         </DialogHeader>
-        {children}
+        <div className="flex-1 overflow-hidden">
+          {children}
+        </div>
       </DialogContent>
     </Dialog>
   )

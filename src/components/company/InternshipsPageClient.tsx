@@ -31,19 +31,19 @@ interface Internship {
   isActive: boolean
   maxInterns: number
   createdAt: Date
-  mentorId: string
+  mentorId: string | null
   mentor: {
     id: string
-    name: string
+    name: string | null
     email: string
     image: string | null
-  }
+  } | null
   applications: Array<{
     id: string
     status: string
     user: {
       id: string
-      name: string
+      name: string | null
       email: string
       image: string | null
     }
@@ -220,12 +220,12 @@ export function InternshipsPageClient({
                           )}
                           <div className="flex items-center space-x-1">
                             <Avatar className="h-5 w-5">
-                              <AvatarImage src={internship.mentor.image || undefined} />
+                              <AvatarImage src={internship.mentor?.image || undefined} />
                               <AvatarFallback className="text-xs">
-                                {internship.mentor.name.charAt(0)}
+                                {internship.mentor?.name?.charAt(0) || 'M'}
                               </AvatarFallback>
                             </Avatar>
-                            <span>{internship.mentor.name}</span>
+                            <span>{internship.mentor?.name || 'No mentor assigned'}</span>
                           </div>
                         </div>
                       </div>

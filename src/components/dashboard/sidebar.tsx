@@ -180,11 +180,6 @@ const sidebarItems = {
   COMPANY_ADMIN: [
     {
       title: "Dashboard",
-      href: "/dashboard",
-      icon: "LayoutDashboard",
-    },
-    {
-      title: "Company Overview",
       href: "/company/dashboard",
       icon: "Building",
     },

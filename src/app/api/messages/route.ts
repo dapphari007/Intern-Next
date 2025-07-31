@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Role-based direct messaging restrictions
-      const canMessage = await canUserMessageRecipient(userRole, session.user.companyId, recipient.role, recipient.companyId)
+      const canMessage = await canUserMessageRecipient(userRole, session.user.companyId || null, recipient.role, recipient.companyId)
       
       if (!canMessage) {
         return NextResponse.json(
