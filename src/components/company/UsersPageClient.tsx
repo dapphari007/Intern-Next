@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast"
 import { 
   Users, 
@@ -18,15 +17,18 @@ import {
   Shield,
   Edit,
   Trash2,
-  MoreHorizontal,
   Search,
-  Filter,
   Power,
   PowerOff,
   MessageCircle,
-  UserX
+  UserX,
+  Eye,
+  UserMinus,
+  UserCheck
 } from "lucide-react"
 import Link from "next/link"
+import { UserProfileModal } from "@/components/modals/users/UserProfileModal"
+import { DeleteUserModal } from "@/components/modals/users/DeleteUserModal"
 
 interface User {
   id: string
@@ -44,6 +46,7 @@ interface User {
 interface UsersPageClientProps {
   initialUsers: User[]
   currentUserId: string
+  currentUserRole: string
   totalUsers: number
   activeUsers: number
   adminUsers: number
@@ -54,6 +57,7 @@ interface UsersPageClientProps {
 export function UsersPageClient({
   initialUsers,
   currentUserId,
+  currentUserRole,
   totalUsers,
   activeUsers,
   adminUsers,
@@ -66,6 +70,10 @@ export function UsersPageClient({
   const [roleFilter, setRoleFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
+  const [userToDelete, setUserToDelete] = useState<User | null>(null)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -135,29 +143,58 @@ export function UsersPageClient({
     }
   }
 
-  const softDeleteUser = async (userId: string) => {
+  const handleUserUpdate = (updatedUser: any) => {
+    setUsers(prev => 
+      prev.map(user => 
+        user.id === updatedUser.id 
+          ? { ...user, ...updatedUser }
+          : user
+      )
+    )
+  }
+
+  const handleUserDeleted = (userId: string) => {
+    setUsers(prev => prev.filter(user => user.id !== userId))
+  }
+
+  const openProfileModal = (userId: string) => {
+    setSelectedUserId(userId)
+    setIsProfileModalOpen(true)
+  }
+
+  const openDeleteModal = (user: User) => {
+    setUserToDelete(user)
+    setIsDeleteModalOpen(true)
+  }
+
+  const openChatModal = (userId: string) => {
+    // Open user profile modal when chat icon is clicked
+    openProfileModal(userId)
+  }
+
+  const updateUserRole = async (userId: string, newRole: string) => {
     try {
       setIsLoading(true)
       const response = await fetch(`/api/users/${userId}`, {
-        method: 'DELETE'
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update-role', role: newRole })
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to delete user')
-      }
-
-      // Remove user from local state
-      setUsers(prev => prev.filter(user => user.id !== userId))
-
+      if (!response.ok) throw new Error('Failed to update user role')
+      
+      const updatedUser = await response.json()
+      handleUserUpdate(updatedUser)
+      
       toast({
-        title: "User Deleted",
-        description: "User has been removed from the company.",
+        title: "Role Updated",
+        description: `User role changed to ${newRole.replace('_', ' ')}.`,
       })
     } catch (error) {
-      console.error('Error deleting user:', error)
+      console.error('Error updating user role:', error)
       toast({
         title: "Error",
-        description: "Failed to delete user.",
+        description: "Failed to update user role.",
         variant: "destructive",
       })
     } finally {
@@ -367,59 +404,76 @@ export function UsersPageClient({
                         </div>
                       </div>
                       <div className="flex items-center space-x-2 ml-4">
+
+                        {/* View Profile Button */}
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => openProfileModal(user.id)}
+                          title="View Profile"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+
+                        
                         <Button variant="outline" size="sm" asChild>
                           <Link href={`/messages?to=${user.id}`}>
-                            <MessageCircle className="h-4 w-4" />
+                          <MessageCircle className="h-4 w-4" />
                           </Link>
                         </Button>
-                        {user.id !== currentUserId && (
+
+                        {user.id !== currentUserId && currentUserRole === 'COMPANY_ADMIN' && (
                           <>
+                            {/* Role Toggle Buttons */}
+                            {user.role === 'INTERN' && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => updateUserRole(user.id, 'MENTOR')}
+                                disabled={isLoading}
+                                className="text-blue-600 hover:text-blue-700"
+                                title="Promote to Mentor"
+                              >
+                                <UserCheck className="h-4 w-4" />
+                              </Button>
+                            )}
+
+                            {user.role === 'MENTOR' && (
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => updateUserRole(user.id, 'INTERN')}
+                                disabled={isLoading}
+                                className="text-orange-600 hover:text-orange-700"
+                                title="Downgrade to Intern"
+                              >
+                                <UserMinus className="h-4 w-4" />
+                              </Button>
+                            )}
+
+                            {/* Status Toggle Button */}
                             <Button 
                               variant="outline" 
                               size="sm"
                               onClick={() => toggleUserStatus(user.id)}
                               disabled={isLoading}
                               className={user.isActive ? "text-red-600 hover:text-red-700" : "text-green-600 hover:text-green-700"}
+                              title={user.isActive ? "Deactivate User" : "Activate User"}
                             >
                               {user.isActive ? <PowerOff className="h-4 w-4" /> : <Power className="h-4 w-4" />}
                             </Button>
-                            <Button variant="outline" size="sm" asChild>
-                              <Link href={`/company/users/${user.id}/edit`}>
-                                <Edit className="h-4 w-4" />
-                              </Link>
+
+                            {/* Delete Button */}
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => openDeleteModal(user)}
+                              disabled={isLoading}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              title="Remove from Company"
+                            >
+                              <UserX className="h-4 w-4" />
                             </Button>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem asChild>
-                                  <Link href={`/company/users/${user.id}/profile`}>
-                                    View Profile
-                                  </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                  <Link href={`/company/users/${user.id}/edit`}>
-                                    Edit User
-                                  </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem asChild>
-                                  <Link href={`/messages?to=${user.id}`}>
-                                    Send Message
-                                  </Link>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  className="text-red-600"
-                                  onClick={() => softDeleteUser(user.id)}
-                                  disabled={isLoading}
-                                >
-                                  <UserX className="h-4 w-4 mr-2" />
-                                  Remove from Company
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
                           </>
                         )}
                       </div>
@@ -431,6 +485,30 @@ export function UsersPageClient({
           </CardContent>
         </Card>
       </div>
+
+      {/* Modals */}
+      {selectedUserId && (
+        <UserProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={() => {
+            setIsProfileModalOpen(false)
+            setSelectedUserId(null)
+          }}
+          userId={selectedUserId}
+          currentUserRole={currentUserRole}
+          onUserUpdate={handleUserUpdate}
+        />
+      )}
+
+      <DeleteUserModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false)
+          setUserToDelete(null)
+        }}
+        user={userToDelete}
+        onUserDeleted={handleUserDeleted}
+      />
     </div>
   )
 }

@@ -15,12 +15,56 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Users can access their own data, admins can access any user's data
-    if (session.user.id !== params.id && session.user.role !== 'ADMIN') {
+    // Users can access their own data, admins and company admins can access users in their company
+    const currentUser = await db.user.findUnique({
+      where: { id: session.user.id },
+      include: { company: true }
+    })
+
+    const targetUser = await db.user.findUnique({
+      where: { id: params.id },
+      include: { company: true }
+    })
+
+    if (!targetUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    // Allow access if:
+    // 1. User is accessing their own data
+    // 2. User is a global admin
+    // 3. User is a company admin accessing someone from their company
+    const canAccess = session.user.id === params.id ||
+                     session.user.role === 'ADMIN' ||
+                     (currentUser?.role === 'COMPANY_ADMIN' && 
+                      currentUser?.companyId === targetUser?.companyId)
+
+    if (!canAccess) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const user = await UserService.getUserById(params.id)
+    const user = await db.user.findUnique({
+      where: { id: params.id },
+      include: {
+        company: true,
+        internships: {
+          include: {
+            internship: true
+          }
+        },
+        mentorships: true,
+        certificates: true,
+        creditHistory: {
+          orderBy: { createdAt: 'desc' },
+          take: 10
+        },
+        companyApplications: {
+          include: {
+            internship: true
+          }
+        }
+      }
+    })
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
@@ -29,30 +73,28 @@ export async function GET(
     // Transform the data to match the expected format
     const transformedUser = {
       id: user.id,
-      name: user.name || '',
+      name: user.name,
       email: user.email,
+      image: user.image,
       role: user.role,
-      avatar: user.image,
+      isActive: user.isActive,
       bio: user.bio,
+      phone: user.phone,
+      linkedin: user.linkedin,
+      github: user.github,
+      website: user.website,
+      location: user.location,
       skillCredits: user.skillCredits,
-      joinedAt: user.createdAt.toISOString().split('T')[0],
-      status: 'active', // Default status
-      completedInternships: user.certificates.length,
-      currentInternships: user.role === 'INTERN' ? user.internships.length : user.mentorships.length,
-      internships: user.role === 'INTERN' ? user.internships.map(app => app.internship) : user.mentorships,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+      company: user.company ? {
+        id: user.company.id,
+        name: user.company.name
+      } : null,
+      internships: user.role === 'INTERN' ? user.internships.map(app => app.internship) : user.companyApplications.map(app => app.internship),
+      mentorships: user.mentorships,
       certificates: user.certificates,
-      creditHistory: user.creditHistory,
-      // Additional fields that could be added to the schema later
-      location: null,
-      university: null,
-      company: null,
-      position: null,
-      skills: [],
-      phone: null,
-      linkedin: null,
-      github: null,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt
+      creditHistory: user.creditHistory
     }
 
     return NextResponse.json(transformedUser)
@@ -165,6 +207,30 @@ export async function PATCH(
       return NextResponse.json({
         id: updatedUser.id,
         isActive: updatedUser.isActive
+      })
+    }
+
+    if (action === 'update-role') {
+      const { role } = body
+
+      // Validate role
+      if (!['INTERN', 'MENTOR', 'COMPANY_ADMIN'].includes(role)) {
+        return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
+      }
+
+      // Only company admins and global admins can change roles
+      if (currentUser?.role !== 'COMPANY_ADMIN' && currentUser?.role !== 'ADMIN') {
+        return NextResponse.json({ error: 'Insufficient permissions' }, { status: 403 })
+      }
+
+      const updatedUser = await db.user.update({
+        where: { id: params.id },
+        data: { role }
+      })
+
+      return NextResponse.json({
+        id: updatedUser.id,
+        role: updatedUser.role
       })
     }
 

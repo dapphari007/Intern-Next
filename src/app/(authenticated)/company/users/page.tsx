@@ -47,6 +47,13 @@ export default async function CompanyUsersPage() {
   const company = user.company
   const companyUsers = company.users
 
+  // Transform users data to match the expected type (convert Date to string)
+  const transformedUsers = companyUsers.map(user => ({
+    ...user,
+    createdAt: user.createdAt.toISOString(),
+    updatedAt: user.updatedAt.toISOString()
+  }))
+
   // Calculate statistics
   const totalUsers = companyUsers.length
   const activeUsers = companyUsers.filter(u => u.isActive).length
@@ -56,8 +63,9 @@ export default async function CompanyUsersPage() {
 
   return (
     <UsersPageClient
-      initialUsers={companyUsers}
+      initialUsers={transformedUsers}
       currentUserId={session.user.id}
+      currentUserRole={session.user.role}
       totalUsers={totalUsers}
       activeUsers={activeUsers}
       adminUsers={adminUsers}
