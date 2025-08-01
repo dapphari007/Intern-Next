@@ -49,6 +49,7 @@ interface User {
   skills?: string[]
   joinedAt: string
   isActive: boolean
+  status?: string
   skillCredits?: number
   completedInternships?: number
   currentInternships?: number
@@ -716,8 +717,8 @@ export default function AdminUsersPage() {
                       <Badge variant={getRoleBadgeVariant(selectedUser.role)}>
                         {selectedUser.role}
                       </Badge>
-                      <Badge variant={getStatusBadgeVariant(selectedUser.status)}>
-                        {selectedUser.status}
+                      <Badge variant={getStatusBadgeVariant(selectedUser.status || (selectedUser.isActive ? 'active' : 'inactive'))}>
+                        {selectedUser.status || (selectedUser.isActive ? 'active' : 'inactive')}
                       </Badge>
                     </div>
                   </div>
@@ -842,22 +843,11 @@ export default function AdminUsersPage() {
 
         {/* Delete Confirmation Modal */}
         <DeleteConfirmationModal
-          isOpen={isDeleteModalOpen}
-          onClose={() => setIsDeleteModalOpen(false)}
+          open={isDeleteModalOpen}
+          onOpenChange={setIsDeleteModalOpen}
           onConfirm={handleDeleteUser}
           title="Delete User"
           description="This will permanently delete the user and all associated data."
-          itemName="user account"
-          itemDetails={userToDelete ? [
-            `Name: ${userToDelete.name}`,
-            `Email: ${userToDelete.email}`,
-            `Role: ${userToDelete.role}`,
-            `Joined: ${new Date(userToDelete.joinedAt).toLocaleDateString()}`,
-            `Skill Credits: ${userToDelete.skillCredits || 0}`,
-            `Completed Internships: ${userToDelete.completedInternships || 0}`
-          ] : []}
-          requireConfirmation={true}
-          confirmationText="DELETE"
         />
     </div>
   )

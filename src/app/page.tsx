@@ -286,7 +286,7 @@ export default function HomePage() {
                 Join as Intern
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild>
+            <Button size="lg" variant="secondary" asChild>
               <Link href="/auth/signup">
                 <Award className="mr-2 h-4 w-4" />
                 Become a Mentor

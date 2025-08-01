@@ -147,6 +147,11 @@ const sidebarItems = {
       icon: "Users",
     },
     {
+      title: "Companies",
+      href: "/admin/companies",
+      icon: "Building",
+    },
+    {
       title: "Internships",
       href: "/admin/internships",
       icon: "Briefcase",

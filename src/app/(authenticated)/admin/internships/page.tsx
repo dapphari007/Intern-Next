@@ -14,8 +14,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Navigation } from "@/components/navigation"
 import { useToast } from "@/hooks/use-toast"
+import { AddInternshipTaskModal } from "@/components/admin/add-internship-task-modal"
+import { DeleteConfirmationModal } from "@/components/delete-confirmation-modal"
 import { 
   BookOpen, 
   Search, 
@@ -95,6 +98,13 @@ export default function AdminInternshipsPage() {
     actionType: 'activate' | 'deactivate' | 'complete'
   } | null>(null)
   const [internshipToDelete, setInternshipToDelete] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState("overview")
+  const [internshipTasks, setInternshipTasks] = useState<any[]>([])
+  const [tasksLoading, setTasksLoading] = useState(false)
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false)
+  const [editingTask, setEditingTask] = useState<any>(null)
+  const [viewingTask, setViewingTask] = useState<any>(null)
+  const [deletingTask, setDeletingTask] = useState<any>(null)
   const { toast } = useToast()
 
   // Check authentication and authorization
@@ -132,6 +142,68 @@ export default function AdminInternshipsPage() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchInternshipTasks = async (internshipId: string) => {
+    try {
+      setTasksLoading(true)
+      const response = await fetch(`/api/admin/internships/${internshipId}/tasks`)
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch tasks')
+      }
+      
+      const data = await response.json()
+      setInternshipTasks(data.tasks || [])
+    } catch (error) {
+      console.error('Error fetching tasks:', error)
+      toast({
+        title: "Error",
+        description: "Failed to fetch tasks. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setTasksLoading(false)
+    }
+  }
+
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        if (selectedInternship) {
+          await fetchInternshipTasks(selectedInternship.id)
+        }
+        setDeletingTask(null)
+        toast({
+          title: "Success",
+          description: "Task deleted successfully",
+        })
+      } else {
+        const error = await response.json()
+        toast({
+          title: "Error",
+          description: error.error || 'Failed to delete task',
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('Error deleting task:', error)
+      toast({
+        title: "Error",
+        description: "Failed to delete task",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleTaskSuccess = () => {
+    if (selectedInternship) {
+      fetchInternshipTasks(selectedInternship.id)
     }
   }
 
@@ -473,99 +545,48 @@ export default function AdminInternshipsPage() {
           </div>
         </div>
 
-        {/* Internships Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Internships ({filteredInternships.length})</CardTitle>
-            <CardDescription>
-              Manage internship postings and applications
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Internship</TableHead>
-                  <TableHead>Mentor</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Applications</TableHead>
-                  <TableHead>Details</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredInternships.map((internship) => (
-                  <TableRow key={internship.id}>
-                    <TableCell>
-                      <div className="space-y-1">
-                        <p className="font-medium">{internship.title}</p>
-                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+        {/* Internships Cards */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Internships ({filteredInternships.length})</h2>
+          </div>
+          
+          {filteredInternships.length === 0 ? (
+            <div className="text-center py-12">
+              <BookOpen className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No internships found</h3>
+              <p className="text-muted-foreground mb-4">
+                {hasActiveSearch || domainFilter !== "all" || statusFilter !== "all" 
+                  ? "No internships match your current filters."
+                  : "Get started by adding your first internship."
+                }
+              </p>
+              <Button onClick={() => setShowAddInternshipModal(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Internship
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredInternships.map((internship) => (
+                <Card key={internship.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => {
+                  setSelectedInternship(internship)
+                  setIsViewDialogOpen(true)
+                }}>
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg line-clamp-1">{internship.title}</CardTitle>
+                        <div className="flex items-center space-x-2 text-sm text-muted-foreground mt-1">
                           <Building className="h-3 w-3" />
-                          <span>{internship.company}</span>
-                          <MapPin className="h-3 w-3 ml-2" />
-                          <span>{internship.location}</span>
+                          <span className="line-clamp-1">{internship.company}</span>
                         </div>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="outline">{internship.domain}</Badge>
-                          {internship.isPaid && (
-                            <Badge variant="secondary" className="text-green-600">
-                              <IndianRupee className="h-3 w-3 mr-1" />
-                              {internship.stipend}
-                            </Badge>
-                          )}
+                        <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                          <MapPin className="h-3 w-3" />
+                          <span className="line-clamp-1">{internship.location}</span>
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback>
-                            {internship.mentor.split(' ').map(n => n[0]).join('')}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium text-sm">{internship.mentor}</p>
-                          <div className="flex items-center">
-                            <Star className="h-3 w-3 text-yellow-500 mr-1" />
-                            <span className="text-xs text-muted-foreground">{internship.rating}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusBadgeVariant(internship.status)}>
-                        {internship.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <p className="font-medium">{internship.applicants} applied</p>
-                        <p className="text-muted-foreground">
-                          Max: {internship.maxInterns} interns
-                        </p>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <p>{internship.duration} weeks</p>
-                        <div className="flex items-center text-muted-foreground">
-                          <Calendar className="h-3 w-3 mr-1" />
-                          {new Date(internship.postedAt).toLocaleDateString()}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedInternship(internship)
-                            setIsViewDialogOpen(true)
-                          }}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                      <div className="flex space-x-1" onClick={(e) => e.stopPropagation()}>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -577,124 +598,145 @@ export default function AdminInternshipsPage() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        {internship.status === 'active' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleStatusChange(internship.id, 'inactive')}
-                            className="text-orange-600 hover:text-orange-600"
-                            title="Deactivate internship"
-                          >
-                            <XCircle className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {internship.status === 'inactive' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleStatusChange(internship.id, 'active')}
-                            className="text-green-600 hover:text-green-600"
-                            title="Activate internship"
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {(internship.status === 'active' || internship.status === 'inactive') && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleStatusChange(internship.id, 'completed')}
-                            className="text-blue-600 hover:text-blue-600"
-                            title="Mark as completed"
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                          </Button>
-                        )}
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleDeleteInternship(internship.id)}
                           className="text-destructive hover:text-destructive"
+                          title="Delete internship"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-3">
+                      {/* Status and Domain */}
+                      <div className="flex items-center space-x-2">
+                        <Badge variant={getStatusBadgeVariant(internship.status)}>{internship.status}</Badge>
+                        <Badge variant="outline">{internship.domain}</Badge>
+                        {/* Stipend */}
+                      {internship.isPaid && (
+                        <div className="flex items-center justify-center">
+                          <Badge variant="secondary" className="text-green-600">
+                            <IndianRupee className="h-3 w-3 mr-1" />
+                            {internship.stipend}
+                          </Badge>
+                        </div>
+                      )}
+                      </div>
+
+                      {/* Stats */}
+                      <div className="grid grid-cols-2 gap-4 pt-2 border-t">
+                        <div className="text-center">
+                          <div className="text-lg font-semibold">{internship.applicants}</div>
+                          <div className="text-xs text-muted-foreground">Applications</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg font-semibold">{internship.duration}w</div>
+                          <div className="text-xs text-muted-foreground">Duration</div>
+                        </div>
+                      </div>
+
+                      
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* View Internship Dialog */}
-        <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+        <Dialog open={isViewDialogOpen} onOpenChange={(open) => {
+          setIsViewDialogOpen(open)
+          if (!open) {
+            setActiveTab("overview")
+            setInternshipTasks([])
+          }
+        }}>
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden">
             <DialogHeader>
-              <DialogTitle>Internship Details</DialogTitle>
+              <DialogTitle className="text-2xl">
+                {selectedInternship?.title}
+              </DialogTitle>
               <DialogDescription>
-                View detailed information about this internship
+                Manage internship details and tasks
               </DialogDescription>
             </DialogHeader>
             {selectedInternship && (
-              <div className="space-y-6">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <h3 className="text-2xl font-semibold">{selectedInternship.title}</h3>
-                    <div className="flex items-center space-x-4 text-muted-foreground">
-                      <div className="flex items-center">
-                        <Building className="h-4 w-4 mr-1" />
-                        {selectedInternship.company}
-                      </div>
-                      <div className="flex items-center">
-                        <MapPin className="h-4 w-4 mr-1" />
-                        {selectedInternship.location}
-                      </div>
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        {selectedInternship.duration} weeks
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="outline">{selectedInternship.domain}</Badge>
-                      <Badge variant={getStatusBadgeVariant(selectedInternship.status)}>
-                        {selectedInternship.status}
-                      </Badge>
-                      {selectedInternship.isPaid && (
-                        <Badge variant="secondary" className="text-green-600">
-                          <IndianRupee className="h-3 w-3 mr-1" />
-                          ${selectedInternship.stipend}/month
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="flex items-center mb-2">
-                      <Star className="h-4 w-4 text-yellow-500 mr-1" />
-                      <span className="font-medium">{selectedInternship.rating}</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {selectedInternship.applicants} applications
-                    </p>
-                  </div>
-                </div>
+              <div className="flex-1 overflow-hidden">
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full flex flex-col">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="overview">Overview</TabsTrigger>
+                    <TabsTrigger value="tasks" onClick={() => {
+                      if (activeTab !== "tasks") {
+                        fetchInternshipTasks(selectedInternship.id)
+                      }
+                    }}>
+                      Tasks ({internshipTasks.length})
+                    </TabsTrigger>
+                  </TabsList>
 
-                <div>
-                  <h4 className="font-medium mb-2">Description</h4>
-                  <p className="text-sm text-muted-foreground">{selectedInternship.description}</p>
-                </div>
+                  <div className="flex-1 overflow-y-auto mt-4">
+                    <TabsContent value="overview" className="space-y-6 mt-0">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2">
+                          <div className="flex items-center space-x-4 text-muted-foreground">
+                            <div className="flex items-center">
+                              <Building className="h-4 w-4 mr-1" />
+                              {selectedInternship.company}
+                            </div>
+                            <div className="flex items-center">
+                              <MapPin className="h-4 w-4 mr-1" />
+                              {selectedInternship.location}
+                            </div>
+                            <div className="flex items-center">
+                              <Calendar className="h-4 w-4 mr-1" />
+                              {selectedInternship.duration} weeks
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="outline">{selectedInternship.domain}</Badge>
+                            <Badge variant={getStatusBadgeVariant(selectedInternship.status)}>
+                              {selectedInternship.status}
+                            </Badge>
+                            {selectedInternship.isPaid && (
+                              <Badge variant="secondary" className="text-green-600">
+                                <IndianRupee className="h-3 w-3 mr-1" />
+                                ₹{selectedInternship.stipend}/month
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="flex items-center mb-2">
+                            <Star className="h-4 w-4 text-yellow-500 mr-1" />
+                            <span className="font-medium">{selectedInternship.rating}</span>
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {selectedInternship.applicants} applications
+                          </p>
+                        </div>
+                      </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 className="font-medium mb-2">Mentor Information</h4>
-                    <div className="flex items-center space-x-3 p-3 border rounded-lg">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback>
-                          {selectedInternship.mentor.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
                       <div>
-                        <p className="font-medium">{selectedInternship.mentor}</p>
+                        <h4 className="font-medium mb-2">Description</h4>
+                        <p className="text-sm text-muted-foreground">{selectedInternship.description}</p>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <h4 className="font-medium mb-2">Mentor Information</h4>
+                          <div className="flex items-center space-x-3 p-3 border rounded-lg">
+                            <Avatar className="h-10 w-10">
+                              <AvatarFallback>
+                                {selectedInternship.mentor.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">{selectedInternship.mentor}</p>
                         <div className="flex items-center">
                           <Star className="h-3 w-3 text-yellow-500 mr-1" />
                           <span className="text-sm text-muted-foreground">{selectedInternship.rating} rating</span>
@@ -765,48 +807,149 @@ export default function AdminInternshipsPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center pt-4 border-t">
-                  <p className="text-sm text-muted-foreground">
-                    Posted on {new Date(selectedInternship.postedAt).toLocaleDateString()}
-                  </p>
-                  <div className="flex space-x-2">
-                    {selectedInternship.status === 'active' && (
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          handleStatusChange(selectedInternship.id, 'inactive')
-                          setIsViewDialogOpen(false)
-                        }}
-                      >
-                        <XCircle className="mr-2 h-4 w-4" />
-                        Deactivate
-                      </Button>
-                    )}
-                    {selectedInternship.status === 'inactive' && (
-                      <Button
-                        onClick={() => {
-                          handleStatusChange(selectedInternship.id, 'active')
-                          setIsViewDialogOpen(false)
-                        }}
-                      >
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Activate
-                      </Button>
-                    )}
-                    {(selectedInternship.status === 'active' || selectedInternship.status === 'inactive') && (
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          handleStatusChange(selectedInternship.id, 'completed')
-                          setIsViewDialogOpen(false)
-                        }}
-                      >
-                        <CheckCircle className="mr-2 h-4 w-4" />
-                        Mark Complete
-                      </Button>
-                    )}
+                      <div className="flex justify-between items-center pt-4 border-t">
+                        <p className="text-sm text-muted-foreground">
+                          Posted on {new Date(selectedInternship.postedAt).toLocaleDateString()}
+                        </p>
+                        <div className="flex space-x-2">
+                          {selectedInternship.status === 'active' && (
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                handleStatusChange(selectedInternship.id, 'inactive')
+                                setIsViewDialogOpen(false)
+                              }}
+                            >
+                              <XCircle className="mr-2 h-4 w-4" />
+                              Deactivate
+                            </Button>
+                          )}
+                          {selectedInternship.status === 'inactive' && (
+                            <Button
+                              onClick={() => {
+                                handleStatusChange(selectedInternship.id, 'active')
+                                setIsViewDialogOpen(false)
+                              }}
+                            >
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Activate
+                            </Button>
+                          )}
+                          {(selectedInternship.status === 'active' || selectedInternship.status === 'inactive') && (
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                handleStatusChange(selectedInternship.id, 'completed')
+                                setIsViewDialogOpen(false)
+                              }}
+                            >
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Mark Complete
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="tasks" className="space-y-4 mt-0">
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-lg font-semibold">Internship Tasks</h3>
+                        <Button size="sm" onClick={() => setShowAddTaskModal(true)}>
+                          <Plus className="mr-2 h-4 w-4" />
+                          Add Task
+                        </Button>
+                      </div>
+
+                      {tasksLoading ? (
+                        <div className="space-y-4">
+                          {[...Array(3)].map((_, i) => (
+                            <div key={i} className="h-24 bg-muted rounded animate-pulse"></div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {internshipTasks.length === 0 ? (
+                            <div className="text-center py-12">
+                              <CheckCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                              <h3 className="text-lg font-semibold mb-2">No tasks found</h3>
+                              <p className="text-muted-foreground mb-4">
+                                Get started by adding the first task for this internship.
+                              </p>
+                              <Button onClick={() => setShowAddTaskModal(true)}>
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add Task
+                              </Button>
+                            </div>
+                          ) : (
+                            internshipTasks.map((task) => (
+                              <Card key={task.id}>
+                                <CardHeader className="pb-3">
+                                  <div className="flex items-start justify-between">
+                                    <div>
+                                      <CardTitle className="text-base">{task.title}</CardTitle>
+                                      <div className="flex items-center space-x-2 mt-2">
+                                        <Badge variant={task.status === 'COMPLETED' ? 'default' : task.status === 'IN_PROGRESS' ? 'secondary' : 'outline'}>
+                                          {task.status.replace('_', ' ')}
+                                        </Badge>
+                                        {task.dueDate && (
+                                          <Badge variant="outline" className="text-xs">
+                                            Due: {new Date(task.dueDate).toLocaleDateString()}
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="flex space-x-1">
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        onClick={() => setViewingTask(task)}
+                                      >
+                                        <Eye className="h-4 w-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm"
+                                        onClick={() => setEditingTask(task)}
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </Button>
+                                      <Button 
+                                        variant="ghost" 
+                                        size="sm" 
+                                        className="text-destructive hover:text-destructive"
+                                        onClick={() => setDeletingTask(task)}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </CardHeader>
+                                <CardContent className="pt-0">
+                                  <div className="space-y-2">
+                                    <p className="text-sm text-muted-foreground line-clamp-2">
+                                      {task.description}
+                                    </p>
+                                    
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                      <div>
+                                        <span className="text-muted-foreground">Assigned to:</span>
+                                        <p className="font-medium">{task.assignee?.name || 'Unassigned'}</p>
+                                      </div>
+                                      <div>
+                                        <span className="text-muted-foreground">Submissions:</span>
+                                        <p className="font-medium">{task.submissions?.length || 0}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </TabsContent>
                   </div>
-                </div>
+                </Tabs>
               </div>
             )}
           </DialogContent>
@@ -927,6 +1070,29 @@ export default function AdminInternshipsPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Task Modals */}
+        {selectedInternship && (
+          <>
+            <AddInternshipTaskModal
+              internshipId={selectedInternship.id}
+              open={showAddTaskModal}
+              onOpenChange={setShowAddTaskModal}
+              onSuccess={handleTaskSuccess}
+            />
+
+            {deletingTask && (
+              <DeleteConfirmationModal
+                open={!!deletingTask}
+                onOpenChange={(open) => !open && setDeletingTask(null)}
+                onConfirm={() => handleDeleteTask(deletingTask.id)}
+                title="Delete Task"
+                description={`Are you sure you want to delete "${deletingTask.title}"? This action cannot be undone.`}
+                loading={false}
+              />
+            )}
+          </>
+        )}
       </div>
     </div>
   )

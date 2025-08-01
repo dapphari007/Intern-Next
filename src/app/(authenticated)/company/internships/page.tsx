@@ -193,6 +193,7 @@ export default async function CompanyInternshipsPage() {
       pendingApplications={pendingApplications}
       acceptedAllApplications={acceptedAllApplications}
       rejectedApplications={rejectedApplications}
+      companyId={company.id}
     />
   )
 }

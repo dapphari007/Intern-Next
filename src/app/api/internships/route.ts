@@ -138,7 +138,7 @@ export async function GET(request: NextRequest) {
       }));
 
       // Combine both types of internships
-      allInternships = [...transformedRegularInternships, ...transformedCompanyInternships];
+      allInternships = [...transformedRegularInternships, ...transformedCompanyInternships] as any[];
       
       // Sort by creation date
       allInternships.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());

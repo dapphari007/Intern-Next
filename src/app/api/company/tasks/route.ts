@@ -69,8 +69,7 @@ export async function POST(request: NextRequest) {
         internshipId,
         assignedTo,
         status: TaskStatus.PENDING,
-        dueDate: dueDate ? new Date(dueDate) : null,
-        priority: priority || 'MEDIUM'
+        dueDate: dueDate ? new Date(dueDate) : null
       },
       include: {
         assignee: {

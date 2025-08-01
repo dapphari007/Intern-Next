@@ -29,7 +29,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 
-interface AdminTaskManagementClientProps {
+interface TaskManagementClientProps {
   tasks: any[]
   taskStats: {
     total: number
@@ -40,33 +40,31 @@ interface AdminTaskManagementClientProps {
   }
   tasksByDomain: Record<string, any[]>
   studentsWithTasks: any[]
+  userRole: string
+  companyInfo?: {
+    id: string
+    name: string
+    industry?: string | null
+  } | null
+  companyInternships: any[]
 }
 
-export function AdminTaskManagementClient({ 
+export function TaskManagementClient({ 
   tasks,
   taskStats,
   tasksByDomain, 
-  studentsWithTasks 
-}: AdminTaskManagementClientProps) {
+  studentsWithTasks,
+  userRole: propUserRole,
+  companyInfo,
+  companyInternships
+}: TaskManagementClientProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedDomain, setSelectedDomain] = useState<string>('All')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
   const { toast } = useToast()
   
-  // Check if current user is admin (they can only view, not edit/delete)
-  const [userRole, setUserRole] = useState<string>('')
-  
-  useEffect(() => {
-    // Get user role from session or context
-    fetch('/api/auth/session')
-      .then(res => res.json())
-      .then(data => {
-        if (data?.user?.role) {
-          setUserRole(data.user.role)
-        }
-      })
-      .catch(console.error)
-  }, [])
+  // Use the user role passed as prop
+  const userRole = propUserRole
 
   const domains = ['All', ...Object.keys(tasksByDomain)]
 
@@ -113,14 +111,89 @@ export function AdminTaskManagementClient({
   }
 
   const [selectedTask, setSelectedTask] = useState<any>(null)
+  const [selectedStudent, setSelectedStudent] = useState<any>(null)
   const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [taskToDelete, setTaskToDelete] = useState<string | null>(null)
 
   const handleViewTask = (task: any) => {
     setSelectedTask(task)
     setIsViewModalOpen(true)
+  }
+
+  const handleViewStudent = (student: any) => {
+    setSelectedStudent(student)
+    setIsStudentModalOpen(true)
+  }
+
+  const handleCreateTask = async () => {
+    try {
+      const title = (document.getElementById('create-title') as HTMLInputElement)?.value
+      const description = (document.getElementById('create-description') as HTMLTextAreaElement)?.value
+      const internshipId = (document.getElementById('create-internship') as HTMLSelectElement)?.value
+      const credits = (document.getElementById('create-credits') as HTMLInputElement)?.value
+      const dueDate = (document.getElementById('create-due-date') as HTMLInputElement)?.value
+      const assigneeEmail = (document.getElementById('create-assignee') as HTMLInputElement)?.value
+
+      if (!title || !description || !internshipId) {
+        toast({
+          title: "Error",
+          description: "Please fill in all required fields",
+          variant: "destructive",
+        })
+        return
+      }
+
+      const response = await fetch('/api/admin/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          internshipId,
+          credits: credits || 10,
+          dueDate: dueDate || null,
+          assigneeEmail: assigneeEmail || null,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create task')
+      }
+
+      toast({
+        title: "Success",
+        description: "Task created successfully",
+      })
+
+      setIsCreateModalOpen(false)
+      
+      // Reset form
+      ;(document.getElementById('create-title') as HTMLInputElement).value = ''
+      ;(document.getElementById('create-description') as HTMLTextAreaElement).value = ''
+      ;(document.getElementById('create-internship') as HTMLSelectElement).value = ''
+      ;(document.getElementById('create-credits') as HTMLInputElement).value = '10'
+      ;(document.getElementById('create-due-date') as HTMLInputElement).value = ''
+      ;(document.getElementById('create-assignee') as HTMLInputElement).value = ''
+
+      // Refresh the page to show the new task
+      window.location.reload()
+
+    } catch (error) {
+      console.error('Error creating task:', error)
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create task",
+        variant: "destructive",
+      })
+    }
   }
 
   const handleEditTask = (task: any) => {
@@ -203,19 +276,21 @@ export function AdminTaskManagementClient({
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Admin Task Management</h1>
+            <h1 className="text-3xl font-bold">Task Management</h1>
             <p className="text-muted-foreground">
-              Monitor and manage all tasks across the platform
+              {companyInfo ? (
+                <>Monitor and manage tasks for <span className="font-medium text-foreground">{companyInfo.name}</span></>
+              ) : (
+                "Monitor and manage your tasks"
+              )}
             </p>
+            {companyInfo?.industry && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Industry: {companyInfo.industry}
+              </p>
+            )}
           </div>
-          <div className="flex space-x-2">
-            <Button variant="outline" asChild>
-              <Link href="/admin/analytics">
-                <Target className="h-4 w-4 mr-2" />
-                Analytics
-              </Link>
-            </Button>
-          </div>
+        
         </div>
 
         {/* Statistics Cards */}
@@ -349,16 +424,32 @@ export function AdminTaskManagementClient({
                 <div className="text-center py-12">
                   <CheckSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-medium mb-2">No tasks found</h3>
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground mb-4">
                     {searchTerm || selectedDomain !== 'All' || statusFilter !== 'ALL' 
                       ? 'Try adjusting your search terms or filters.'
-                      : 'No tasks have been created yet.'
+                      : (userRole === 'ADMIN' || userRole === 'COMPANY_ADMIN') 
+                        ? (companyInternships?.length || 0) === 0
+                          ? 'Create internships first, then you can add tasks to them.'
+                          : 'No tasks have been created yet. Click "Create Task" to get started.'
+                        : 'No tasks have been created yet.'
                     }
                   </p>
+                  {(userRole === 'ADMIN' || userRole === 'COMPANY_ADMIN') && !searchTerm && selectedDomain === 'All' && statusFilter === 'ALL' && (
+                    <div className="flex justify-center">
+                        <Button onClick={() => setIsCreateModalOpen(true)}>
+                          <Plus className="mr-2 h-4 w-4" />
+                          Create Your First Task
+                        </Button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 filteredTasks.map((task) => (
-                  <Card key={task.id} className="hover:shadow-md transition-shadow">
+                  <Card 
+                    key={task.id} 
+                    className="hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => handleViewTask(task)}
+                  >
                     <CardContent className="p-6">
                       <div className="flex items-start justify-between">
                         <div className="flex-1 space-y-3">
@@ -410,22 +501,16 @@ export function AdminTaskManagementClient({
                                 {task.submissions.length} submission(s)
                               </span>
                               
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => handleViewTask(task)}
-                                title="View Task"
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              
                               {/* Only show edit/delete buttons for non-admin users */}
                               {userRole !== 'ADMIN' && (
                                 <>
                                   <Button 
                                     variant="ghost" 
                                     size="sm"
-                                    onClick={() => handleEditTask(task)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleEditTask(task);
+                                    }}
                                     title="Edit Task"
                                   >
                                     <Edit className="h-4 w-4" />
@@ -434,7 +519,10 @@ export function AdminTaskManagementClient({
                                   <Button 
                                     variant="ghost" 
                                     size="sm"
-                                    onClick={() => handleDeactivateTask(task.id)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeactivateTask(task.id);
+                                    }}
                                     className="text-orange-600 hover:text-orange-600"
                                     title="Deactivate Task"
                                   >
@@ -444,7 +532,10 @@ export function AdminTaskManagementClient({
                                   <Button 
                                     variant="ghost" 
                                     size="sm"
-                                    onClick={() => handleDeleteTask(task.id)}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteTask(task.id);
+                                    }}
                                     className="text-red-600 hover:text-red-600"
                                     title="Delete Task"
                                   >
@@ -465,13 +556,34 @@ export function AdminTaskManagementClient({
 
           {/* Students Tab */}
           <TabsContent value="students" className="space-y-6">
+            {/* Students Header */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold">Student Progress</h2>
+                <p className="text-muted-foreground">
+                  {companyInfo ? (
+                    <>Track progress of students working on <span className="font-medium text-foreground">{companyInfo.name}</span> tasks</>
+                  ) : (
+                    "Track student progress and task completion"
+                  )}
+                </p>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {studentsWithTasks.length} student{studentsWithTasks.length !== 1 ? 's' : ''}
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 gap-4">
               {studentsWithTasks.length === 0 ? (
                 <div className="text-center py-12">
                   <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-medium mb-2">No students with tasks</h3>
                   <p className="text-muted-foreground">
-                    Students will appear here once tasks are assigned to them.
+                    {companyInfo ? (
+                      <>Students from <span className="font-medium">{companyInfo.name}</span> will appear here once tasks are assigned to them.</>
+                    ) : (
+                      "Students will appear here once tasks are assigned to them."
+                    )}
                   </p>
                 </div>
               ) : (
@@ -481,7 +593,11 @@ export function AdminTaskManagementClient({
                   const totalTasks = student.tasks.length
                   
                   return (
-                    <Card key={student.id} className="hover:shadow-md transition-shadow">
+                    <Card 
+                      key={student.id} 
+                      className="hover:shadow-md transition-shadow cursor-pointer"
+                      onClick={() => handleViewStudent(student)}
+                    >
                       <CardContent className="p-6">
                         <div className="flex items-center space-x-4">
                           <Avatar className="h-12 w-12">
@@ -518,12 +634,10 @@ export function AdminTaskManagementClient({
                               <span>
                                 Latest: {student.tasks[0]?.internship?.title || 'No internship'}
                               </span>
-                              <Button variant="outline" size="sm" asChild>
-                                <Link href={`/admin/users/${student.id}`}>
-                                  <Eye className="h-3 w-3 mr-1" />
-                                  View Profile
-                                </Link>
-                              </Button>
+                              <div className="flex items-center text-blue-600">
+                                <Eye className="h-3 w-3 mr-1" />
+                                <span>Click to view details</span>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -538,57 +652,162 @@ export function AdminTaskManagementClient({
 
         {/* View Task Modal */}
         <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Task Details</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <CheckSquare className="h-5 w-5" />
+                Task Details
+              </DialogTitle>
               <DialogDescription>
-                View detailed information about this task
+                Complete information about this task
               </DialogDescription>
             </DialogHeader>
             {selectedTask && (
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-sm font-medium">Title</Label>
-                  <p className="text-sm text-muted-foreground">{selectedTask.title}</p>
+              <div className="space-y-6">
+                {/* Task Header */}
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <h3 className="text-lg font-semibold mb-2">{selectedTask.title}</h3>
+                  <p className="text-muted-foreground">{selectedTask.description}</p>
                 </div>
-                <div>
-                  <Label className="text-sm font-medium">Description</Label>
-                  <p className="text-sm text-muted-foreground">{selectedTask.description}</p>
+
+                {/* Status and Priority */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="p-2 bg-blue-100 rounded-full">
+                          <Target className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Status</p>
+                          <Badge className={getStatusColor(selectedTask.status)}>
+                            {selectedTask.status.replace('_', ' ')}
+                          </Badge>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="p-2 bg-green-100 rounded-full">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Credits</p>
+                          <p className="text-lg font-semibold">{selectedTask.credits}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {selectedTask.dueDate && (
+                    <Card>
+                      <CardContent className="p-4">
+                        <div className="flex items-center space-x-2">
+                          <div className="p-2 bg-orange-100 rounded-full">
+                            <Clock className="h-4 w-4 text-orange-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">Due Date</p>
+                            <p className="text-sm font-semibold">
+                              {new Date(selectedTask.dueDate).toLocaleDateString()}
+                            </p>
+                            <Badge className={getPriorityColor(selectedTask.dueDate)} variant="outline">
+                              {Math.ceil((new Date(selectedTask.dueDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
+                            </Badge>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-sm font-medium">Status</Label>
-                    <Badge className={getStatusColor(selectedTask.status)}>
-                      {selectedTask.status}
-                    </Badge>
-                  </div>
-                  <div>
-                    <Label className="text-sm font-medium">Credits</Label>
-                    <p className="text-sm text-muted-foreground">{selectedTask.credits}</p>
-                  </div>
+
+                {/* Assignee and Internship Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Users className="h-4 w-4" />
+                        Assigned To
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center space-x-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={selectedTask.assignee?.image || undefined} />
+                          <AvatarFallback>
+                            {selectedTask.assignee?.name?.charAt(0) || selectedTask.assignee?.email?.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium">
+                            {selectedTask.assignee?.name || selectedTask.assignee?.email}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {selectedTask.assignee?.email}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Target className="h-4 w-4" />
+                        Internship Details
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div>
+                          <p className="font-medium">{selectedTask.internship?.title}</p>
+                          <Badge variant="outline">{selectedTask.internship?.domain}</Badge>
+                        </div>
+                        {selectedTask.internship?.company && (
+                          <p className="text-sm text-muted-foreground">
+                            Company: {selectedTask.internship.company.name}
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-                <div>
-                  <Label className="text-sm font-medium">Internship</Label>
-                  <p className="text-sm text-muted-foreground">{selectedTask.internship?.title}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Domain</Label>
-                  <Badge variant="outline">{selectedTask.internship?.domain}</Badge>
-                </div>
-                {selectedTask.dueDate && (
-                  <div>
-                    <Label className="text-sm font-medium">Due Date</Label>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(selectedTask.dueDate).toLocaleDateString()}
-                    </p>
-                  </div>
-                )}
-                <div>
-                  <Label className="text-sm font-medium">Submissions</Label>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedTask.submissions?.length || 0} submission(s)
-                  </p>
-                </div>
+
+                {/* Submissions */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <CheckSquare className="h-4 w-4" />
+                      Submissions ({selectedTask.submissions?.length || 0})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedTask.submissions && selectedTask.submissions.length > 0 ? (
+                      <div className="space-y-2">
+                        {selectedTask.submissions.map((submission: any, index: number) => (
+                          <div key={index} className="flex items-center justify-between p-2 bg-muted/30 rounded">
+                            <div>
+                              <p className="text-sm font-medium">
+                                Submission {index + 1}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {submission.user?.name || submission.user?.email}
+                              </p>
+                            </div>
+                            <Badge variant="outline">
+                              {new Date(submission.createdAt).toLocaleDateString()}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No submissions yet</p>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
             )}
           </DialogContent>
@@ -656,6 +875,254 @@ export function AdminTaskManagementClient({
                 setIsEditModalOpen(false)
               }}>
                 Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Student Details Modal */}
+        <Dialog open={isStudentModalOpen} onOpenChange={setIsStudentModalOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Student Progress Details
+              </DialogTitle>
+              <DialogDescription>
+                Complete overview of student's task progress and performance
+              </DialogDescription>
+            </DialogHeader>
+            {selectedStudent && (
+              <div className="space-y-6">
+                {/* Student Header */}
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <Avatar className="h-16 w-16">
+                      <AvatarImage src={selectedStudent.image || undefined} />
+                      <AvatarFallback className="text-lg">
+                        {selectedStudent.name?.charAt(0) || selectedStudent.email.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="text-xl font-semibold">
+                        {selectedStudent.name || selectedStudent.email}
+                      </h3>
+                      <p className="text-muted-foreground">{selectedStudent.email}</p>
+                      <Badge variant="outline" className="mt-1">
+                        {selectedStudent.role}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress Overview */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="p-2 bg-blue-100 rounded-full">
+                          <CheckSquare className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Total Tasks</p>
+                          <p className="text-2xl font-bold">{selectedStudent.tasks?.length || 0}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="p-2 bg-green-100 rounded-full">
+                          <CheckCircle className="h-4 w-4 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Completed</p>
+                          <p className="text-2xl font-bold">
+                            {selectedStudent.tasks?.filter((task: any) => task.status === 'COMPLETED').length || 0}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="p-2 bg-yellow-100 rounded-full">
+                          <Clock className="h-4 w-4 text-yellow-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">In Progress</p>
+                          <p className="text-2xl font-bold">
+                            {selectedStudent.tasks?.filter((task: any) => task.status === 'IN_PROGRESS').length || 0}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardContent className="p-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="p-2 bg-red-100 rounded-full">
+                          <AlertTriangle className="h-4 w-4 text-red-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">Overdue</p>
+                          <p className="text-2xl font-bold">
+                            {selectedStudent.tasks?.filter((task: any) => 
+                              task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'COMPLETED'
+                            ).length || 0}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Progress Bar */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">Overall Progress</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span>Task Completion Rate</span>
+                        <span>
+                          {getStudentTaskCompletion(selectedStudent)}%
+                        </span>
+                      </div>
+                      <Progress value={getStudentTaskCompletion(selectedStudent)} className="h-3" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Task List */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <CheckSquare className="h-4 w-4" />
+                      All Tasks ({selectedStudent.tasks?.length || 0})
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {selectedStudent.tasks && selectedStudent.tasks.length > 0 ? (
+                      <div className="space-y-3">
+                        {selectedStudent.tasks.map((task: any, index: number) => (
+                          <div key={task.id || index} className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                            <div className="flex-1">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="font-medium">{task.title}</h4>
+                                <Badge className={getStatusColor(task.status)}>
+                                  {task.status.replace('_', ' ')}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-2">
+                                {task.description}
+                              </p>
+                              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                <span>Credits: {task.credits}</span>
+                                <span>Internship: {task.internship?.title}</span>
+                                <Badge variant="outline" className="text-xs">
+                                  {task.internship?.domain}
+                                </Badge>
+                                {task.dueDate && (
+                                  <span>Due: {new Date(task.dueDate).toLocaleDateString()}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No tasks assigned yet</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Task Modal */}
+        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Plus className="h-5 w-5" />
+                Create New Task
+              </DialogTitle>
+              <DialogDescription>
+                Create a new task for your company's internship program
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="create-title">Task Title</Label>
+                <Input
+                  id="create-title"
+                  placeholder="Enter task title"
+                />
+              </div>
+              <div>
+                <Label htmlFor="create-description">Description</Label>
+                <Textarea
+                  id="create-description"
+                  placeholder="Describe the task requirements and objectives"
+                  rows={4}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="create-internship">Internship</Label>
+                  <select
+                    id="create-internship"
+                    className="w-full px-3 py-2 border border-input bg-background rounded-md text-sm"
+                  >
+                    <option value="">Select an internship</option>
+                    {companyInternships?.map((internship) => (
+                      <option key={internship.id} value={internship.id}>
+                        {internship.title} ({internship.domain})
+                      </option>
+                    )) || []}
+                  </select>
+                </div>
+                <div>
+                  <Label htmlFor="create-credits">Credits</Label>
+                  <Input
+                    id="create-credits"
+                    type="number"
+                    placeholder="Task credits"
+                    min="0"
+                    defaultValue="10"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="create-due-date">Due Date (Optional)</Label>
+                <Input
+                  id="create-due-date"
+                  type="date"
+                />
+              </div>
+              <div>
+                <Label htmlFor="create-assignee">Assign To (Optional)</Label>
+                <Input
+                  id="create-assignee"
+                  placeholder="Student email (leave empty to assign later)"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleCreateTask}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Task
               </Button>
             </DialogFooter>
           </DialogContent>

@@ -18,7 +18,11 @@ export async function GET(
       where: { id: params.id },
       include: {
         internship: {
-          include: {
+          select: {
+            id: true,
+            title: true,
+            domain: true,
+            mentorId: true,
             mentor: {
               select: {
                 id: true,
@@ -28,7 +32,7 @@ export async function GET(
             }
           }
         },
-        assignedToUser: {
+        assignee: {
           select: {
             id: true,
             name: true,
@@ -91,8 +95,19 @@ export async function PATCH(
       where: { id: params.id },
       include: {
         internship: {
-          include: {
-            mentor: true
+          select: {
+            id: true,
+            title: true,
+            domain: true,
+            mentorId: true,
+            mentor: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                companyId: true
+              }
+            }
           }
         }
       }
@@ -123,7 +138,11 @@ export async function PATCH(
       },
       include: {
         internship: {
-          include: {
+          select: {
+            id: true,
+            title: true,
+            domain: true,
+            mentorId: true,
             mentor: {
               select: {
                 id: true,
@@ -133,7 +152,7 @@ export async function PATCH(
             }
           }
         },
-        assignedToUser: {
+        assignee: {
           select: {
             id: true,
             name: true,
@@ -179,6 +198,18 @@ export async function DELETE(
         _count: {
           select: {
             submissions: true
+          }
+        },
+        internship: {
+          select: {
+            id: true,
+            mentorId: true,
+            mentor: {
+              select: {
+                id: true,
+                companyId: true
+              }
+            }
           }
         }
       }

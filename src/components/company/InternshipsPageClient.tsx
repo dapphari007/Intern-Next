@@ -134,6 +134,8 @@ interface InternshipsPageClientProps {
   pendingApplications: number
   acceptedAllApplications: number
   rejectedApplications: number
+  // Company data
+  companyId: string
 }
 
 export function InternshipsPageClient({
@@ -152,7 +154,8 @@ export function InternshipsPageClient({
   totalAllApplications,
   pendingApplications,
   acceptedAllApplications,
-  rejectedApplications
+  rejectedApplications,
+  companyId
 }: InternshipsPageClientProps) {
   const [activeTab, setActiveTab] = useState("internships")
 
@@ -192,6 +195,7 @@ export function InternshipsPageClient({
               totalApplications={totalApplications}
               acceptedApplications={acceptedApplications}
               avgStipend={avgStipend}
+              companyId={companyId}
             />
           </TabsContent>
 

@@ -26,7 +26,7 @@ interface Message {
   createdAt: Date
   isRead: boolean
   senderId: string
-  receiverId: string
+  receiverId: string | null
   type: string
   sender: {
     id: string
@@ -41,7 +41,7 @@ interface Message {
     email: string
     image: string | null
     role: string
-  }
+  } | null
 }
 
 interface User {
@@ -50,7 +50,7 @@ interface User {
   email: string
   image: string | null
   role: string
-  companyId?: string
+  companyId?: string | null | undefined
 }
 
 interface MessagesClientProps {

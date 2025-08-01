@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { BaseModal } from "../base/BaseModal"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -12,8 +13,35 @@ import {
   User,
   Edit,
   Trash2,
-  Eye
+  Eye,
+  CheckSquare,
+  AlertCircle
 } from "lucide-react"
+
+interface Task {
+  id: string
+  title: string
+  description: string
+  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'OVERDUE'
+  dueDate?: string
+  createdAt: string
+  assignee: {
+    id: string
+    name: string
+    email: string
+    image?: string
+  }
+  internship: {
+    id: string
+    title: string
+    domain: string
+  }
+  submissions: Array<{
+    id: string
+    status: 'SUBMITTED' | 'APPROVED' | 'REJECTED' | 'NEEDS_REVISION'
+    submittedAt: string
+  }>
+}
 
 interface Internship {
   id: string
@@ -42,6 +70,7 @@ interface Internship {
       image: string | null
     }
   }> | null
+  tasks?: Task[]
 }
 
 interface ViewInternshipModalProps {
@@ -51,6 +80,7 @@ interface ViewInternshipModalProps {
   onEdit?: () => void
   onDelete?: () => void
   onViewApplications?: () => void
+  companyId?: string
 }
 
 export function ViewInternshipModal({
@@ -59,8 +89,36 @@ export function ViewInternshipModal({
   internship,
   onEdit,
   onDelete,
-  onViewApplications
+  onViewApplications,
+  companyId
 }: ViewInternshipModalProps) {
+  const [tasks, setTasks] = useState<Task[]>([])
+  const [tasksLoading, setTasksLoading] = useState(false)
+
+  // Fetch tasks when modal opens and internship changes
+  useEffect(() => {
+    if (isOpen && internship && companyId) {
+      const fetchTasks = async () => {
+        setTasksLoading(true)
+        try {
+          const response = await fetch(`/api/admin/companies/${companyId}/tasks`)
+          if (response.ok) {
+            const data = await response.json()
+            // Filter tasks for this specific internship
+            const internshipTasks = data.filter((task: Task) => task.internship.id === internship.id)
+            setTasks(internshipTasks)
+          }
+        } catch (error) {
+          console.error('Error fetching tasks:', error)
+        } finally {
+          setTasksLoading(false)
+        }
+      }
+
+      fetchTasks()
+    }
+  }, [isOpen, internship, companyId])
+
   // Guard clause: Don't render if internship is null
   if (!internship) {
     return null
@@ -202,6 +260,98 @@ export function ViewInternshipModal({
             </div>
           </div>
         </div>
+
+        {/* Tasks Section */}
+        {(tasksLoading || tasks.length > 0) && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold">Related Tasks</h3>
+              {tasksLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-5 w-16 bg-muted rounded"></div>
+                </div>
+              ) : (
+                <Badge variant="outline">
+                  {tasks.length} task{tasks.length !== 1 ? 's' : ''}
+                </Badge>
+              )}
+            </div>
+            
+            {tasksLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[...Array(2)].map((_, index) => (
+                  <div key={index} className="border rounded-lg p-4 space-y-2 animate-pulse">
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                    <div className="h-3 bg-muted rounded w-full"></div>
+                    <div className="h-3 bg-muted rounded w-1/2"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-60 overflow-y-auto">
+                {tasks.map((task) => (
+                <div key={task.id} className="border rounded-lg p-4 space-y-2">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <h4 className="font-medium text-sm line-clamp-1">{task.title}</h4>
+                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+                        {task.description}
+                      </p>
+                    </div>
+                    <Badge 
+                      className={`ml-2 ${
+                        task.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                        task.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-800' :
+                        task.status === 'OVERDUE' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}
+                    >
+                      {task.status === 'IN_PROGRESS' ? 'In Progress' : 
+                       task.status === 'COMPLETED' ? 'Completed' :
+                       task.status === 'OVERDUE' ? 'Overdue' : 'Pending'}
+                    </Badge>
+                  </div>
+                  
+                  <div className="space-y-1">
+                    <div className="flex items-center text-xs text-muted-foreground">
+                      <User className="h-3 w-3 mr-1" />
+                      {task.assignee.name}
+                    </div>
+                    {task.dueDate && (
+                      <div className={`flex items-center text-xs ${
+                        new Date(task.dueDate) < new Date() && task.status !== 'COMPLETED' 
+                          ? 'text-red-600' 
+                          : 'text-muted-foreground'
+                      }`}>
+                        <Calendar className="h-3 w-3 mr-1" />
+                        Due: {new Date(task.dueDate).toLocaleDateString()}
+                      </div>
+                    )}
+                    {task.submissions.length > 0 && (
+                      <div className="flex items-center text-xs">
+                        <CheckSquare className="h-3 w-3 mr-1" />
+                        <Badge 
+                          className={`text-xs ${
+                            task.submissions[0].status === 'APPROVED' ? 'bg-green-100 text-green-800' :
+                            task.submissions[0].status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                            task.submissions[0].status === 'NEEDS_REVISION' ? 'bg-orange-100 text-orange-800' :
+                            'bg-yellow-100 text-yellow-800'
+                          }`}
+                        >
+                          {task.submissions[0].status === 'SUBMITTED' ? 'Under Review' :
+                           task.submissions[0].status === 'APPROVED' ? 'Approved' :
+                           task.submissions[0].status === 'REJECTED' ? 'Rejected' :
+                           'Needs Revision'}
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Status and Actions */}
         <div className="flex items-center justify-between pt-4 border-t">

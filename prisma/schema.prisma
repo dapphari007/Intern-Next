@@ -79,6 +79,8 @@ model User {
   notificationPreferences NotificationPreferences? @relation("UserNotificationPreferences")
   privacyPreferences PrivacyPreferences? @relation("UserPrivacyPreferences")
   wallet        Wallet? @relation("UserWallet")
+  companyTaskAssignments CompanyInternshipTask[] @relation("CompanyTaskAssignments")
+  companyTaskSubmissions CompanyInternshipTaskSubmission[] @relation("CompanyTaskSubmissions")
 
   @@map("users")
 }
@@ -148,6 +150,7 @@ model Task {
   internshipId String
   assignedTo   String
   status       TaskStatus @default(PENDING)
+  credits      Int        @default(0)
   dueDate      DateTime?
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
@@ -270,6 +273,7 @@ model CompanyInternship {
   company      Company                    @relation(fields: [companyId], references: [id])
   mentor       User?                      @relation("CompanyMentorships", fields: [mentorId], references: [id])
   applications CompanyInternshipApplication[]
+  tasks        CompanyInternshipTask[]
 
   @@map("company_internships")
 }
@@ -287,6 +291,42 @@ model CompanyInternshipApplication {
 
   @@unique([internshipId, userId])
   @@map("company_internship_applications")
+}
+
+model CompanyInternshipTask {
+  id           String     @id @default(cuid())
+  title        String
+  description  String     @db.Text
+  internshipId String
+  assignedTo   String
+  status       TaskStatus @default(PENDING)
+  dueDate      DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  internship  CompanyInternship       @relation(fields: [internshipId], references: [id])
+  assignee    User                    @relation("CompanyTaskAssignments", fields: [assignedTo], references: [id])
+  submissions CompanyInternshipTaskSubmission[]
+
+  @@map("company_internship_tasks")
+}
+
+model CompanyInternshipTaskSubmission {
+  id          String           @id @default(cuid())
+  taskId      String
+  userId      String
+  content     String           @db.Text
+  fileUrl     String?
+  status      SubmissionStatus @default(SUBMITTED)
+  feedback    String?
+  creditsAwarded Int           @default(0)
+  submittedAt DateTime         @default(now())
+  reviewedAt  DateTime?
+
+  task CompanyInternshipTask @relation(fields: [taskId], references: [id])
+  user User                  @relation("CompanyTaskSubmissions", fields: [userId], references: [id])
+
+  @@map("company_internship_task_submissions")
 }
 
 model JobPosting {
