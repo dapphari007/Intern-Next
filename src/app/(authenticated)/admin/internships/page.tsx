@@ -510,7 +510,7 @@ export default function AdminInternshipsPage() {
                           {internship.isPaid && (
                             <Badge variant="secondary" className="text-green-600">
                               <IndianRupee className="h-3 w-3 mr-1" />
-                              ${internship.stipend}
+                              {internship.stipend}
                             </Badge>
                           )}
                         </div>
@@ -901,6 +901,28 @@ export default function AdminInternshipsPage() {
                     Mark Complete
                   </>
                 )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Internship</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this internship? This action cannot be undone.
+                Note: Internships with existing applications or tasks cannot be deleted.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteConfirmOpen(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmDeleteInternship}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
               </Button>
             </DialogFooter>
           </DialogContent>

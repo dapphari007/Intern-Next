@@ -189,8 +189,7 @@ export function EditInternshipForm({ internship, onSubmit, onCancel }: EditInter
               <Input
                 id="maxInterns"
                 type="number"
-                min="1"
-                max="50"
+                min=""
                 value={formData.maxInterns}
                 onChange={(e) => setFormData(prev => ({ ...prev, maxInterns: parseInt(e.target.value) || 1 }))}
                 required

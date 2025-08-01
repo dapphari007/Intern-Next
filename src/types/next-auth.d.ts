@@ -10,6 +10,7 @@ declare module "next-auth" {
       image?: string | null
       role: UserRole
       companyId?: string | null
+      isActive: boolean
     }
   }
 
@@ -20,6 +21,7 @@ declare module "next-auth" {
     image?: string | null
     role: UserRole
     companyId?: string | null
+    isActive: boolean
   }
 }
 
@@ -28,5 +30,6 @@ declare module "next-auth/jwt" {
     id: string
     role: UserRole
     companyId?: string | null
+    isActive: boolean
   }
 }

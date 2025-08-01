@@ -207,13 +207,10 @@ export default function AdminAnalyticsPage() {
           <Button 
             variant="outline" 
             size="sm"
-            onClick={() => {
-              // TODO: Implement filter functionality
-              alert('Filter functionality coming soon!')
-            }}
+            onClick={() => setSelectedPeriod(selectedPeriod === "30d" ? "7d" : selectedPeriod === "7d" ? "90d" : "30d")}
           >
             <Filter className="mr-2 h-4 w-4" />
-            Filter
+            {selectedPeriod === "7d" ? "Last 7 Days" : selectedPeriod === "30d" ? "Last 30 Days" : "Last 90 Days"}
           </Button>
           <Button 
             variant="outline" 

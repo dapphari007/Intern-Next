@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { useServerSearch } from "@/hooks/use-smooth-search"
+import { useState, useEffect, useCallback, useMemo } from "react"
+import { useSmoothSearch } from "@/hooks/use-smooth-search"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -48,7 +48,7 @@ interface User {
   position?: string
   skills?: string[]
   joinedAt: string
-  status: 'active' | 'inactive' | 'pending'
+  isActive: boolean
   skillCredits?: number
   completedInternships?: number
   currentInternships?: number
@@ -72,63 +72,74 @@ export default function AdminUsersPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<User | null>(null)
+  const [users, setUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
 
-  // Fetch function for server search
-  const fetchUsers = useCallback(async (searchTerm: string, roleFilter: string, statusFilter: string) => {
-    // Build query parameters
-    const params = new URLSearchParams()
-    if (searchTerm) params.append('search', searchTerm)
-    if (roleFilter !== 'all') params.append('role', roleFilter)
-    if (statusFilter !== 'all') params.append('status', statusFilter)
-    
-    const response = await fetch(`/api/users?${params.toString()}`)
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch users')
+  // Fetch users from API (one-time fetch)
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch('/api/users')
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch users')
+        }
+        
+        const userData = await response.json()
+        // Ensure userData is an array
+        if (Array.isArray(userData)) {
+          setUsers(userData)
+        } else if (userData && Array.isArray(userData.users)) {
+          setUsers(userData.users)
+        } else {
+          console.error('Invalid user data format:', userData)
+          setUsers([]) // Fallback to empty array
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred')
+        toast({
+          title: "Error",
+          description: "Failed to fetch users from database.",
+          variant: "destructive",
+        })
+      } finally {
+        setLoading(false)
+      }
     }
-    
-    const userData = await response.json()
-    // Ensure userData is an array
-    if (Array.isArray(userData)) {
-      return userData
-    } else if (userData && Array.isArray(userData.users)) {
-      return userData.users
-    } else {
-      console.error('Invalid user data format:', userData)
-      return [] // Fallback to empty array
-    }
-  }, [])
 
-  // Use server search hook
+    fetchUsers()
+  }, [toast])
+
+  // Use smooth search hook for client-side filtering
   const {
     searchTerm,
     setSearchTerm,
     debouncedSearchTerm,
     isSearching,
-    data: users,
-    error: searchError,
-    clearSearch
-  } = useServerSearch<User[]>(fetchUsers, [roleFilter, statusFilter], {
-    debounceMs: 300
+    filteredItems: searchFilteredUsers,
+    clearSearch,
+    hasActiveSearch
+  } = useSmoothSearch(users, ['name', 'email', 'role', 'company', 'university'], {
+    debounceMs: 300,
+    minSearchLength: 0
   })
 
-  // Handle search errors
-  useEffect(() => {
-    if (searchError) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch users from database.",
-        variant: "destructive",
-      })
-    }
-  }, [searchError, toast])
+  // Apply additional filters to search results
+  const filteredUsers = useMemo(() => {
+    return searchFilteredUsers.filter(user => {
+      const matchesRole = roleFilter === "all" || user.role === roleFilter
+      const matchesStatus = statusFilter === "all" || 
+        (statusFilter === "active" && user.isActive) ||
+        (statusFilter === "inactive" && !user.isActive)
+      
+      return matchesRole && matchesStatus
+    })
+  }, [searchFilteredUsers, roleFilter, statusFilter])
 
-  // Since filtering is now done on the server, we use users directly
-  const filteredUsers: User[] = Array.isArray(users) ? users : []
-  const loading = isSearching
-
-  const handleUpdateUserStatus = async (userId: string, newStatus: 'active' | 'inactive') => {
+  const handleUpdateUserStatus = async (userId: string, isActive: boolean) => {
     try {
       const response = await fetch('/api/users', {
         method: 'PUT',
@@ -138,7 +149,7 @@ export default function AdminUsersPage() {
         body: JSON.stringify({
           userId,
           action: 'updateStatus',
-          data: { status: newStatus }
+          data: { status: isActive ? 'active' : 'inactive' }
         })
       })
 
@@ -146,12 +157,16 @@ export default function AdminUsersPage() {
         throw new Error('Failed to update user status')
       }
 
-      // Refresh data by triggering a new search
-      await fetchUsers(debouncedSearchTerm, roleFilter, statusFilter)
+      // Update local state
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId ? { ...user, isActive: isActive } : user
+        )
+      )
       
       toast({
         title: "Success",
-        description: `User status updated to ${newStatus}`,
+        description: `User ${isActive ? 'activated' : 'deactivated'} successfully`,
       })
     } catch (error) {
       console.error('Error updating user status:', error)
@@ -173,8 +188,12 @@ export default function AdminUsersPage() {
         throw new Error('Failed to verify email')
       }
 
-      // Refresh data by triggering a new search
-      await fetchUsers(debouncedSearchTerm, roleFilter, statusFilter)
+      // Update local state
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId ? { ...user, isEmailVerified: true, emailVerifiedAt: new Date().toISOString() } : user
+        )
+      )
       
       toast({
         title: "Success",
@@ -202,8 +221,8 @@ export default function AdminUsersPage() {
         throw new Error('Failed to delete user')
       }
 
-      // Refresh data by triggering a new search
-      await fetchUsers(debouncedSearchTerm, roleFilter, statusFilter)
+      // Update local state
+      setUsers(prevUsers => prevUsers.filter(user => user.id !== userToDelete.id))
       
       toast({
         title: "Success",
@@ -239,8 +258,12 @@ export default function AdminUsersPage() {
         throw new Error('Failed to update user')
       }
 
-      // Refresh data by triggering a new search
-      await fetchUsers(debouncedSearchTerm, roleFilter, statusFilter)
+      // Update local state
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId ? { ...user, ...data } : user
+        )
+      )
       
       toast({
         title: "Success",
@@ -277,8 +300,10 @@ export default function AdminUsersPage() {
         throw new Error(error.error || 'Failed to create user')
       }
 
-      // Refresh data by triggering a new search
-      await fetchUsers(debouncedSearchTerm, roleFilter, statusFilter)
+      const newUser = await response.json()
+      
+      // Update local state
+      setUsers(prevUsers => [...prevUsers, newUser])
       
       toast({
         title: "Success",
@@ -374,7 +399,7 @@ export default function AdminUsersPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {filteredUsers.filter(u => u.role === 'INTERN' && u.status === 'active').length}
+                {filteredUsers.filter(u => u.role === 'INTERN' && u.isActive).length}
               </div>
               <p className="text-xs text-muted-foreground">
                 Currently enrolled
@@ -389,7 +414,7 @@ export default function AdminUsersPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {filteredUsers.filter(u => u.role === 'MENTOR' && u.status === 'active').length}
+                {filteredUsers.filter(u => u.role === 'MENTOR' && u.isActive).length}
               </div>
               <p className="text-xs text-muted-foreground">
                 Available for mentoring
@@ -399,15 +424,15 @@ export default function AdminUsersPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Users</CardTitle>
+              <CardTitle className="text-sm font-medium">Inactive Users</CardTitle>
               <UserCheck className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {filteredUsers.filter(u => u.status === 'pending').length}
+                {filteredUsers.filter(u => !u.isActive).length}
               </div>
               <p className="text-xs text-muted-foreground">
-                Awaiting approval
+                Deactivated accounts
               </p>
             </CardContent>
           </Card>
@@ -456,7 +481,6 @@ export default function AdminUsersPage() {
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -548,8 +572,8 @@ export default function AdminUsersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getStatusBadgeVariant(user.status)}>
-                        {user.status}
+                      <Badge variant={user.isActive ? 'default' : 'secondary'}>
+                        {user.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -631,11 +655,12 @@ export default function AdminUsersPage() {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        {user.status === 'active' ? (
+                        {user.isActive ? (
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleUpdateUserStatus(user.id, 'inactive')}
+                            onClick={() => handleUpdateUserStatus(user.id, false)}
+                            title="Deactivate User"
                           >
                             <UserX className="h-4 w-4" />
                           </Button>
@@ -643,7 +668,8 @@ export default function AdminUsersPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleUpdateUserStatus(user.id, 'active')}
+                            onClick={() => handleUpdateUserStatus(user.id, true)}
+                            title="Activate User"
                           >
                             <UserCheck className="h-4 w-4" />
                           </Button>

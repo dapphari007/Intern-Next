@@ -433,8 +433,15 @@ export class AnalyticsService {
       db.internshipApplication.count({
         where: { status: ApplicationStatus.PENDING }
       }),
-      // Simulate system error count (in real app, this would come from logs)
-      Promise.resolve(0)
+      // Get system errors from failed submissions or applications in the last 24 hours
+      db.taskSubmission.count({
+        where: {
+          status: 'REJECTED',
+          submittedAt: {
+            gte: new Date(Date.now() - 24 * 60 * 60 * 1000)
+          }
+        }
+      })
     ])
 
     const userEngagement = totalUsers > 0 ? (activeUsers / totalUsers) * 100 : 0

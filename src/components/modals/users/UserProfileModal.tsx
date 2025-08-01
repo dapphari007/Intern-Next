@@ -413,7 +413,7 @@ export function UserProfileModal({
                               <span className="text-sm text-muted-foreground">
                                 {internship.domain} • {internship.duration} weeks
                                 {internship.isPaid && internship.stipend && 
-                                  ` • $${internship.stipend}/month`
+                                  ` • ${internship.stipend}/month`
                                 }
                               </span>
                             </div>

@@ -352,12 +352,12 @@ export function AddInternshipModal({ open, onOpenChange, onSuccess }: AddInterns
             {formData.skills.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {formData.skills.map((skill, index) => (
-                  <div key={index} className="flex items-center bg-blue-100 text-blue-800 px-2 py-1 rounded-md text-sm">
+                  <div key={index} className="flex items-center bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-md text-sm">
                     {skill}
                     <button
                       type="button"
                       onClick={() => removeSkill(index)}
-                      className="ml-2 text-blue-600 hover:text-blue-800"
+                      className="ml-2 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100"
                     >
                       ×
                     </button>
@@ -384,12 +384,12 @@ export function AddInternshipModal({ open, onOpenChange, onSuccess }: AddInterns
             {formData.requirements.length > 0 && (
               <div className="space-y-1 mt-2">
                 {formData.requirements.map((req, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                    <span className="text-sm">{req}</span>
+                  <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                    <span className="text-sm text-gray-900 dark:text-gray-100">{req}</span>
                     <button
                       type="button"
                       onClick={() => removeRequirement(index)}
-                      className="text-red-600 hover:text-red-800"
+                      className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                     >
                       ×
                     </button>
@@ -416,12 +416,12 @@ export function AddInternshipModal({ open, onOpenChange, onSuccess }: AddInterns
             {formData.responsibilities.length > 0 && (
               <div className="space-y-1 mt-2">
                 {formData.responsibilities.map((resp, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                    <span className="text-sm">{resp}</span>
+                  <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                    <span className="text-sm text-gray-900 dark:text-gray-100">{resp}</span>
                     <button
                       type="button"
                       onClick={() => removeResponsibility(index)}
-                      className="text-red-600 hover:text-red-800"
+                      className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                     >
                       ×
                     </button>
@@ -448,12 +448,12 @@ export function AddInternshipModal({ open, onOpenChange, onSuccess }: AddInterns
             {formData.benefits.length > 0 && (
               <div className="space-y-1 mt-2">
                 {formData.benefits.map((benefit, index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                    <span className="text-sm">{benefit}</span>
+                  <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                    <span className="text-sm text-gray-900 dark:text-gray-100">{benefit}</span>
                     <button
                       type="button"
                       onClick={() => removeBenefit(index)}
-                      className="text-red-600 hover:text-red-800"
+                      className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
                     >
                       ×
                     </button>

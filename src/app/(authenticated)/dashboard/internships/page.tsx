@@ -173,7 +173,7 @@ export default async function InternshipsPage() {
                       <CardTitle>{internship.title}</CardTitle>
                       <CardDescription>
                         {internship.domain} • {internship.duration} weeks
-                        {internship.isPaid && ` • $${internship.stipend} stipend`}
+                        {internship.isPaid && ` • ${internship.stipend} stipend`}
                       </CardDescription>
                     </div>
                     <Badge variant={getStatusVariant(internship.status)}>

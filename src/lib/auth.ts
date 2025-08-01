@@ -43,18 +43,38 @@ export const authOptions: NextAuthOptions = {
           })
         }
 
+        // Check if user is deactivated
+        if (!user.isActive) {
+          return null // Prevent login for deactivated users
+        }
+
         return {
           id: user.id,
           email: user.email,
           name: user.name,
           role: user.role,
           companyId: user.companyId,
+          isActive: user.isActive,
         }
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
+      // Always refresh user data from database to get latest status
+      if (token.email) {
+        const dbUser = await db.user.findUnique({
+          where: { email: token.email },
+        })
+        if (dbUser) {
+          token.role = dbUser.role
+          token.id = dbUser.id
+          token.companyId = dbUser.companyId
+          token.isActive = dbUser.isActive
+        }
+      }
+      
+      // If this is a new login, also set initial data
       if (user) {
         const dbUser = await db.user.findUnique({
           where: { email: user.email! },
@@ -63,6 +83,7 @@ export const authOptions: NextAuthOptions = {
           token.role = dbUser.role
           token.id = dbUser.id
           token.companyId = dbUser.companyId
+          token.isActive = dbUser.isActive
         }
       }
       return token
@@ -72,6 +93,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string
         session.user.role = token.role as UserRole
         session.user.companyId = token.companyId as string | null
+        session.user.isActive = token.isActive as boolean
       }
       return session
     },

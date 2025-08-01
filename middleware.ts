@@ -18,6 +18,15 @@ export default withAuth(
       return NextResponse.redirect(new URL('/auth/signin', req.url))
     }
 
+    // Check if user is deactivated
+    if (token.isActive === false) {
+      // Allow access to sign out and deactivated page
+      if (pathname === '/auth/deactivated' || pathname === '/api/auth/signout') {
+        return NextResponse.next()
+      }
+      return NextResponse.redirect(new URL('/auth/deactivated', req.url))
+    }
+
     // Admin only routes
     const adminRoutes = ['/admin']
     if (adminRoutes.some(route => pathname.startsWith(route))) {

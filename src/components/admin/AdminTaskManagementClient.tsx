@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
@@ -19,9 +19,15 @@ import {
   Search,
   Filter,
   Eye,
-  Edit
+  Edit,
+  Trash2,
+  UserX
 } from 'lucide-react'
 import Link from 'next/link'
+import { useToast } from "@/hooks/use-toast"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 
 interface AdminTaskManagementClientProps {
   tasks: any[]
@@ -45,6 +51,22 @@ export function AdminTaskManagementClient({
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedDomain, setSelectedDomain] = useState<string>('All')
   const [statusFilter, setStatusFilter] = useState<string>('ALL')
+  const { toast } = useToast()
+  
+  // Check if current user is admin (they can only view, not edit/delete)
+  const [userRole, setUserRole] = useState<string>('')
+  
+  useEffect(() => {
+    // Get user role from session or context
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => {
+        if (data?.user?.role) {
+          setUserRole(data.user.role)
+        }
+      })
+      .catch(console.error)
+  }, [])
 
   const domains = ['All', ...Object.keys(tasksByDomain)]
 
@@ -88,6 +110,91 @@ export function AdminTaskManagementClient({
     if (days <= 3) return 'bg-orange-100 text-orange-800'
     if (days <= 7) return 'bg-yellow-100 text-yellow-800'
     return 'bg-green-100 text-green-800'
+  }
+
+  const [selectedTask, setSelectedTask] = useState<any>(null)
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [taskToDelete, setTaskToDelete] = useState<string | null>(null)
+
+  const handleViewTask = (task: any) => {
+    setSelectedTask(task)
+    setIsViewModalOpen(true)
+  }
+
+  const handleEditTask = (task: any) => {
+    setSelectedTask(task)
+    setIsEditModalOpen(true)
+  }
+
+  const handleDeactivateTask = async (taskId: string) => {
+    try {
+      const response = await fetch(`/api/tasks/${taskId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'INACTIVE' })
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to deactivate task')
+      }
+
+      toast({
+        title: "Success",
+        description: "Task deactivated successfully",
+      })
+
+      // Refresh the page to update the task list
+      window.location.reload()
+    } catch (error) {
+      console.error('Error deactivating task:', error)
+      toast({
+        title: "Error",
+        description: "Failed to deactivate task",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleDeleteTask = (taskId: string) => {
+    setTaskToDelete(taskId)
+    setIsDeleteModalOpen(true)
+  }
+
+  const confirmDeleteTask = async () => {
+    if (!taskToDelete) return
+
+    try {
+      const response = await fetch(`/api/tasks/${taskToDelete}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to delete task')
+      }
+
+      toast({
+        title: "Success",
+        description: "Task deleted successfully",
+      })
+
+      // Refresh the page to update the task list
+      window.location.reload()
+    } catch (error: any) {
+      console.error('Error deleting task:', error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete task",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleteModalOpen(false)
+      setTaskToDelete(null)
+    }
   }
 
   return (
@@ -302,12 +409,49 @@ export function AdminTaskManagementClient({
                               <span className="text-sm text-muted-foreground">
                                 {task.submissions.length} submission(s)
                               </span>
-                              <Button variant="outline" size="sm" asChild>
-                                <Link href={`/admin/tasks/${task.id}`}>
-                                  <Eye className="h-3 w-3 mr-1" />
-                                  View
-                                </Link>
+                              
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleViewTask(task)}
+                                title="View Task"
+                              >
+                                <Eye className="h-4 w-4" />
                               </Button>
+                              
+                              {/* Only show edit/delete buttons for non-admin users */}
+                              {userRole !== 'ADMIN' && (
+                                <>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => handleEditTask(task)}
+                                    title="Edit Task"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => handleDeactivateTask(task.id)}
+                                    className="text-orange-600 hover:text-orange-600"
+                                    title="Deactivate Task"
+                                  >
+                                    <UserX className="h-4 w-4" />
+                                  </Button>
+                                  
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm"
+                                    onClick={() => handleDeleteTask(task.id)}
+                                    className="text-red-600 hover:text-red-600"
+                                    title="Delete Task"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -391,6 +535,153 @@ export function AdminTaskManagementClient({
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* View Task Modal */}
+        <Dialog open={isViewModalOpen} onOpenChange={setIsViewModalOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Task Details</DialogTitle>
+              <DialogDescription>
+                View detailed information about this task
+              </DialogDescription>
+            </DialogHeader>
+            {selectedTask && (
+              <div className="space-y-4">
+                <div>
+                  <Label className="text-sm font-medium">Title</Label>
+                  <p className="text-sm text-muted-foreground">{selectedTask.title}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Description</Label>
+                  <p className="text-sm text-muted-foreground">{selectedTask.description}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium">Status</Label>
+                    <Badge className={getStatusColor(selectedTask.status)}>
+                      {selectedTask.status}
+                    </Badge>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium">Credits</Label>
+                    <p className="text-sm text-muted-foreground">{selectedTask.credits}</p>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Internship</Label>
+                  <p className="text-sm text-muted-foreground">{selectedTask.internship?.title}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Domain</Label>
+                  <Badge variant="outline">{selectedTask.internship?.domain}</Badge>
+                </div>
+                {selectedTask.dueDate && (
+                  <div>
+                    <Label className="text-sm font-medium">Due Date</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {new Date(selectedTask.dueDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+                <div>
+                  <Label className="text-sm font-medium">Submissions</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedTask.submissions?.length || 0} submission(s)
+                  </p>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Task Modal */}
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Edit Task</DialogTitle>
+              <DialogDescription>
+                Update task information
+              </DialogDescription>
+            </DialogHeader>
+            {selectedTask && (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="edit-title">Title</Label>
+                  <Input
+                    id="edit-title"
+                    defaultValue={selectedTask.title}
+                    placeholder="Task title"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-description">Description</Label>
+                  <Textarea
+                    id="edit-description"
+                    defaultValue={selectedTask.description}
+                    placeholder="Task description"
+                    rows={4}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-credits">Credits</Label>
+                    <Input
+                      id="edit-credits"
+                      type="number"
+                      defaultValue={selectedTask.credits}
+                      placeholder="Credits"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-due-date">Due Date</Label>
+                    <Input
+                      id="edit-due-date"
+                      type="date"
+                      defaultValue={selectedTask.dueDate ? new Date(selectedTask.dueDate).toISOString().split('T')[0] : ''}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={() => {
+                // TODO: Implement save functionality
+                toast({
+                  title: "Info",
+                  description: "Edit functionality will be implemented soon",
+                })
+                setIsEditModalOpen(false)
+              }}>
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Task Modal */}
+        <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Task</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this task? This action cannot be undone.
+                Note: Tasks with existing submissions cannot be deleted.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDeleteModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmDeleteTask}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

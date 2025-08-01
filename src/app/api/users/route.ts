@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
       bio: user.bio,
       skillCredits: user.skillCredits,
       joinedAt: user.createdAt.toISOString().split('T')[0],
-      status: user.isActive ? 'active' : 'inactive',
+      isActive: user.isActive,
       isEmailVerified: user.isEmailVerified,
       emailVerifiedAt: user.emailVerifiedAt,
       resumeGDriveLink: user.resumeGDriveLink,

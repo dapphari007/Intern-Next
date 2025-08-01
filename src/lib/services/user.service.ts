@@ -186,6 +186,10 @@ export class UserService {
       where.role = role
     }
     
+    if (status) {
+      where.isActive = status === 'active'
+    }
+    
     if (search) {
       where.OR = [
         { name: { contains: search, mode: 'insensitive' } },
