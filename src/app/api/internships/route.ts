@@ -16,11 +16,13 @@ const createInternshipSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
     const { searchParams } = new URL(request.url);
     const domain = searchParams.get('domain');
     const isPaid = searchParams.get('isPaid');
     
-    const internships = await db.internship.findMany({
+    // Get regular internships
+    const regularInternships = await db.internship.findMany({
       where: {
         status: 'ACTIVE',
         ...(domain && { domain }),
@@ -33,6 +35,13 @@ export async function GET(request: NextRequest) {
             name: true,
             email: true,
             image: true,
+            company: {
+              select: {
+                id: true,
+                name: true,
+                logo: true,
+              },
+            },
           },
         },
         applications: {
@@ -52,7 +61,90 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(internships);
+    // Transform regular internships to include company info
+    const transformedRegularInternships = regularInternships.map(internship => ({
+      ...internship,
+      company: internship.mentor.company || { name: 'InternHub', logo: null },
+      type: 'regular' as const,
+    }));
+
+    let allInternships = transformedRegularInternships;
+
+    // If user is admin, also fetch company internships
+    if (session?.user?.role === 'ADMIN') {
+      const companyInternships = await db.companyInternship.findMany({
+        where: {
+          status: 'ACTIVE',
+          isActive: true,
+          ...(domain && { domain }),
+          ...(isPaid && { isPaid: isPaid === 'true' }),
+        },
+        include: {
+          company: {
+            select: {
+              id: true,
+              name: true,
+              logo: true,
+            },
+          },
+          mentor: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            },
+          },
+          applications: {
+            select: {
+              id: true,
+              status: true,
+            },
+          },
+          _count: {
+            select: {
+              applications: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+      // Transform company internships to match the regular internship structure
+      const transformedCompanyInternships = companyInternships.map(internship => ({
+        id: internship.id,
+        title: internship.title,
+        description: internship.description,
+        domain: internship.domain,
+        duration: internship.duration,
+        isPaid: internship.isPaid,
+        stipend: internship.stipend,
+        maxInterns: internship.maxInterns,
+        skills: null,
+        requirements: null,
+        responsibilities: null,
+        benefits: null,
+        createdAt: internship.createdAt,
+        updatedAt: internship.updatedAt,
+        status: internship.status,
+        mentorId: internship.mentorId,
+        mentor: internship.mentor,
+        applications: internship.applications,
+        _count: internship._count,
+        company: internship.company,
+        type: 'company' as const,
+      }));
+
+      // Combine both types of internships
+      allInternships = [...transformedRegularInternships, ...transformedCompanyInternships];
+      
+      // Sort by creation date
+      allInternships.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    }
+
+    return NextResponse.json(allInternships);
   } catch (error) {
     console.error('Error fetching internships:', error);
     return NextResponse.json(

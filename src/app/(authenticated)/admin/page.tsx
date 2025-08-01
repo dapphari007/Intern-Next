@@ -422,7 +422,7 @@ export default function AdminDashboard() {
                   </Link>
                 </Button>
                 <Button variant="outline" className="w-full justify-start" asChild>
-                  <Link href="/admin/certificates">
+                  <Link href="/certificates">
                     <Award className="mr-2 h-4 w-4" />
                     Issue Certificates
                   </Link>

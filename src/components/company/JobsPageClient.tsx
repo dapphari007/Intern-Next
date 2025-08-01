@@ -6,15 +6,15 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { 
   Briefcase, 
-  Users, 
-  DollarSign,
+  Users,
   Plus,
   Edit,
   Eye,
   Trash2,
   MapPin,
   Power,
-  PowerOff
+  PowerOff,
+  IndianRupee
 } from "lucide-react"
 import { CreateJobModal } from "@/components/modals/jobs/CreateJobModal"
 import { ViewJobModal } from "@/components/modals/jobs/ViewJobModal"
@@ -214,7 +214,7 @@ export function JobsPageClient({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Avg. Salary</CardTitle>
-              <DollarSign className="h-4 w-4 text-orange-500" />
+              <IndianRupee className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
@@ -277,7 +277,7 @@ export function JobsPageClient({
                           </span>
                           {formatSalary(job) && (
                             <span className="flex items-center">
-                              <DollarSign className="h-4 w-4 mr-1" />
+                              <IndianRupee className="h-4 w-4 mr-1" />
                               {formatSalary(job)}
                             </span>
                           )}

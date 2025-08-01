@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { 
   MapPin, 
-  DollarSign, 
+  IndianRupee, 
   Calendar,
   Users,
   Edit,
@@ -119,7 +119,7 @@ export function ViewJobModal({
               )}
               {formatSalary() && (
                 <span className="flex items-center">
-                  <DollarSign className="h-4 w-4 mr-1" />
+                  <IndianRupee className="h-4 w-4 mr-1" />
                   {formatSalary()}
                 </span>
               )}

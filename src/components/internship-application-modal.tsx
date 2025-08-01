@@ -13,7 +13,7 @@ import {
   Link as LinkIcon, 
   MapPin, 
   Clock, 
-  DollarSign, 
+  IndianRupee, 
   Users, 
   Building,
   Star,
@@ -38,6 +38,12 @@ interface Internship {
   mentor: {
     name: string | null
   }
+  company: {
+    id: string
+    name: string
+    logo: string | null
+  }
+  type?: 'regular' | 'company'
   _count: {
     applications: number
   }
@@ -150,10 +156,13 @@ export function InternshipApplicationModal({
           <div className="space-y-4">
             <div>
               <h3 className="text-xl font-semibold">{internship.title}</h3>
+              <div className="flex items-center space-x-2 text-lg font-medium text-primary mt-1">
+                <Building className="h-5 w-5" />
+                <span>{internship.company.name}</span>
+              </div>
               <div className="flex items-center space-x-4 text-muted-foreground mt-2">
                 <div className="flex items-center">
-                  <Building className="mr-1 h-4 w-4" />
-                  {internship.domain}
+                  <span className="text-sm">Domain: {internship.domain}</span>
                 </div>
                 <div className="flex items-center">
                   <Clock className="mr-1 h-4 w-4" />
@@ -167,8 +176,8 @@ export function InternshipApplicationModal({
               <div className="mt-2">
                 {internship.isPaid && internship.stipend ? (
                   <Badge className="bg-green-100 text-green-800">
-                    <DollarSign className="mr-1 h-3 w-3" />
-                    ${internship.stipend}/month
+                    <IndianRupee className="mr-1 h-3 w-3" />
+                    {internship.stipend}/month
                   </Badge>
                 ) : (
                   <Badge variant="outline">Unpaid</Badge>
@@ -224,6 +233,11 @@ export function InternshipApplicationModal({
                 </ul>
               </div>
             )}
+
+            <div>
+              <h4 className="font-medium mb-2">Company</h4>
+              <p className="text-muted-foreground">{internship.company.name}</p>
+            </div>
 
             <div>
               <h4 className="font-medium mb-2">Mentor</h4>

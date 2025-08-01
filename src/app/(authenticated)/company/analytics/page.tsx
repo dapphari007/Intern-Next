@@ -15,7 +15,7 @@ import {
   Target,
   Award,
   Clock,
-  DollarSign
+  IndianRupee,
 } from "lucide-react"
 
 export default async function CompanyAnalyticsPage() {
@@ -250,7 +250,7 @@ export default async function CompanyAnalyticsPage() {
               <div className="flex items-center justify-between p-4 border rounded-lg">
                 <div>
                   <div className="flex items-center space-x-2">
-                    <DollarSign className="h-4 w-4 text-green-500" />
+                    <IndianRupee className="h-4 w-4 text-green-500" />
                     <span className="font-medium">Avg. Internship Stipend</span>
                   </div>
                   <p className="text-2xl font-bold">${avgInternshipStipend.toFixed(0)}</p>
@@ -262,7 +262,7 @@ export default async function CompanyAnalyticsPage() {
               <div className="flex items-center justify-between p-4 border rounded-lg">
                 <div>
                   <div className="flex items-center space-x-2">
-                    <DollarSign className="h-4 w-4 text-blue-500" />
+                    <IndianRupee className="h-4 w-4 text-blue-500" />
                     <span className="font-medium">Avg. Job Salary</span>
                   </div>
                   <p className="text-2xl font-bold">${(avgJobSalary / 1000).toFixed(0)}k</p>

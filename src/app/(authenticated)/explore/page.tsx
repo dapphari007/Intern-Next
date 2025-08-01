@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import { useSession } from "next-auth/react"
+import { useSmoothSearch } from "@/hooks/use-smooth-search"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,7 +13,7 @@ import {
   Search, 
   MapPin, 
   Clock, 
-  DollarSign, 
+  IndianRupee, 
   Users, 
   Filter,
   Star,
@@ -37,6 +38,12 @@ interface Internship {
   mentor: {
     name: string | null
   }
+  company: {
+    id: string
+    name: string
+    logo: string | null
+  }
+  type?: 'regular' | 'company'
   _count: {
     applications: number
   }
@@ -46,27 +53,29 @@ const domains = ["All", "Web Development", "Data Science", "Design", "Backend De
 
 export default function ExplorePage() {
   const { data: session } = useSession()
-  const [searchTerm, setSearchTerm] = useState("")
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("")
   const [selectedDomain, setSelectedDomain] = useState("All")
   const [isPaidFilter, setIsPaidFilter] = useState("All")
   const [sortBy, setSortBy] = useState("recent")
   const [internships, setInternships] = useState<Internship[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchLoading, setSearchLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedInternship, setSelectedInternship] = useState<Internship | null>(null)
   const [modalMode, setModalMode] = useState<'view' | 'apply'>('view')
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  // Debounce search term
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
-    }, 300)
-
-    return () => clearTimeout(timer)
-  }, [searchTerm])
+  // Use smooth search hook
+  const {
+    searchTerm,
+    setSearchTerm,
+    debouncedSearchTerm,
+    isSearching,
+    filteredItems: searchFilteredInternships,
+    clearSearch,
+    hasActiveSearch
+  } = useSmoothSearch(internships, ['title', 'description', 'domain', 'company'], {
+    debounceMs: 300,
+    minSearchLength: 0
+  })
 
   // Fetch internships from API
   useEffect(() => {
@@ -89,20 +98,18 @@ export default function ExplorePage() {
     fetchInternships()
   }, [])
 
-  const filteredInternships = internships.filter(internship => {
-    const matchesSearch = debouncedSearchTerm === "" || 
-                         internship.title.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-                         internship.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-                         internship.domain.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-    
-    const matchesDomain = selectedDomain === "All" || internship.domain === selectedDomain
-    
-    const matchesPaid = isPaidFilter === "All" || 
-                       (isPaidFilter === "Paid" && internship.isPaid) ||
-                       (isPaidFilter === "Unpaid" && !internship.isPaid)
-    
-    return matchesSearch && matchesDomain && matchesPaid
-  })
+  // Apply additional filters to search results
+  const filteredInternships = useMemo(() => {
+    return searchFilteredInternships.filter(internship => {
+      const matchesDomain = selectedDomain === "All" || internship.domain === selectedDomain
+      
+      const matchesPaid = isPaidFilter === "All" || 
+                         (isPaidFilter === "Paid" && internship.isPaid) ||
+                         (isPaidFilter === "Unpaid" && !internship.isPaid)
+      
+      return matchesDomain && matchesPaid
+    })
+  }, [searchFilteredInternships, selectedDomain, isPaidFilter])
 
   const sortedInternships = [...filteredInternships].sort((a, b) => {
     switch (sortBy) {
@@ -141,7 +148,10 @@ export default function ExplorePage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Explore Internships</h1>
         <p className="text-muted-foreground">
-          Discover skill-based internships that match your interests and career goals
+          {session?.user?.role === 'ADMIN' 
+            ? 'Browse all internships from companies and mentors across the platform'
+            : 'Discover skill-based internships that match your interests and career goals'
+          }
         </p>
       </div>
 
@@ -156,7 +166,7 @@ export default function ExplorePage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
-            {searchTerm !== debouncedSearchTerm && (
+            {isSearching && (
               <div className="absolute right-3 top-3">
                 <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
               </div>
@@ -198,25 +208,35 @@ export default function ExplorePage() {
 
       {/* Results */}
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-muted-foreground">
-          {loading ? "Loading..." : `Showing ${sortedInternships.length} of ${internships.length} internships`}
-        </p>
+        <div className="flex items-center space-x-2">
+          <p className="text-muted-foreground">
+            {loading ? "Loading..." : `Showing ${sortedInternships.length} of ${internships.length} internships`}
+          </p>
+          {selectedDomain !== "All" && (
+            <Badge variant="outline" className="text-xs">
+              Domain: {selectedDomain}
+            </Badge>
+          )}
+          {isPaidFilter !== "All" && (
+            <Badge variant="outline" className="text-xs">
+              Type: {isPaidFilter}
+            </Badge>
+          )}
+        </div>
         <div className="flex space-x-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => {
-              setSearchTerm("")
-              setSelectedDomain("All")
-              setIsPaidFilter("All")
-            }}
-          >
-            Reset Filters
-          </Button>
-          <Button variant="outline" size="sm">
-            <Filter className="mr-2 h-4 w-4" />
-            More Filters
-          </Button>
+          {(hasActiveSearch || selectedDomain !== "All" || isPaidFilter !== "All") && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                clearSearch()
+                setSelectedDomain("All")
+                setIsPaidFilter("All")
+              }}
+            >
+              Reset Filters
+            </Button>
+          )}
         </div>
       </div>
 
@@ -266,19 +286,28 @@ export default function ExplorePage() {
                     <div className="flex items-center space-x-4 text-muted-foreground">
                       <div className="flex items-center">
                         <Building className="mr-1 h-4 w-4" />
-                        {internship.domain}
+                        {internship.company.name}
                       </div>
                       <div className="flex items-center">
                         <Clock className="mr-1 h-4 w-4" />
                         {internship.duration} weeks
                       </div>
                     </div>
+                    <div className="text-sm text-muted-foreground">
+                      Domain: {internship.domain}
+                    </div>
                   </div>
                   <div className="text-right space-y-2">
+                    {session?.user?.role === 'ADMIN' && internship.type && (
+                      <Badge variant="secondary" className="text-xs mr-3">
+                        {internship.type === 'company' ? 'Company' : 'Platform'}
+                      </Badge>
+                    )}
+                    
                     {internship.isPaid && internship.stipend ? (
                       <Badge className="bg-green-100 text-green-800">
-                        <DollarSign className="mr-1 h-3 w-3" />
-                        ${internship.stipend}/month
+                        <IndianRupee className="mr-1 h-3 w-3" />
+                        {internship.stipend}/month
                       </Badge>
                     ) : (
                       <Badge variant="outline">Unpaid</Badge>
@@ -330,7 +359,7 @@ export default function ExplorePage() {
       )}
 
       {/* Load More */}
-      {sortedInternships.length > 0 && (
+      {sortedInternships.length > 10 && (
         <div className="mt-8 text-center">
           <Button variant="outline" size="lg">
             Load More Internships
@@ -347,7 +376,7 @@ export default function ExplorePage() {
             <p>Try adjusting your search criteria or filters</p>
           </div>
           <Button variant="outline" onClick={() => {
-            setSearchTerm("")
+            clearSearch()
             setSelectedDomain("All")
             setIsPaidFilter("All")
           }}>

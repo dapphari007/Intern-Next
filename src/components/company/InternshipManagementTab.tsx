@@ -11,7 +11,7 @@ import {
   Briefcase, 
   Users, 
   Calendar,
-  DollarSign,
+  IndianRupee,
   Plus,
   Edit,
   Eye,
@@ -191,7 +191,7 @@ export function InternshipManagementTab({
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Avg. Stipend</CardTitle>
-            <DollarSign className="h-4 w-4 text-orange-500" />
+            <IndianRupee className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
@@ -314,7 +314,7 @@ export function InternshipManagementTab({
                         </span>
                         {internship.isPaid && internship.stipend && (
                           <span className="flex items-center">
-                            <DollarSign className="h-4 w-4 mr-1" />
+                            <IndianRupee className="h-4 w-4 mr-1" />
                             ${internship.stipend.toLocaleString()}
                           </span>
                         )}

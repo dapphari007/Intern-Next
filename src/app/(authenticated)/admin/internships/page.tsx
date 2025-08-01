@@ -1,7 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useSession } from "next-auth/react"
+import { useSmoothSearch } from "@/hooks/use-smooth-search"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -29,13 +30,14 @@ import {
   Users,
   MapPin,
   Calendar,
-  DollarSign,
+  IndianRupee,
   Star,
   Building,
   User
 } from "lucide-react"
 import Link from "next/link"
 import { AddInternshipModal } from "@/components/admin/add-internship-modal"
+import { EditInternshipForm } from "@/components/admin/edit-internship-form"
 
 interface Internship {
   id: string
@@ -65,11 +67,25 @@ export default function AdminInternshipsPage() {
   const router = useRouter()
   const [internships, setInternships] = useState<Internship[]>([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
   const [domainFilter, setDomainFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+
+  // Use smooth search hook
+  const {
+    searchTerm,
+    setSearchTerm,
+    debouncedSearchTerm,
+    isSearching,
+    filteredItems: searchFilteredInternships,
+    clearSearch,
+    hasActiveSearch
+  } = useSmoothSearch(internships, ['title', 'company', 'mentor'], {
+    debounceMs: 300,
+    minSearchLength: 0
+  })
   const [selectedInternship, setSelectedInternship] = useState<Internship | null>(null)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [showAddInternshipModal, setShowAddInternshipModal] = useState(false)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [statusChangeConfirmOpen, setStatusChangeConfirmOpen] = useState(false)
@@ -119,16 +135,15 @@ export default function AdminInternshipsPage() {
     }
   }
 
-  // Filter internships based on search and filters
-  const filteredInternships = internships.filter(internship => {
-    const matchesSearch = internship.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         internship.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         internship.mentor.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesDomain = domainFilter === "all" || internship.domain === domainFilter
-    const matchesStatus = statusFilter === "all" || internship.status === statusFilter
-    
-    return matchesSearch && matchesDomain && matchesStatus
-  })
+  // Apply additional filters to search results
+  const filteredInternships = useMemo(() => {
+    return searchFilteredInternships.filter(internship => {
+      const matchesDomain = domainFilter === "all" || internship.domain === domainFilter
+      const matchesStatus = statusFilter === "all" || internship.status === statusFilter
+      
+      return matchesDomain && matchesStatus
+    })
+  }, [searchFilteredInternships, domainFilter, statusFilter])
 
 
 
@@ -214,6 +229,46 @@ export default function AdminInternshipsPage() {
     }
   }
 
+  const handleEditInternship = async (internshipData: Partial<Internship>) => {
+    if (!selectedInternship) return
+
+    try {
+      const response = await fetch(`/api/admin/internships/${selectedInternship.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(internshipData),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update internship')
+      }
+
+      const updatedInternship = await response.json()
+      
+      setInternships(prev => prev.map(internship => 
+        internship.id === selectedInternship.id ? updatedInternship : internship
+      ))
+      
+      toast({
+        title: "Success",
+        description: "Internship updated successfully",
+      })
+
+      setIsEditDialogOpen(false)
+      setSelectedInternship(null)
+    } catch (error: any) {
+      console.error('Error updating internship:', error)
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update internship",
+        variant: "destructive",
+      })
+    }
+  }
+
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case 'active': return 'default'
@@ -266,11 +321,6 @@ export default function AdminInternshipsPage() {
               </p>
             </div>
             <div className="flex space-x-2">
-              <Button variant="outline" asChild>
-                <Link href="/admin">
-                  ← Back to Dashboard
-                </Link>
-              </Button>
               <Button onClick={() => setShowAddInternshipModal(true)}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add Internship
@@ -356,6 +406,11 @@ export default function AdminInternshipsPage() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
                   />
+                  {isSearching && (
+                    <div className="absolute right-3 top-3">
+                      <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                    </div>
+                  )}
                 </div>
               </div>
               <Select value={domainFilter} onValueChange={setDomainFilter}>
@@ -383,6 +438,40 @@ export default function AdminInternshipsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Search Results */}
+        <div className="mb-4 flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <p className="text-muted-foreground">
+              {loading ? "Loading..." : `Showing ${filteredInternships.length} of ${internships.length} internships`}
+            </p>
+            {domainFilter !== "all" && (
+              <Badge variant="outline" className="text-xs">
+                Domain: {domainFilter}
+              </Badge>
+            )}
+            {statusFilter !== "all" && (
+              <Badge variant="outline" className="text-xs">
+                Status: {statusFilter}
+              </Badge>
+            )}
+          </div>
+          <div className="flex space-x-2">
+            {(hasActiveSearch || domainFilter !== "all" || statusFilter !== "all") && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  clearSearch()
+                  setDomainFilter("all")
+                  setStatusFilter("all")
+                }}
+              >
+                Reset Filters
+              </Button>
+            )}
+          </div>
+        </div>
 
         {/* Internships Table */}
         <Card>
@@ -420,7 +509,7 @@ export default function AdminInternshipsPage() {
                           <Badge variant="outline">{internship.domain}</Badge>
                           {internship.isPaid && (
                             <Badge variant="secondary" className="text-green-600">
-                              <DollarSign className="h-3 w-3 mr-1" />
+                              <IndianRupee className="h-3 w-3 mr-1" />
                               ${internship.stipend}
                             </Badge>
                           )}
@@ -476,6 +565,17 @@ export default function AdminInternshipsPage() {
                           }}
                         >
                           <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedInternship(internship)
+                            setIsEditDialogOpen(true)
+                          }}
+                          title="Edit internship"
+                        >
+                          <Edit className="h-4 w-4" />
                         </Button>
                         {internship.status === 'active' && (
                           <Button
@@ -562,7 +662,7 @@ export default function AdminInternshipsPage() {
                       </Badge>
                       {selectedInternship.isPaid && (
                         <Badge variant="secondary" className="text-green-600">
-                          <DollarSign className="h-3 w-3 mr-1" />
+                          <IndianRupee className="h-3 w-3 mr-1" />
                           ${selectedInternship.stipend}/month
                         </Badge>
                       )}
@@ -708,6 +808,25 @@ export default function AdminInternshipsPage() {
                   </div>
                 </div>
               </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Internship Modal */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Internship</DialogTitle>
+              <DialogDescription>
+                Update internship details and requirements
+              </DialogDescription>
+            </DialogHeader>
+            {selectedInternship && (
+              <EditInternshipForm
+                internship={selectedInternship}
+                onSubmit={handleEditInternship}
+                onCancel={() => setIsEditDialogOpen(false)}
+              />
             )}
           </DialogContent>
         </Dialog>

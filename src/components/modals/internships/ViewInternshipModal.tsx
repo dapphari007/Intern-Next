@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { 
   Calendar, 
-  DollarSign, 
+  IndianRupee, 
   Users, 
   Clock,
   User,
@@ -117,8 +117,8 @@ export function ViewInternshipModal({
                 </div>
                 {internship.isPaid && internship.stipend && (
                   <div className="flex items-center text-sm">
-                    <DollarSign className="h-4 w-4 mr-2 text-muted-foreground" />
-                    ${internship.stipend}/month stipend
+                    <IndianRupee className="h-4 w-4 mr-2 text-muted-foreground" />
+                    {internship.stipend}/month stipend
                   </div>
                 )}
                 <div className="flex items-center text-sm">
