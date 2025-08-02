@@ -158,6 +158,7 @@ export function ViewCompanyModal({ companyId, open, onOpenChange, onSuccess }: V
   const [activeTab, setActiveTab] = useState("overview")
   const [showAddInternshipModal, setShowAddInternshipModal] = useState(false)
   const [showAddTaskModal, setShowAddTaskModal] = useState(false)
+  const [showAddCompanyAdminModal, setShowAddCompanyAdminModal] = useState(false)
   const [viewingInternship, setViewingInternship] = useState<any>(null)
   const [editingInternship, setEditingInternship] = useState<any>(null)
   const [editingTask, setEditingTask] = useState<CompanyTask | null>(null)
@@ -417,6 +418,14 @@ export function ViewCompanyModal({ companyId, open, onOpenChange, onSuccess }: V
                 </TabsContent>
 
                 <TabsContent value="users" className="space-y-4 mt-0">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-semibold">Company Users</h3>
+                    <Button onClick={() => setShowAddCompanyAdminModal(true)} size="sm">
+                      <Plus className="mr-2 h-4 w-4" />
+                      Add User
+                    </Button>
+                  </div>
+
                   <div className="space-y-4">
                     {company.users.map((user) => (
                       <Card key={user.id}>
@@ -703,6 +712,7 @@ export function ViewCompanyModal({ companyId, open, onOpenChange, onSuccess }: V
               onSuccess={fetchTasks}
             />
           )}
+
 
           {deletingItem && (
             <DeleteConfirmationModal

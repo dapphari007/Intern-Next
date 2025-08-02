@@ -323,24 +323,7 @@ export default function AdminDashboard() {
               </Link>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow cursor-pointer">
-              <Link href="/admin/internships">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                        <BookOpen className="h-5 w-5 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Internships</p>
-                        <p className="text-sm text-muted-foreground">Manage internships</p>
-                      </div>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </CardContent>
-              </Link>
-            </Card>
+
 
             <Card className="hover:shadow-md transition-shadow cursor-pointer">
               <Link href="/admin/analytics">
@@ -499,12 +482,7 @@ export default function AdminDashboard() {
                     Manage Users
                   </Link>
                 </Button>
-                <Button variant="outline" className="w-full justify-start" asChild>
-                  <Link href="/admin/internships">
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    Manage Internships
-                  </Link>
-                </Button>
+
                 <Button variant="outline" className="w-full justify-start" asChild>
                   <Link href="/certificates">
                     <Award className="mr-2 h-4 w-4" />

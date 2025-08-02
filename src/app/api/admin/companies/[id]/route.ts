@@ -135,7 +135,8 @@ export async function PUT(
       industry,
       size,
       location,
-      logo
+      logo,
+      adminUserId
     } = body
 
     // Validate required fields
@@ -162,6 +163,60 @@ export async function PUT(
 
     if (duplicateCompany) {
       return NextResponse.json({ error: 'Company with this name already exists' }, { status: 400 })
+    }
+
+    // Handle admin user assignment changes
+    if (adminUserId !== undefined) {
+      // Get current admin user for this company
+      const currentAdminUser = await db.user.findFirst({
+        where: { 
+          companyId: params.id,
+          role: 'COMPANY_ADMIN'
+        }
+      })
+
+      // If adminUserId is empty string, remove current admin
+      if (adminUserId === "") {
+        if (currentAdminUser) {
+          await db.user.update({
+            where: { id: currentAdminUser.id },
+            data: { companyId: null }
+          })
+        }
+      } else {
+        // Validate new admin user
+        const newAdminUser = await db.user.findUnique({
+          where: { id: adminUserId }
+        })
+
+        if (!newAdminUser) {
+          return NextResponse.json({ error: 'Selected admin user not found' }, { status: 400 })
+        }
+
+        if (newAdminUser.role !== 'COMPANY_ADMIN') {
+          return NextResponse.json({ error: 'Selected user must have COMPANY_ADMIN role' }, { status: 400 })
+        }
+
+        if (newAdminUser.companyId && newAdminUser.companyId !== params.id) {
+          return NextResponse.json({ error: 'Selected user is already assigned to another company' }, { status: 400 })
+        }
+
+        // Remove current admin if different from new admin
+        if (currentAdminUser && currentAdminUser.id !== adminUserId) {
+          await db.user.update({
+            where: { id: currentAdminUser.id },
+            data: { companyId: null }
+          })
+        }
+
+        // Assign new admin
+        if (newAdminUser.companyId !== params.id) {
+          await db.user.update({
+            where: { id: adminUserId },
+            data: { companyId: params.id }
+          })
+        }
+      }
     }
 
     const updatedCompany = await db.company.update({

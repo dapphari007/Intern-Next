@@ -151,16 +151,7 @@ const sidebarItems = {
       href: "/admin/companies",
       icon: "Building",
     },
-    {
-      title: "Internships",
-      href: "/admin/internships",
-      icon: "Briefcase",
-    },
-    {
-      title: "Task Management",
-      href: "/admin/tasks",
-      icon: "CheckSquare",
-    },
+
     {
       title: "Messages",
       href: "/messages",

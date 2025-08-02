@@ -121,7 +121,8 @@ export async function POST(request: NextRequest) {
       industry,
       size,
       location,
-      logo
+      logo,
+      adminUserId
     } = body
 
     // Validate required fields
@@ -136,6 +137,25 @@ export async function POST(request: NextRequest) {
 
     if (existingCompany) {
       return NextResponse.json({ error: 'Company with this name already exists' }, { status: 400 })
+    }
+
+    // Validate admin user if provided
+    if (adminUserId) {
+      const adminUser = await db.user.findUnique({
+        where: { id: adminUserId }
+      })
+
+      if (!adminUser) {
+        return NextResponse.json({ error: 'Selected admin user not found' }, { status: 400 })
+      }
+
+      if (adminUser.role !== 'COMPANY_ADMIN') {
+        return NextResponse.json({ error: 'Selected user must have COMPANY_ADMIN role' }, { status: 400 })
+      }
+
+      if (adminUser.companyId) {
+        return NextResponse.json({ error: 'Selected user is already assigned to another company' }, { status: 400 })
+      }
     }
 
     const company = await db.company.create({
@@ -175,6 +195,14 @@ export async function POST(request: NextRequest) {
         }
       }
     })
+
+    // Assign admin user to company if provided
+    if (adminUserId) {
+      await db.user.update({
+        where: { id: adminUserId },
+        data: { companyId: company.id }
+      })
+    }
 
     return NextResponse.json(company, { status: 201 })
   } catch (error) {

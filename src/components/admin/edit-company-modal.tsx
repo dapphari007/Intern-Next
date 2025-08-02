@@ -8,6 +8,14 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
+interface User {
+  id: string
+  name: string
+  email: string
+  role: string
+  companyId?: string | null
+}
+
 interface Company {
   id: string
   name: string
@@ -17,6 +25,7 @@ interface Company {
   size?: string
   location?: string
   logo?: string
+  users?: User[]
 }
 
 interface EditCompanyModalProps {
@@ -52,6 +61,9 @@ const industries = [
 
 export function EditCompanyModal({ company, open, onOpenChange, onSuccess }: EditCompanyModalProps) {
   const [loading, setLoading] = useState(false)
+  const [usersLoading, setUsersLoading] = useState(false)
+  const [availableUsers, setAvailableUsers] = useState<User[]>([])
+  const [currentAdminUser, setCurrentAdminUser] = useState<User | null>(null)
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -59,11 +71,16 @@ export function EditCompanyModal({ company, open, onOpenChange, onSuccess }: Edi
     industry: "",
     size: "",
     location: "",
-    logo: ""
+    logo: "",
+    adminUserId: ""
   })
 
   useEffect(() => {
     if (company) {
+      // Find current admin user
+      const adminUser = company.users?.find(user => user.role === 'COMPANY_ADMIN') || null
+      setCurrentAdminUser(adminUser)
+      
       setFormData({
         name: company.name || "",
         description: company.description || "",
@@ -71,10 +88,41 @@ export function EditCompanyModal({ company, open, onOpenChange, onSuccess }: Edi
         industry: company.industry || "",
         size: company.size || "",
         location: company.location || "",
-        logo: company.logo || ""
+        logo: company.logo || "",
+        adminUserId: adminUser?.id || "no-admin"
       })
     }
   }, [company])
+
+  useEffect(() => {
+    if (open) {
+      fetchAvailableUsers()
+    }
+  }, [open, company])
+
+  const fetchAvailableUsers = async () => {
+    try {
+      setUsersLoading(true)
+      // Fetch users with COMPANY_ADMIN role
+      const response = await fetch('/api/users?role=COMPANY_ADMIN')
+      if (response.ok) {
+        const data = await response.json()
+        // Filter users who don't have a company assigned OR are assigned to current company
+        const availableUsersForCompany = data.users?.filter((user: User) => 
+          !user.companyId || user.companyId === company.id
+        ) || []
+        setAvailableUsers(availableUsersForCompany)
+      } else {
+        console.error('Failed to fetch users')
+        setAvailableUsers([])
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error)
+      setAvailableUsers([])
+    } finally {
+      setUsersLoading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -86,12 +134,18 @@ export function EditCompanyModal({ company, open, onOpenChange, onSuccess }: Edi
 
     setLoading(true)
     try {
+      // Prepare form data, converting "no-admin" to empty string
+      const submitData = {
+        ...formData,
+        adminUserId: formData.adminUserId === "no-admin" ? "" : formData.adminUserId
+      }
+      
       const response = await fetch(`/api/admin/companies/${company.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       })
 
       if (response.ok) {
@@ -214,6 +268,29 @@ export function EditCompanyModal({ company, open, onOpenChange, onSuccess }: Edi
                 placeholder="https://company.com/logo.png"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="adminUser">Company Admin (Optional)</Label>
+            <Select value={formData.adminUserId} onValueChange={(value) => handleInputChange('adminUserId', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder={usersLoading ? "Loading users..." : "Select company admin"} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="no-admin">No admin assigned</SelectItem>
+                {availableUsers.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.name} ({user.email})
+                    {user.id === currentAdminUser?.id && " (Current)"}
+                  </SelectItem>
+                ))}
+                {availableUsers.length === 0 && !usersLoading && (
+                  <SelectItem value="no-users" disabled>
+                    No available company admin users
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
           </div>
 
           <DialogFooter>

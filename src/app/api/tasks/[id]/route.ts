@@ -191,8 +191,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Check if task exists
-    const existingTask = await db.task.findUnique({
+    // Check if task exists (check both regular and company tasks)
+    let existingTask = await db.task.findUnique({
       where: { id: params.id },
       include: {
         _count: {
@@ -215,30 +215,72 @@ export async function DELETE(
       }
     })
 
+    let isCompanyTask = false
+    if (!existingTask) {
+      // Check if it's a company internship task
+      existingTask = await db.companyInternshipTask.findUnique({
+        where: { id: params.id },
+        include: {
+          _count: {
+            select: {
+              submissions: true
+            }
+          },
+          internship: {
+            select: {
+              id: true,
+              mentorId: true,
+              company: {
+                select: {
+                  id: true
+                }
+              }
+            }
+          }
+        }
+      }) as any
+      isCompanyTask = true
+    }
+
     if (!existingTask) {
       return NextResponse.json({ error: "Task not found" }, { status: 404 })
     }
 
-    // Check permissions - Only mentors and company admins can delete tasks, not global admin
+    // Check permissions - Admin can delete any task, mentors and company admins can delete their tasks
+    const isAdmin = session.user.role === 'ADMIN'
     const isMentor = session.user.role === 'MENTOR' && existingTask.internship?.mentorId === session.user.id
-    const isCompanyAdmin = session.user.role === 'COMPANY_ADMIN' && existingTask.internship?.mentor?.companyId === session.user.companyId
+    const isCompanyAdmin = session.user.role === 'COMPANY_ADMIN' && 
+      (existingTask.internship?.mentor?.companyId === session.user.companyId || 
+       (isCompanyTask && (existingTask.internship as any)?.company?.id === session.user.companyId))
 
-    if (!isMentor && !isCompanyAdmin) {
-      return NextResponse.json({ error: "Forbidden - Only mentors and company admins can delete tasks" }, { status: 403 })
+    if (!isAdmin && !isMentor && !isCompanyAdmin) {
+      return NextResponse.json({ error: "Forbidden - Only admins, mentors and company admins can delete tasks" }, { status: 403 })
     }
 
     // For testing purposes, allow deletion of tasks with submissions
     if (existingTask._count.submissions > 0) {
-      // Delete submissions first
-      await db.taskSubmission.deleteMany({
-        where: { taskId: params.id }
-      })
+      // Delete submissions first based on task type
+      if (isCompanyTask) {
+        await db.companyInternshipTaskSubmission.deleteMany({
+          where: { taskId: params.id }
+        })
+      } else {
+        await db.taskSubmission.deleteMany({
+          where: { taskId: params.id }
+        })
+      }
     }
 
-    // Delete task
-    await db.task.delete({
-      where: { id: params.id }
-    })
+    // Delete task based on type
+    if (isCompanyTask) {
+      await db.companyInternshipTask.delete({
+        where: { id: params.id }
+      })
+    } else {
+      await db.task.delete({
+        where: { id: params.id }
+      })
+    }
 
     return NextResponse.json({ message: "Task deleted successfully" })
   } catch (error) {

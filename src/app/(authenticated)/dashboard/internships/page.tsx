@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { db } from "@/lib/db"
-import { Plus, Users, Clock, CheckCircle, Briefcase } from "lucide-react"
+import { Plus, Users, Clock, CheckCircle, Briefcase, CheckSquare } from "lucide-react"
+import Link from "next/link"
 
 export default async function InternshipsPage() {
   const session = await getServerSession(authOptions)
@@ -47,9 +48,24 @@ export default async function InternshipsPage() {
         }
       },
       tasks: {
-        select: {
-          id: true,
-          status: true
+        include: {
+          assignee: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true
+            }
+          },
+          submissions: {
+            select: {
+              id: true,
+              submittedAt: true
+            }
+          }
+        },
+        orderBy: {
+          createdAt: 'desc'
         }
       },
       _count: {
@@ -224,6 +240,58 @@ export default async function InternshipsPage() {
                       </div>
                     )}
                     
+                    {/* Tasks Section */}
+                    {internship.tasks.length > 0 && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-sm font-medium">Recent Tasks</h4>
+                          <Badge variant="outline">
+                            {internship.tasks.length} total
+                          </Badge>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          {internship.tasks.slice(0, 3).map((task) => (
+                            <div key={task.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-lg">
+                              <div className="flex items-center space-x-2">
+                                {task.status === 'COMPLETED' ? (
+                                  <CheckCircle className="h-4 w-4 text-green-500" />
+                                ) : task.status === 'IN_PROGRESS' ? (
+                                  <Clock className="h-4 w-4 text-blue-500" />
+                                ) : (
+                                  <Clock className="h-4 w-4 text-gray-500" />
+                                )}
+                                <div>
+                                  <p className="text-sm font-medium">{task.title}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    Assigned to: {task.assignee?.name || task.assignee?.email || 'Unassigned'}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Badge variant={
+                                  task.status === 'COMPLETED' ? 'default' : 
+                                  task.status === 'IN_PROGRESS' ? 'secondary' : 'outline'
+                                }>
+                                  {task.status.replace('_', ' ')}
+                                </Badge>
+                                {task.submissions.length > 0 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {task.submissions.length} submission{task.submissions.length !== 1 ? 's' : ''}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                          {internship.tasks.length > 3 && (
+                            <p className="text-xs text-muted-foreground text-center">
+                              +{internship.tasks.length - 3} more tasks
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
                     {/* Stats */}
                     <div className="grid grid-cols-3 gap-4 text-sm">
                       <div className="text-center">
@@ -251,6 +319,14 @@ export default async function InternshipsPage() {
                             <Clock className="mr-2 h-4 w-4" />
                             Review Applications ({pendingApplications.length})
                           </Button>
+                        )}
+                        {session.user.role === 'ADMIN' && internship.tasks.length > 0 && (
+                          <Link href={`/dashboard/internships/${internship.id}`}>
+                            <Button size="sm" variant="outline">
+                              <CheckSquare className="mr-2 h-4 w-4" />
+                              View All Tasks ({internship.tasks.length})
+                            </Button>
+                          </Link>
                         )}
                         <Button size="sm" variant="outline">
                           Manage

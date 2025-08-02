@@ -87,9 +87,9 @@ export class NavigationService {
               icon: 'Users'
             },
             {
-              label: 'Internships',
-              href: '/admin/internships',
-              icon: 'Briefcase'
+              label: 'Companies',
+              href: '/admin/companies',
+              icon: 'Building'
             },
             {
               label: 'Analytics',

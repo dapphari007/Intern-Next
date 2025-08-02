@@ -1,12 +1,20 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
+interface User {
+  id: string
+  name: string
+  email: string
+  role: string
+  companyId?: string | null
+}
 
 interface AddCompanyModalProps {
   open: boolean
@@ -40,6 +48,8 @@ const industries = [
 
 export function AddCompanyModal({ open, onOpenChange, onSuccess }: AddCompanyModalProps) {
   const [loading, setLoading] = useState(false)
+  const [usersLoading, setUsersLoading] = useState(false)
+  const [availableUsers, setAvailableUsers] = useState<User[]>([])
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -47,8 +57,37 @@ export function AddCompanyModal({ open, onOpenChange, onSuccess }: AddCompanyMod
     industry: "",
     size: "",
     location: "",
-    logo: ""
+    logo: "",
+    adminUserId: ""
   })
+
+  useEffect(() => {
+    if (open) {
+      fetchAvailableUsers()
+    }
+  }, [open])
+
+  const fetchAvailableUsers = async () => {
+    try {
+      setUsersLoading(true)
+      // Fetch users without company assignment (companyId is null) and with COMPANY_ADMIN role
+      const response = await fetch('/api/users?role=COMPANY_ADMIN')
+      if (response.ok) {
+        const data = await response.json()
+        // Filter users who don't have a company assigned
+        const usersWithoutCompany = data.users?.filter((user: User) => !user.companyId) || []
+        setAvailableUsers(usersWithoutCompany)
+      } else {
+        console.error('Failed to fetch users')
+        setAvailableUsers([])
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error)
+      setAvailableUsers([])
+    } finally {
+      setUsersLoading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -60,12 +99,18 @@ export function AddCompanyModal({ open, onOpenChange, onSuccess }: AddCompanyMod
 
     setLoading(true)
     try {
+      // Prepare form data, converting "no-admin" to empty string
+      const submitData = {
+        ...formData,
+        adminUserId: formData.adminUserId === "no-admin" ? "" : formData.adminUserId
+      }
+      
       const response = await fetch('/api/admin/companies', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(submitData),
       })
 
       if (response.ok) {
@@ -78,7 +123,8 @@ export function AddCompanyModal({ open, onOpenChange, onSuccess }: AddCompanyMod
           industry: "",
           size: "",
           location: "",
-          logo: ""
+          logo: "",
+          adminUserId: ""
         })
       } else {
         const error = await response.json()
@@ -197,6 +243,27 @@ export function AddCompanyModal({ open, onOpenChange, onSuccess }: AddCompanyMod
                 placeholder="https://company.com/logo.png"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="adminUser">Company Admin (Optional)</Label>
+            <Select value={formData.adminUserId} onValueChange={(value) => handleInputChange('adminUserId', value)}>
+              <SelectTrigger>
+                <SelectValue placeholder={usersLoading ? "Loading users..." : "Select company admin"} />
+              </SelectTrigger>
+              <SelectContent>
+                {availableUsers.map((user) => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.name} ({user.email})
+                  </SelectItem>
+                ))}
+                {availableUsers.length === 0 && !usersLoading && (
+                  <SelectItem value="no-users" disabled>
+                    No available company admin users
+                  </SelectItem>
+                )}
+              </SelectContent>
+            </Select>
           </div>
 
           <DialogFooter>
